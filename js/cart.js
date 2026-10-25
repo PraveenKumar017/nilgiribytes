@@ -265,7 +265,7 @@ const STORAGE_KEY = "veb_cart";
       if (wrap) {
         wrap.innerHTML = "";
 
-        if (!lines.length) {
+        if (!Array.isArray(lines) || lines.length === 0) {
           const empty = document.createElement("p");
           empty.className = "empty-state";
           empty.textContent = "Your cart is empty. Add something fresh from the shop.";
@@ -282,7 +282,7 @@ const STORAGE_KEY = "veb_cart";
       }
 
       const orderBtn = drawer.querySelector("[data-order-whatsapp]");
-      if (orderBtn) orderBtn.disabled = lines.length === 0;
+      if (orderBtn) orderBtn.disabled = !Array.isArray(lines) || lines.length === 0;
     }
 
     renderCartPage(lines);
@@ -306,16 +306,19 @@ const STORAGE_KEY = "veb_cart";
 
     wrap.innerHTML = "";
 
-    if (!lines.length) {
-      if (emptyEl) emptyEl.hidden = false;
-      if (contentEl) contentEl.hidden = true;
-      if (summaryEl) summaryEl.hidden = true;
+    const hasItems = Array.isArray(lines) && lines.length > 0;
+
+    if (!hasItems) {
+      if (emptyEl) { emptyEl.hidden = false; emptyEl.style.display = "flex"; }
+      if (contentEl) { contentEl.hidden = true; contentEl.style.display = "none"; }
+      if (summaryEl) { summaryEl.hidden = true; summaryEl.style.display = "none"; }
+      if (orderBtn) orderBtn.disabled = true;
       return;
     }
 
-    if (emptyEl) emptyEl.hidden = true;
-    if (contentEl) contentEl.hidden = false;
-    if (summaryEl) summaryEl.hidden = false;
+    if (emptyEl) { emptyEl.hidden = true; emptyEl.style.display = "none"; }
+    if (contentEl) { contentEl.hidden = false; contentEl.style.display = "grid"; }
+    if (summaryEl) { summaryEl.hidden = false; summaryEl.style.display = ""; }
 
     lines.forEach(function (line) {
       wrap.appendChild(buildCartRow(line));
