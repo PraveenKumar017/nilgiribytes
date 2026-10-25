@@ -90,14 +90,16 @@
     <main class="admin-main" id="main-content">
 
       <div class="admin-toolbar">
-        <h1 class="admin-toolbar_title" data-admin-title>Catalog</h1>
-        <div class="admin-toolbar_actions" data-admin-actions>
-          <button class="btn" type="button" data-admin-add>Add product</button>
-          <button class="btn" type="button" data-admin-add-combo>Add combo</button>
-          <button class="btn btn--primary" type="button" data-admin-publish disabled>Publish</button>
-        </div>
-        <div class="admin-toolbar_actions" data-admin-blog-actions hidden>
-          <button class="btn btn--primary" type="button" data-blog-add>Add post</button>
+        <div class="admin-toolbar_head">
+          <h1 class="admin-toolbar_title" data-admin-title>Catalog</h1>
+          <div class="admin-toolbar_actions" data-admin-blog-actions hidden>
+            <button class="btn btn--primary" type="button" data-blog-add>Add post</button>
+          </div>
+          <div class="admin-toolbar_actions" data-admin-actions>
+            <button class="btn" type="button" data-admin-add>Add product</button>
+            <button class="btn" type="button" data-admin-add-combo>Add combo</button>
+            <button class="btn btn--primary" type="button" data-admin-publish disabled>Publish</button>
+          </div>
         </div>
         <span class="admin-save-status" data-admin-status role="status" aria-live="polite"></span>
       </div>

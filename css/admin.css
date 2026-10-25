@@ -303,6 +303,16 @@ body[data-page="admin"] {
   margin-top: 0;
 }
 
+.admin-toolbar_head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
 .admin-toolbar_title {
   font-family: var(--font-heading, "Playfair Display", serif);
   font-size: 1.6rem;
