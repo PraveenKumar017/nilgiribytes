@@ -325,6 +325,104 @@
       });
   }
 
+  function saveBlogPost(isDraft) {
+    const editing = state.blogEditing;
+    if (!editing) return;
+    const existing = editing.post;
+
+    const title = els.blogTitle ? els.blogTitle.value.trim() : "";
+    if (!title) {
+      setStatus("Please add a title.", "error");
+      if (els.blogTitle) els.blogTitle.focus();
+      return;
+    }
+
+    const content = readBlogBlocks();
+    const hasContent = content.some(function (block) {
+      const text = block.text || "";
+      if (text.trim()) return true;
+      const items = Array.isArray(block.items) ? block.items : [];
+      return items.some(function (item) { return item && item.trim(); });
+    });
+    if (!hasContent) {
+      setStatus("Please write at least one paragraph.", "error");
+      if (els.blogBlocks) {
+        const first = els.blogBlocks.querySelector(".admin-blog-block_text");
+        if (first) first.focus();
+      }
+      return;
+    }
+
+    const slug =
+      state.blogSlugTouched && els.blogSlug && els.blogSlug.value.trim()
+        ? els.blogSlug.value.trim()
+        : generateBlogSlug(title);
+
+    const post = {
+      slug: slug,
+      status: isDraft ? "draft" : "published",
+      title: title,
+      category: els.blogCategory ? els.blogCategory.value : "",
+      author: els.blogAuthor ? els.blogAuthor.value.trim() : "",
+      date: els.blogDate ? els.blogDate.value : todayISO(),
+      readingTime: blogReadingTime(content),
+      image: els.blogImage ? els.blogImage.value.trim() : "",
+      excerpt: (els.blogExcerpt ? els.blogExcerpt.value.trim() : "") || blogExcerpt(content),
+      imageAlt: (els.blogImageAlt ? els.blogImageAlt.value.trim() : "") || title,
+      content: content,
+    };
+
+    setStatus("Saving...", "muted");
+
+    const payload = {
+      post: post,
+      originalSlug: existing && existing.slug ? existing.slug : slug,
+      version: state.blogVersion,
+    };
+
+    return api(BLOG_URL, { method: "PUT", body: JSON.stringify(payload) })
+      .then(function (result) {
+        const savedPost = (result && result.post) ? result.post : post;
+        if (Array.isArray(result && result.posts)) state.blogPosts = result.posts;
+        const target = state.blogPosts.filter(function (p) { return p && p.slug === savedPost.slug; })[0];
+        if (target) state.blogPosts[state.blogPosts.indexOf(target)] = savedPost;
+        else state.blogPosts.unshift(savedPost);
+        state.blogVersion = (result && result.version) || state.blogVersion;
+        state.blogLoaded = true;
+        hideBlogEditor();
+        setStatus(
+          isDraft ? "Draft saved. Publish it when you are ready." : "Post updated.",
+          "success"
+        );
+      })
+      .catch(function (err) {
+        setStatus(err.message || "Could not save. Your text is safe — please try again.", "error");
+      });
+  }
+
+  function publishBlogPost(index) {
+    const post = state.blogPosts[index];
+    if (!post) return;
+    setStatus("Publishing...", "muted");
+    return api(BLOG_URL, {
+      method: "POST",
+      body: JSON.stringify({ action: "publish", slug: post.slug, version: state.blogVersion }),
+    })
+      .then(function (result) {
+        const posts = Array.isArray(result && result.posts) ? result.posts : state.blogPosts;
+        state.blogPosts = posts;
+        const updated = posts.filter(function (p) { return p && p.slug === post.slug; })[0];
+        if (updated) updated.status = "published";
+        state.blogVersion = (result && result.version) || state.blogVersion;
+        state.blogLoaded = true;
+        renderBlogList();
+        setStatus("Post published. It may take a minute to appear on the live site.", "success");
+      })
+      .catch(function (err) {
+        setStatus(err.message || "Could not publish. Your text is safe — please try again.", "error");
+      });
+  }
+
   async function publishCatalog() {
     if (state.publishing || !state.dirty) return;
 

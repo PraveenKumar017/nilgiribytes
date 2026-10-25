@@ -23,9 +23,9 @@
   window.Bakery.whatsappLink = function (message) {
     const number = window.Bakery.config.whatsappNumber;
     const base = "https://wa.me/" + number;
-    return message
-      ? base + "?text=" + encodeURIComponent(message)
-      : base;
+    const defaultMsg = "Hello Nilgiribytes! Can you send more details about your products?";
+    const text = (message && message.trim()) ? message : defaultMsg;
+    return base + "?text=" + encodeURIComponent(text);
   };
 
   window.Bakery.storage = {

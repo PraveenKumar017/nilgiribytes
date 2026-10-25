@@ -394,10 +394,13 @@
 
     const config = (window.Bakery && window.Bakery.config) || {};
     if (config.whatsappNumber) {
-      btn.setAttribute(
-        "href",
-        "https://wa.me/" + config.whatsappNumber
-      );
+      const baseMsg =
+        "Hello Nilgiribytes! Can you send more details about your products?";
+      const link =
+        window.Bakery && typeof window.Bakery.whatsappLink === "function"
+          ? window.Bakery.whatsappLink()
+          : "https://wa.me/" + config.whatsappNumber + "?text=" + encodeURIComponent(baseMsg);
+      btn.setAttribute("href", link);
     }
 
     btn.classList.add("is-visible");
