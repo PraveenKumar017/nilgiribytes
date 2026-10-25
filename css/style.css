@@ -279,11 +279,11 @@ p {
   justify-content: center;
   gap: 0.5rem;
   font-family: var(--font-body);
-  font-size: 0.95rem;
+  font-size: 0.9rem;
   font-weight: 600;
   letter-spacing: 0.04em;
   text-transform: uppercase;
-  padding: 0.9rem 2.2rem;
+  padding: 0.6rem 1.8rem;
   border: 1px solid transparent;
   border-radius: var(--radius-sm);
   cursor: pointer;
@@ -291,6 +291,7 @@ p {
   transition: background var(--transition), color var(--transition),
     border-color var(--transition), transform var(--transition),
     box-shadow var(--transition);
+  line-height: 1.2;
 }
 
 .btn:active {
@@ -316,6 +317,8 @@ p {
   background: linear-gradient(180deg, var(--color-gold), var(--color-cinnamon));
   color: var(--color-cream);
   box-shadow: var(--shadow-gold-cta);
+  padding: 0.55rem 1.6rem;
+  font-size: 0.88rem;
 }
 
 .hero_content .btn--primary:hover {
@@ -327,6 +330,8 @@ p {
   background: transparent;
   color: var(--color-chocolate);
   border-color: var(--hairline-gold-strong);
+  padding: 0.55rem 1.6rem;
+  font-size: 0.88rem;
 }
 
 .btn--outline:hover {
@@ -339,7 +344,8 @@ p {
 .btn--ghost {
   background: transparent;
   color: var(--color-primary);
-  padding: 0.5rem 0.75rem;
+  padding: 0.4rem 0.65rem;
+  font-size: 0.88rem;
 }
 
 .btn--ghost:hover {
@@ -367,8 +373,9 @@ p {
 }
 
 .btn--small {
-  padding: 0.55rem 1.15rem;
-  font-size: 0.86rem;
+  padding: 0.45rem 1rem;
+  font-size: 0.84rem;
+  line-height: 1.2;
 }
 
 .link-arrow {
@@ -1474,6 +1481,7 @@ body {
   object-fit: cover;
   display: block;
   transition: transform 680ms var(--ease-out);
+  border-right: 1px solid var(--color-wheat);
 }
 
 .product-card:hover::after {
@@ -1613,8 +1621,9 @@ body {
 }
 
 .product-card_action .btn {
-  padding: 0.6rem 1.1rem;
-  font-size: 0.9rem;
+  padding: 0.5rem 1rem;
+  font-size: 0.84rem;
+  line-height: 1.2;
 }
 
 /* Add-to-cart buttons stay steady on hover — no colour flash or motion. */
@@ -2205,16 +2214,16 @@ body[data-page="cart"] .section {
 
 .qty-stepper {
   display: inline-flex;
-  align-items: center;
-  border: 1px solid var(--color-wheat);
+  align-items: stretch;
+  border: 1px solid var(--color-border);
   border-radius: var(--radius-sm);
   overflow: hidden;
-  margin-top: 0.5rem;
+  height: 44px;
 }
 
 .qty-stepper button {
-  width: 30px;
-  height: 30px;
+  width: 38px;
+  height: 42px;
   background: var(--color-cream);
   border: 0;
   cursor: pointer;
@@ -2228,25 +2237,28 @@ body[data-page="cart"] .section {
 }
 
 .qty-stepper span {
-  min-width: 34px;
+  min-width: 30px;
   text-align: center;
-  font-size: 0.875rem;
+  font-size: 0.85rem;
   font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 
 /* Card stepper — replaces the Add to cart button, same full width. */
 .qty-stepper--card {
   width: 100%;
-  height: 48px;
+  height: 42px;
   margin-top: 0;
   border-color: var(--color-border);
 }
 
 .qty-stepper--card button {
-  flex: 0 0 52px;
+  flex: 0 0 46px;
   width: auto;
-  height: 46px;
-  font-size: 1.2rem;
+  height: 40px;
+  font-size: 1.1rem;
   line-height: 1;
   background: var(--color-surface);
 }
@@ -2254,11 +2266,11 @@ body[data-page="cart"] .section {
 .qty-stepper--card span {
   flex: 1 1 auto;
   min-width: 0;
-  height: 46px;
+  height: 40px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  font-size: 1rem;
+  font-size: 0.95rem;
   font-weight: 700;
 }
 
@@ -2421,17 +2433,17 @@ body[data-page="cart"] .section {
 
 /* "Add to cart" swaps into this stepper — fixed width, both states match. */
 .modal_actions .qty-stepper {
-  width: 196px;
-  height: 52px;
+  width: 150px;
+  height: 44px;
   margin-top: 0;
   border-color: var(--color-border);
 }
 
 .modal_actions .qty-stepper button {
-  flex: 0 0 58px;
-  height: 50px;
+  flex: 0 0 48px;
+  height: 42px;
   width: auto;
-  font-size: 1.35rem;
+  font-size: 1.1rem;
   line-height: 1;
   background: var(--color-surface);
 }
@@ -2439,16 +2451,19 @@ body[data-page="cart"] .section {
 .modal_actions .qty-stepper span {
   flex: 1 1 auto;
   min-width: 0;
-  height: 50px;
+  height: 42px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.05rem;
+  font-size: 0.95rem;
   font-weight: 700;
 }
 
 .modal_actions .btn {
-  width: 196px;
+  width: auto;
+  padding: 0.55rem 1.6rem;
+  font-size: 0.88rem;
+  line-height: 1.2;
 }
 
 .todo-note {
@@ -2598,53 +2613,91 @@ body[data-page="cart"] .section {
   margin-bottom: 0;
 }
 
-/* ---------- Newsletter ---------- */
-.newsletter {
+/* ---------- CTA ---------- */
+.cta {
   position: relative;
-  background: var(--gradient-dark);
-  color: var(--color-ivory);
-  border: 1px solid var(--color-gold);
-  border-radius: var(--radius-lg);
-  padding: clamp(2.5rem, 5vw, 4rem);
-  text-align: center;
-  box-shadow: var(--shadow-card);
   overflow: hidden;
+  text-align: center;
+  padding: clamp(2.4rem, 6vw, 4.6rem) clamp(1.2rem, 6vw, 4rem);
+  border-radius: var(--radius-lg);
+  background: radial-gradient(circle at top, rgba(199, 154, 66, 0.18), transparent 55%),
+    linear-gradient(180deg, rgba(107, 56, 33, 0.98) 0%, rgba(63, 34, 20, 0.98) 100%);
+  color: var(--color-cream);
+  box-shadow: var(--shadow-soft);
+  border: 1px solid rgba(199, 154, 66, 0.4);
 }
 
-.newsletter::before,
-.newsletter::after {
+.cta::before,
+.cta::after {
   content: "";
   position: absolute;
-  width: 180px;
-  height: 180px;
-  border: 1px solid var(--hairline-gold);
   border-radius: 50%;
-  pointer-events: none;
+  filter: blur(60px);
+  opacity: 0.4;
 }
 
-.newsletter::before {
-  top: -90px;
-  left: -90px;
+.cta::before {
+  width: 220px;
+  height: 220px;
+  top: -80px;
+  left: -60px;
+  background: radial-gradient(circle, rgba(199, 154, 66, 0.5), transparent);
 }
 
-.newsletter::after {
-  bottom: -90px;
-  right: -90px;
+.cta::after {
+  width: 260px;
+  height: 260px;
+  bottom: -120px;
+  right: -80px;
+  background: radial-gradient(circle, rgba(240, 214, 170, 0.25), transparent);
 }
 
-.newsletter_title {
+.cta > * {
+  position: relative;
+  z-index: 1;
+}
+
+.cta_title {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: clamp(2rem, 5vw, 3.6rem);
+  letter-spacing: 0.02em;
+}
+
+.cta_text {
+  margin: 0.8rem auto 1.8rem;
+  max-width: 580px;
+  color: rgba(248, 243, 233, 0.86);
+  font-size: clamp(1rem, 1.6vw, 1.08rem);
+}
+
+.cta-group {
+  display: flex;
+  gap: 0.8rem;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.cta .btn,
+.cta-group .btn {
+  padding: 0.5rem 1.4rem;
+  font-size: 0.86rem;
+  line-height: 1.2;
+}
+
+.cta_title {
   color: var(--color-cream);
   font-size: clamp(1.7rem, 3.5vw, 2.4rem);
   margin-bottom: 0.5rem;
 }
 
-.newsletter_text {
+.cta_text {
   color: var(--color-wheat);
   max-width: 520px;
   margin: 0 auto 1.75rem;
 }
 
-.newsletter_form {
+.cta-group {
   display: flex;
   gap: 0.6rem;
   max-width: 480px;
@@ -2653,7 +2706,14 @@ body[data-page="cart"] .section {
   z-index: 1;
 }
 
-.newsletter_input {
+.cta .btn,
+.cta-group .btn {
+  padding: 0.5rem 1.4rem;
+  font-size: 0.86rem;
+  line-height: 1.2;
+}
+
+.cta_input {
   flex: 1;
   padding: 0.85rem 1.1rem;
   border: 1px solid var(--hairline-gold);
@@ -2663,11 +2723,11 @@ body[data-page="cart"] .section {
   transition: box-shadow var(--transition);
 }
 
-.newsletter_input:focus {
+.cta_input:focus {
   box-shadow: 0 0 0 3px var(--hairline-gold);
 }
 
-.newsletter_msg {
+.cta_msg {
   margin-top: 0.85rem;
   font-size: 0.9rem;
   min-height: 1.3em;
@@ -2675,11 +2735,11 @@ body[data-page="cart"] .section {
   z-index: 1;
 }
 
-.newsletter_msg.is-error {
+.cta_msg.is-error {
   color: var(--color-wheat);
 }
 
-.newsletter_msg.is-success {
+.cta_msg.is-success {
   color: var(--color-gold);
 }
 
