@@ -301,6 +301,7 @@ const STORAGE_KEY = "veb_cart";
     const orderBtn = page.querySelector("[data-order-whatsapp]");
     const emptyEl = page.querySelector("[data-cart-page-empty]");
     const contentEl = page.querySelector("[data-cart-page-content]");
+    const summaryEl = page.querySelector(".cart-page_summary");
     if (!wrap) return;
 
     wrap.innerHTML = "";
@@ -308,11 +309,13 @@ const STORAGE_KEY = "veb_cart";
     if (!lines.length) {
       if (emptyEl) emptyEl.hidden = false;
       if (contentEl) contentEl.hidden = true;
+      if (summaryEl) summaryEl.hidden = true;
       return;
     }
 
     if (emptyEl) emptyEl.hidden = true;
     if (contentEl) contentEl.hidden = false;
+    if (summaryEl) summaryEl.hidden = false;
 
     lines.forEach(function (line) {
       wrap.appendChild(buildCartRow(line));
