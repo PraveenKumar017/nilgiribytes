@@ -5,7 +5,7 @@
   "description": "Nilgiribytes storefront — Next.js + Prisma + MySQL",
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
+    "build": "prisma generate && next build",
     "start": "next start",
     "typecheck": "tsc --noEmit",
     "lint": "eslint .",
