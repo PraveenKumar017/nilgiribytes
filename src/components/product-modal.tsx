@@ -1,7 +1,14 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { cartLineKey, itemImage, itemPrice, itemSizeLabel } from "@/lib/cart";
+import {
+  cartLineKey,
+  itemDiscountPercent,
+  itemImage,
+  itemMrp,
+  itemPrice,
+  itemSizeLabel,
+} from "@/lib/cart";
 import { formatINR } from "@/lib/format";
 import type { StoreItem } from "@/lib/types";
 import { useCart } from "./cart-provider";
@@ -20,6 +27,10 @@ export function ProductModal({ item, onClose }: ProductModalProps) {
 
   const lineKey = cartLineKey(item.id, itemSizeLabel(item, sizeIndex));
   const qty = quantityOf(lineKey);
+  const price = itemPrice(item, sizeIndex);
+  const mrp = itemMrp(item, sizeIndex);
+  const discount = itemDiscountPercent(item, sizeIndex);
+  const hasDiscount = item.kind === "product" && discount > 0 && mrp > price;
 
   useEffect(() => {
     document.body.classList.add("is-locked");
@@ -92,12 +103,27 @@ export function ProductModal({ item, onClose }: ProductModalProps) {
             <h2 className="modal_title" id="modal-title">
               {item.name}
             </h2>
-            <p className="modal_price">
-              {formatINR(itemPrice(item, sizeIndex))}
-              {item.kind === "combo"
-                ? ` \u00b7 ${item.weight}`
-                : ` \u00b7 ${itemSizeLabel(item, sizeIndex)}`}
-            </p>
+            <div className="modal_pricing">
+              <p className="modal_price">
+                <span className="price-current">{formatINR(price)}</span>
+                {hasDiscount ? (
+                  <s className="price-mrp">{formatINR(mrp)}</s>
+                ) : null}
+                {hasDiscount ? (
+                  <span className="discount-pill">{discount}% OFF</span>
+                ) : null}
+                <span className="modal_price-meta">
+                  {item.kind === "combo"
+                    ? item.weight
+                    : itemSizeLabel(item, sizeIndex)}
+                </span>
+              </p>
+              {hasDiscount ? (
+                <p className="modal_saving">
+                  You save {formatINR(mrp - price)}
+                </p>
+              ) : null}
+            </div>
 
             {item.description.startsWith("TODO") ? (
               <p className="modal_desc">

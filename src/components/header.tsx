@@ -68,7 +68,7 @@ export function Header() {
         <div
           className="scroll-progress-bar"
           data-scroll-progress
-          style={{ transform: `scaleX(${progress})` }}
+          style={{ width: `${progress * 100}%` }}
         />
       </div>
 

@@ -6,8 +6,25 @@ import { PostStatus, Prisma, PrismaClient } from "@prisma/client";
 type LegacySize = {
   label: string;
   grams?: number | null;
+  mrp?: number;
+  discountPercent?: number;
   price: number;
 };
+
+function sizePricing(size: LegacySize) {
+  const pricePaise = Math.round(size.price * 100);
+  const mrpPaise = Math.max(
+    pricePaise,
+    Math.round((size.mrp ?? size.price) * 100)
+  );
+  const discountPercent =
+    size.discountPercent ??
+    (mrpPaise > pricePaise
+      ? Math.round(((mrpPaise - pricePaise) / mrpPaise) * 100)
+      : 0);
+
+  return { mrpPaise, discountPercent, pricePaise };
+}
 
 type LegacyProduct = {
   id: string;
@@ -112,7 +129,7 @@ async function importCatalog(catalog: CatalogFile) {
     const sizes = (product.sizes ?? []).map((size, sizeIndex) => ({
       label: size.label,
       grams: size.grams ?? null,
-      pricePaise: Math.round(size.price * 100),
+      ...sizePricing(size),
       imageUrl: product.sizeImages?.[size.label] ?? product.image ?? null,
       sortOrder: sizeIndex,
     }));

@@ -12,6 +12,22 @@ export function itemSizeLabel(item: StoreItem, sizeIndex = 0): string {
   return item.sizes[sizeIndex]?.label ?? "";
 }
 
+export function itemMrp(item: StoreItem, sizeIndex = 0): number {
+  if (item.kind === "combo") return item.pricePaise;
+  return item.sizes[sizeIndex]?.mrpPaise ?? itemPrice(item, sizeIndex);
+}
+
+export function itemDiscountPercent(item: StoreItem, sizeIndex = 0): number {
+  if (item.kind === "combo") return 0;
+  const size = item.sizes[sizeIndex];
+  if (!size || size.mrpPaise <= size.pricePaise) return 0;
+  return size.discountPercent;
+}
+
+export function itemSaving(item: StoreItem, sizeIndex = 0): number {
+  return Math.max(0, itemMrp(item, sizeIndex) - itemPrice(item, sizeIndex));
+}
+
 export function itemImage(item: StoreItem, sizeIndex = 0): string {
   if (item.kind === "combo") return item.image;
   const size: StoreSize | undefined = item.sizes[sizeIndex];

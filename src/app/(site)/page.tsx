@@ -88,7 +88,7 @@ export default async function HomePage() {
                 <div className="category-card_media">
                   <img
                     className="category-card_texture"
-                    src="/assets/images/animation/varkey.webp"
+                    src="/assets/images/Categories/varkey.png"
                     alt=""
                     aria-hidden="true"
                     loading="lazy"
@@ -98,7 +98,6 @@ export default async function HomePage() {
                   01
                 </span>
                 <div className="category-card_body">
-                  <span className="category-badge">Fresh From Oven</span>
                   <h3 className="category-card_title">Ooty Varkey</h3>
                   <p className="category-card_text">
                     Flaky, buttery layers baked fresh every morning - the taste

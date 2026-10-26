@@ -1,7 +1,14 @@
 "use client";
 
 import { useState } from "react";
-import { cartLineKey, itemImage, itemPrice, itemSizeLabel } from "@/lib/cart";
+import {
+  cartLineKey,
+  itemDiscountPercent,
+  itemImage,
+  itemMrp,
+  itemPrice,
+  itemSizeLabel,
+} from "@/lib/cart";
 import { formatINR } from "@/lib/format";
 import type { StoreItem } from "@/lib/types";
 import { useCart } from "./cart-provider";
@@ -27,6 +34,9 @@ export function ProductCard({
   const qty = quantityOf(lineKey);
   const image = itemImage(item, sizeIndex);
   const price = itemPrice(item, sizeIndex);
+  const mrp = itemMrp(item, sizeIndex);
+  const discount = itemDiscountPercent(item, sizeIndex);
+  const hasDiscount = item.kind === "product" && discount > 0 && mrp > price;
 
   return (
     <article
@@ -42,6 +52,9 @@ export function ProductCard({
           height={360}
           loading="lazy"
         />
+        {hasDiscount ? (
+          <span className="product-card_badge">{discount}% OFF</span>
+        ) : null}
         <button
           type="button"
           className="product-card_view"
@@ -82,10 +95,15 @@ export function ProductCard({
             </button>
           </h3>
           <p className="product-card_price">
-            {formatINR(price)}
-            {item.kind === "combo"
-              ? ""
-              : ` / ${itemSizeLabel(item, sizeIndex)}`}
+            {hasDiscount ? (
+              <s className="price-mrp">{formatINR(mrp)}</s>
+            ) : null}
+            <span className="price-current">{formatINR(price)}</span>
+            {item.kind === "combo" ? null : (
+              <span className="price-size">
+                / {itemSizeLabel(item, sizeIndex)}
+              </span>
+            )}
           </p>
         </div>
 

@@ -13,8 +13,25 @@ import type {
 type LegacySize = {
   label: string;
   grams?: number | null;
+  mrp?: number;
+  discountPercent?: number;
   price: number;
 };
+
+function legacySizePricing(size: LegacySize) {
+  const pricePaise = Math.round(size.price * 100);
+  const mrpPaise = Math.max(
+    pricePaise,
+    Math.round((size.mrp ?? size.price) * 100)
+  );
+  const discountPercent =
+    size.discountPercent ??
+    (mrpPaise > pricePaise
+      ? Math.round(((mrpPaise - pricePaise) / mrpPaise) * 100)
+      : 0);
+
+  return { mrpPaise, discountPercent, pricePaise };
+}
 
 type LegacyProduct = {
   id: string;
@@ -90,7 +107,7 @@ function legacyProducts(): StoreProduct[] {
     const sizes: StoreSize[] = (product.sizes ?? []).map((size) => ({
       label: size.label,
       grams: size.grams ?? null,
-      pricePaise: Math.round(size.price * 100),
+      ...legacySizePricing(size),
       imageUrl: assetUrl(product.sizeImages?.[size.label] ?? product.image),
     }));
 
@@ -239,6 +256,8 @@ export async function getCatalog(): Promise<Catalog> {
           sizes: product.sizes.map((size) => ({
             label: size.label,
             grams: size.grams,
+            mrpPaise: size.mrpPaise,
+            discountPercent: size.discountPercent,
             pricePaise: size.pricePaise,
             imageUrl: assetUrl(size.imageUrl ?? product.imageUrl),
           })),

@@ -1,6 +1,8 @@
 export type StoreSize = {
   label: string;
   grams: number | null;
+  mrpPaise: number;
+  discountPercent: number;
   pricePaise: number;
   imageUrl: string | null;
 };

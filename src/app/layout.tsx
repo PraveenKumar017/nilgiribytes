@@ -6,12 +6,6 @@ import "./styles/responsive.css";
 import "./styles/animations.css";
 import "./styles/hero.css";
 import "./styles/site.css";
-import { CartProvider } from "@/components/cart-provider";
-import { CartBar } from "@/components/cart-bar";
-import { FloatingWhatsApp } from "@/components/floating-whatsapp";
-import { Footer } from "@/components/footer";
-import { Header } from "@/components/header";
-import { SiteEffects } from "@/components/site-effects";
 import { SITE_DESCRIPTION, SITE_NAME, SITE_URL } from "@/lib/site";
 
 const playfair = Playfair_Display({
@@ -91,16 +85,7 @@ export default function RootLayout({
       lang="en"
       className={`${playfair.variable} ${inter.variable} ${lora.variable}`}
     >
-      <body>
-        <CartProvider>
-          <SiteEffects />
-          <Header />
-          {children}
-          <Footer />
-          <CartBar />
-          <FloatingWhatsApp />
-        </CartProvider>
-      </body>
+      <body>{children}</body>
     </html>
   );
 }
