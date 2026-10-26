@@ -17,6 +17,7 @@ export const metadata: Metadata = pageMetadata({
   image: "/assets/our_story.png",
 });
 
+
 export default function AboutPage() {
   return (
     <main id="main-content">
