@@ -8,6 +8,7 @@ export default defineConfig([
   {
     rules: {
       "@next/next/no-img-element": "off",
+      "react-hooks/set-state-in-effect": "off",
     },
   },
   globalIgnores([".next/**", "out/**", "build/**", "next-env.d.ts"]),

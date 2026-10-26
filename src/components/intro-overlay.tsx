@@ -28,7 +28,6 @@ export function IntroOverlay() {
       window.clearTimeout(timer);
       document.body.classList.remove("is-locked");
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   function finish() {

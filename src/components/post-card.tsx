@@ -10,7 +10,6 @@ export function PostCard({ post }: { post: StorePost }) {
         href={`/blog/${post.slug}`}
         aria-label={`Read ${post.title}`}
       >
-        {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src={post.image}
           alt={post.imageAlt || post.title}

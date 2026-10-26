@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
 type SafeImageProps = React.ImgHTMLAttributes<HTMLImageElement> & {
   fallback?: string;
@@ -9,21 +9,16 @@ type SafeImageProps = React.ImgHTMLAttributes<HTMLImageElement> & {
 const FALLBACK = "/assets/placeholder.svg";
 
 export function SafeImage({ src, fallback = FALLBACK, alt, ...rest }: SafeImageProps) {
-  const [current, setCurrent] = useState(src || fallback);
-
-  useEffect(() => {
-    setCurrent(src || fallback);
-  }, [src, fallback]);
+  const [failed, setFailed] = useState<string | null>(null);
+  const source = typeof src === "string" ? src : "";
+  const current = failed === source ? fallback : source || fallback;
 
   return (
-    // eslint-disable-next-line @next/next/no-img-element
     <img
       {...rest}
       src={current}
       alt={alt ?? ""}
-      onError={() => {
-        if (current !== fallback) setCurrent(fallback);
-      }}
+      onError={() => setFailed(source || null)}
     />
   );
 }

@@ -22,10 +22,6 @@ export function Header() {
   const previousCount = useRef<number | null>(null);
 
   useEffect(() => {
-    setNavOpen(false);
-  }, [pathname]);
-
-  useEffect(() => {
     document.body.classList.toggle("nav-is-open", navOpen);
     return () => document.body.classList.remove("nav-is-open");
   }, [navOpen]);
@@ -83,7 +79,6 @@ export function Header() {
             href="/"
             aria-label="Nilgiribytes - Home"
           >
-            {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src="/assets/nilgiribytes_header.png"
               alt=""
@@ -123,6 +118,7 @@ export function Header() {
                       className="site-nav_link"
                       href={item.href}
                       aria-current={active ? "page" : undefined}
+                      onClick={() => setNavOpen(false)}
                     >
                       {item.label}
                     </Link>
@@ -133,7 +129,12 @@ export function Header() {
           </nav>
 
           <div className="header-actions">
-            <Link className="icon-btn" href="/cart" aria-label="Open cart">
+            <Link
+              className="icon-btn"
+              href="/cart"
+              aria-label="Open cart"
+              onClick={() => setNavOpen(false)}
+            >
               <svg viewBox="0 0 24 24" aria-hidden="true">
                 <path d="M6 6h15l-1.5 9h-12z" />
                 <path d="M6 6 5 3H2" />

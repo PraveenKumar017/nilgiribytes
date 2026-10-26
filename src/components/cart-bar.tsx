@@ -2,28 +2,17 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect, useState } from "react";
 import { formatINR } from "@/lib/format";
 import { useCart } from "./cart-provider";
 
 export function CartBar() {
   const pathname = usePathname();
   const { count, subtotal, ready } = useCart();
-  const [visible, setVisible] = useState(false);
   const hidden = !ready || count === 0 || pathname === "/cart";
-
-  useEffect(() => {
-    if (hidden) {
-      setVisible(false);
-      return;
-    }
-    const frame = window.requestAnimationFrame(() => setVisible(true));
-    return () => window.cancelAnimationFrame(frame);
-  }, [hidden]);
 
   return (
     <div
-      className={`cart-bar${visible ? " is-visible" : ""}`}
+      className={`cart-bar${hidden ? "" : " is-visible"}`}
       data-cart-bar
       hidden={hidden}
     >

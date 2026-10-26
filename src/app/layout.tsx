@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from "next";
+import { Inter, Lora, Playfair_Display } from "next/font/google";
 import "./styles/variables.css";
 import "./styles/style.css";
 import "./styles/responsive.css";
@@ -12,6 +13,29 @@ import { Footer } from "@/components/footer";
 import { Header } from "@/components/header";
 import { SiteEffects } from "@/components/site-effects";
 import { SITE_DESCRIPTION, SITE_NAME, SITE_URL } from "@/lib/site";
+
+const playfair = Playfair_Display({
+  subsets: ["latin"],
+  weight: ["500", "600", "700"],
+  style: ["normal", "italic"],
+  variable: "--font-playfair",
+  display: "swap",
+});
+
+const inter = Inter({
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
+  variable: "--font-inter",
+  display: "swap",
+});
+
+const lora = Lora({
+  subsets: ["latin"],
+  weight: ["400", "500"],
+  style: ["normal", "italic"],
+  variable: "--font-lora",
+  display: "swap",
+});
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
@@ -63,19 +87,10 @@ export default function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="en">
-      <head>
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link
-          rel="preconnect"
-          href="https://fonts.gstatic.com"
-          crossOrigin="anonymous"
-        />
-        <link
-          href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Lora:ital,wght@0,400;0,500;1,400;1,500&family=Outfit:wght@500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,500;0,600;1,500&display=swap"
-          rel="stylesheet"
-        />
-      </head>
+    <html
+      lang="en"
+      className={`${playfair.variable} ${inter.variable} ${lora.variable}`}
+    >
       <body>
         <CartProvider>
           <SiteEffects />

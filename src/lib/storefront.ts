@@ -233,14 +233,14 @@ export async function getCatalog(): Promise<Catalog> {
           name: product.name,
           category: product.category.name,
           description: product.description,
-          image: product.imageUrl || product.posterUrl || IMAGE_FALLBACK,
-          poster: product.posterUrl ?? "",
+          image: assetUrl(product.imageUrl || product.posterUrl),
+          poster: product.posterUrl ? assetUrl(product.posterUrl) : "",
           imageAlt: product.imageAlt || `${product.name} from Nilgiribytes`,
           sizes: product.sizes.map((size) => ({
             label: size.label,
             grams: size.grams,
             pricePaise: size.pricePaise,
-            imageUrl: size.imageUrl ?? product.imageUrl,
+            imageUrl: assetUrl(size.imageUrl ?? product.imageUrl),
           })),
         })),
         combos: combos.map((combo) => ({
@@ -251,7 +251,7 @@ export async function getCatalog(): Promise<Catalog> {
           name: combo.name,
           category: "Combos" as const,
           description: combo.description,
-          image: combo.imageUrl || IMAGE_FALLBACK,
+          image: assetUrl(combo.imageUrl),
           imageAlt: combo.imageAlt || `${combo.name} from Nilgiribytes`,
           weight: combo.weightLabel ?? "1 kg total",
           pricePaise: combo.pricePaise,
@@ -294,7 +294,7 @@ export async function getPublishedPosts(): Promise<StorePost[]> {
           readingTime: post.readingTimeMin
             ? `${post.readingTimeMin} min read`
             : readingTime(blocks),
-          image: post.coverImage || IMAGE_FALLBACK,
+          image: assetUrl(post.coverImage),
           imageAlt: post.imageAlt || post.title,
           excerpt: post.excerpt || excerptFromBlocks(blocks),
           content: blocks,

@@ -14,6 +14,11 @@ type PostPageProps = {
   params: Promise<{ slug: string }>;
 };
 
+export async function generateStaticParams() {
+  const posts = await getPublishedPosts();
+  return posts.map((post) => ({ slug: post.slug }));
+}
+
 export async function generateMetadata({ params }: PostPageProps): Promise<Metadata> {
   const { slug } = await params;
   const post = await getPostBySlug(slug);
@@ -123,7 +128,6 @@ export default async function BlogPostPage({ params }: PostPageProps) {
               <span>{post.category}</span>
             </p>
             <div className="article_cover">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src={post.image}
                 alt={post.imageAlt || post.title}

@@ -33,10 +33,10 @@
   --color-accent: var(--color-gold);
 
   /* ----- Typography ----- */
-  --font-heading: "Playfair Display", Georgia, serif;
-  --font-display: "Playfair Display", Georgia, serif;
-  --font-body: "Inter", Arial, sans-serif;
-  --font-quote: "Lora", Georgia, serif;
+  --font-heading: var(--font-playfair), Georgia, serif;
+  --font-display: var(--font-playfair), Georgia, serif;
+  --font-body: var(--font-inter), Arial, sans-serif;
+  --font-quote: var(--font-lora), Georgia, serif;
 
   /* ----- Layout ----- */
   --container-width: 1200px;
