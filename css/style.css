@@ -1045,7 +1045,7 @@ body {
   transform: translateX(4px);
 }
 
-/* Featured card — the landing target for the oven animation */
+/* Featured card */
 .category-card--feature {
   grid-row: span 2;
   justify-content: flex-end;
@@ -1100,6 +1100,20 @@ body {
 
 .category-card--feature:hover .category-card_link {
   color: var(--color-ivory);
+}
+
+.category-badge {
+  display: inline-block;
+  background: linear-gradient(135deg, #e58729, #c79a42);
+  color: #fff;
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  padding: 3px 10px;
+  border-radius: 20px;
+  margin-bottom: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
 }
 
 /* Image cards */
