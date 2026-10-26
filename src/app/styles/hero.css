@@ -1,0 +1,240 @@
+/* ==========================================================================
+   NilgiriBytes — Hero
+   ========================================================================== */
+
+:root {
+  --hero-bg-dark: #0b0503;
+  --hero-cream: #fbf7ef;
+}
+
+/* Full Hero Section Container */
+.hero-story {
+  position: relative;
+  background-color: var(--hero-bg-dark);
+  background-image:
+    linear-gradient(
+      90deg,
+      rgba(8, 4, 2, 0.72) 0%,
+      rgba(8, 4, 2, 0.52) 38%,
+      rgba(8, 4, 2, 0.18) 68%,
+      rgba(8, 4, 2, 0.35) 100%
+    ),
+    url("/assets/hero_image_bg.png");
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  color: var(--hero-cream);
+  overflow: hidden;
+  z-index: 10;
+}
+
+/* Pinned Hero Stage */
+.hero-stage {
+  position: relative;
+  height: 100svh;
+  min-height: 640px;
+  max-height: 1100px;
+  width: 100%;
+  overflow: hidden;
+  isolation: isolate;
+  display: flex;
+  align-items: center;
+  z-index: 5;
+}
+
+/* Soft Left Vignette for Typography Legibility */
+.hero-vignette {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    90deg,
+    rgba(8, 4, 2, 0.55) 0%,
+    rgba(8, 4, 2, 0.45) 28%,
+    rgba(8, 4, 2, 0.25) 46%,
+    rgba(8, 4, 2, 0.08) 62%,
+    transparent 78%
+  );
+  z-index: 5;
+  pointer-events: none;
+}
+
+/* Hero Content */
+.hero-stage .hero-copy {
+  position: relative;
+  z-index: 15;
+  width: min(45%, 560px);
+  margin-left: max(8vw, 80px);
+  padding: 24px 28px 24px 0;
+  border-radius: 16px;
+  background: radial-gradient(
+    ellipse at 25% 45%,
+    rgba(10, 5, 2, 0.55) 0%,
+    rgba(10, 5, 2, 0.25) 60%,
+    transparent 100%
+  );
+  pointer-events: auto;
+}
+
+.hero-stage .hero-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: #f7ca6d;
+  font-size: clamp(0.72rem, 1vw, 0.82rem);
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  margin-bottom: 1.1rem;
+  background: rgba(18, 9, 4, 0.75);
+  padding: 5px 14px;
+  border-radius: 20px;
+  border: 1px solid rgba(247, 202, 109, 0.35);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+}
+
+.hero-stage .hero-heading {
+  font-family: "Playfair Display", Georgia, serif;
+  font-size: clamp(2.4rem, 4.4vw, 5.0rem);
+  line-height: 1.05;
+  letter-spacing: -0.025em;
+  color: #ffffff;
+  margin: 0 0 1.25rem;
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.95), 0 4px 25px rgba(0, 0, 0, 0.9);
+}
+
+.hero-stage .hero-heading span.highlight {
+  color: #ffcf68;
+  font-style: italic;
+  text-shadow: 0 2px 12px rgba(0, 0, 0, 0.95), 0 0 20px rgba(229, 135, 41, 0.5);
+}
+
+.hero-stage .hero-desc {
+  font-size: clamp(1rem, 1.2vw, 1.22rem);
+  line-height: 1.8;
+  color: #ffffff;
+  font-weight: 450;
+  margin-bottom: 2rem;
+  max-width: 470px;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.95), 0 1px 4px rgba(0, 0, 0, 1);
+}
+
+.hero-stage .hero-cta-group {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.hero-stage .hero-cta-group .btn--primary {
+  background: linear-gradient(135deg, #d39634, #a46c1a);
+  color: #fff;
+  border: none;
+  font-weight: 600;
+  padding: 12px 28px;
+  border-radius: 6px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
+}
+
+.hero-stage .hero-cta-group .btn--outline {
+  color: #fbf7ef !important;
+  border: 1.5px solid rgba(251, 247, 239, 0.55);
+  background: rgba(45, 20, 10, 0.45);
+  backdrop-filter: blur(8px);
+  font-weight: 500;
+  padding: 12px 28px;
+  border-radius: 6px;
+  transition: all 0.25s ease;
+}
+
+.hero-stage .hero-cta-group .btn--outline:hover {
+  background: rgba(251, 247, 239, 0.15);
+  border-color: #fbf7ef;
+}
+
+/* ==========================================================================
+   Responsive Adaptations
+   ========================================================================== */
+
+@media (max-width: 1200px) {
+  .hero-stage .hero-copy {
+    width: min(48%, 500px);
+    margin-left: max(6vw, 56px);
+  }
+}
+
+@media (max-width: 992px) {
+  .hero-stage .hero-copy {
+    width: min(52%, 460px);
+    margin-left: max(5vw, 40px);
+  }
+}
+
+@media (max-width: 768px) {
+  .hero-stage {
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding-top: max(60px, 8vh);
+    padding-bottom: max(80px, 12vh);
+    min-height: 100dvh;
+  }
+
+  .hero-vignette {
+    background: linear-gradient(
+      180deg,
+      rgba(8, 4, 2, 0.94) 0%,
+      rgba(8, 4, 2, 0.8) 45%,
+      rgba(8, 4, 2, 0.25) 75%,
+      transparent 100%
+    );
+  }
+
+  .hero-stage .hero-copy {
+    width: 90%;
+    max-width: 500px;
+    margin: 0 auto;
+    text-align: center;
+    background: transparent;
+    padding: 0 20px;
+    border-radius: 0;
+  }
+
+  .hero-stage .hero-eyebrow {
+    display: flex;
+    justify-content: center;
+    margin-left: auto;
+    margin-right: auto;
+    margin-bottom: 1.5rem;
+  }
+
+  .hero-stage .hero-heading {
+    text-align: center;
+    line-height: 1.3;
+    margin-bottom: 1.5rem;
+  }
+
+  .hero-stage .hero-desc {
+    margin-left: auto;
+    margin-right: auto;
+    text-align: center;
+    line-height: 1.85;
+    margin-bottom: 2.5rem;
+  }
+
+  .hero-stage .hero-cta-group {
+    justify-content: center;
+    margin: 0 auto;
+    gap: 24px;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+    max-width: 280px;
+  }
+
+  .hero-stage .hero-cta-group .btn--primary,
+  .hero-stage .hero-cta-group .btn--outline {
+    width: 100%;
+    padding: 14px 24px;
+    font-size: 0.95rem;
+  }
+}

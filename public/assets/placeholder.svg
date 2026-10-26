@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 480 360" role="img" aria-label="Nilgiribytes image coming soon">
+  <rect width="480" height="360" fill="#F2E4C5"/>
+  <circle cx="240" cy="150" r="62" fill="none" stroke="#C79A42" stroke-width="2"/>
+  <path d="M203 168c14-34 39-52 74-54-10 35-34 55-74 54Z" fill="#C79A42" opacity="0.65"/>
+  <text x="240" y="266" text-anchor="middle" font-family="Georgia, serif" font-size="24" fill="#35170F">Nilgiribytes</text>
+  <text x="240" y="294" text-anchor="middle" font-family="Arial, sans-serif" font-size="13" letter-spacing="2" fill="#6B3821">PHOTO COMING SOON</text>
+</svg>

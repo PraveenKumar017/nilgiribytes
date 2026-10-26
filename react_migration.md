@@ -37,7 +37,7 @@ Target site: React frontend + Node.js API + MySQL database
 Known data issues to fix during migration:
 
 - Some catalog prices are placeholders (for example `1`, `3`, `4` rupees). Confirm real prices before importing.
-- Some descriptions contain mojibake (`�?`) and must be cleaned as UTF-8.
+- Some descriptions contain mojibake (` ?`) and must be cleaned as UTF-8.
 - IDs use prefixes (`pr-001`, `cm-001`). Keep them as an external `sku` or migrate to numeric IDs + slugs.
 
 ## 3. Target architecture
@@ -596,7 +596,7 @@ For one developer, plan roughly 8–12 weeks for a careful migration with the ad
 ## 15. Risks and gotchas
 
 - **Prices**: current values may be test data. Confirm before import.
-- **Text encoding**: fix `�?` sequences in descriptions during import.
+- **Text encoding**: fix ` ?` sequences in descriptions during import.
 - **Serverless + MySQL**: connection exhaustion is common; use pooling or a persistent server.
 - **SEO loss**: do not skip 301 redirects, metadata and sitemap regeneration.
 - **Admin security**: never keep plain-text credentials in env vars longer than the initial seed; never expose DB credentials to the browser.
