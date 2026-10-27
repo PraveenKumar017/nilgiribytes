@@ -1,68 +1,51 @@
--- Nilgiribytes — Phase 1 storefront tables
--- Matches prisma/schema.prisma. Run this before `npm run import:json`.
--- Phase 2 tables (AdminUser, Session, Order, OrderItem, NewsletterSubscriber,
--- Settings) are intentionally omitted until the admin panel is built.
+-- Nilgiribytes MySQL schema
+-- Run before `npm run db:seed`. Safe to run more than once.
 
 SET NAMES utf8mb4;
 
--- CreateTable
-CREATE TABLE `Category` (
+CREATE TABLE IF NOT EXISTS `Category` (
     `id` INTEGER NOT NULL AUTO_INCREMENT,
     `slug` VARCHAR(80) NOT NULL,
     `name` VARCHAR(120) NOT NULL,
     `sortOrder` INTEGER NOT NULL DEFAULT 0,
     `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
-    `updatedAt` DATETIME(3) NOT NULL,
+    `updatedAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3) ON UPDATE CURRENT_TIMESTAMP(3),
 
     UNIQUE INDEX `Category_slug_key`(`slug`),
     PRIMARY KEY (`id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
--- CreateTable
-CREATE TABLE `Product` (
+CREATE TABLE IF NOT EXISTS `Product` (
     `id` INTEGER NOT NULL AUTO_INCREMENT,
     `sku` VARCHAR(40) NULL,
     `slug` VARCHAR(160) NOT NULL,
     `name` VARCHAR(160) NOT NULL,
     `description` TEXT NOT NULL,
     `categoryId` INTEGER NOT NULL,
+    `sizes` JSON NOT NULL,
     `posterUrl` VARCHAR(500) NULL,
     `imageUrl` VARCHAR(500) NULL,
     `imageAlt` VARCHAR(240) NULL,
     `sortOrder` INTEGER NOT NULL DEFAULT 0,
     `isActive` BOOLEAN NOT NULL DEFAULT true,
     `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
-    `updatedAt` DATETIME(3) NOT NULL,
+    `updatedAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3) ON UPDATE CURRENT_TIMESTAMP(3),
 
     UNIQUE INDEX `Product_sku_key`(`sku`),
     UNIQUE INDEX `Product_slug_key`(`slug`),
     INDEX `Product_categoryId_isActive_idx`(`categoryId`, `isActive`),
-    PRIMARY KEY (`id`)
+    PRIMARY KEY (`id`),
+    CONSTRAINT `Product_categoryId_fkey` FOREIGN KEY (`categoryId`)
+        REFERENCES `Category`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
--- CreateTable
-CREATE TABLE `ProductSize` (
-    `id` INTEGER NOT NULL AUTO_INCREMENT,
-    `productId` INTEGER NOT NULL,
-    `label` VARCHAR(40) NOT NULL,
-    `grams` INTEGER NULL,
-    `mrpPaise` INTEGER NOT NULL,
-    `discountPercent` INTEGER NOT NULL DEFAULT 0,
-    `pricePaise` INTEGER NOT NULL,
-    `imageUrl` VARCHAR(500) NULL,
-    `sortOrder` INTEGER NOT NULL DEFAULT 0,
-
-    UNIQUE INDEX `ProductSize_productId_label_key`(`productId`, `label`),
-    PRIMARY KEY (`id`)
-) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-
--- CreateTable
-CREATE TABLE `Combo` (
+CREATE TABLE IF NOT EXISTS `Combo` (
     `id` INTEGER NOT NULL AUTO_INCREMENT,
     `sku` VARCHAR(40) NULL,
     `slug` VARCHAR(160) NOT NULL,
     `name` VARCHAR(160) NOT NULL,
     `description` TEXT NOT NULL,
+    `items` JSON NOT NULL,
     `imageUrl` VARCHAR(500) NULL,
     `imageAlt` VARCHAR(240) NULL,
     `weightLabel` VARCHAR(60) NULL,
@@ -70,27 +53,14 @@ CREATE TABLE `Combo` (
     `sortOrder` INTEGER NOT NULL DEFAULT 0,
     `isActive` BOOLEAN NOT NULL DEFAULT true,
     `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
-    `updatedAt` DATETIME(3) NOT NULL,
+    `updatedAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3) ON UPDATE CURRENT_TIMESTAMP(3),
 
     UNIQUE INDEX `Combo_sku_key`(`sku`),
     UNIQUE INDEX `Combo_slug_key`(`slug`),
     PRIMARY KEY (`id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
--- CreateTable
-CREATE TABLE `ComboItem` (
-    `id` INTEGER NOT NULL AUTO_INCREMENT,
-    `comboId` INTEGER NOT NULL,
-    `productId` INTEGER NULL,
-    `nameSnapshot` VARCHAR(160) NOT NULL,
-    `quantityLabel` VARCHAR(60) NOT NULL,
-    `sortOrder` INTEGER NOT NULL DEFAULT 0,
-
-    PRIMARY KEY (`id`)
-) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-
--- CreateTable
-CREATE TABLE `BlogPost` (
+CREATE TABLE IF NOT EXISTS `BlogPost` (
     `id` INTEGER NOT NULL AUTO_INCREMENT,
     `slug` VARCHAR(200) NOT NULL,
     `title` VARCHAR(240) NOT NULL,
@@ -104,29 +74,82 @@ CREATE TABLE `BlogPost` (
     `content` JSON NOT NULL,
     `readingTimeMin` INTEGER NULL,
     `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
-    `updatedAt` DATETIME(3) NOT NULL,
+    `updatedAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3) ON UPDATE CURRENT_TIMESTAMP(3),
 
     UNIQUE INDEX `BlogPost_slug_key`(`slug`),
     INDEX `BlogPost_status_date_idx`(`status`, `date`),
     PRIMARY KEY (`id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
--- AddForeignKey
-ALTER TABLE `Product` ADD CONSTRAINT `Product_categoryId_fkey`
-    FOREIGN KEY (`categoryId`) REFERENCES `Category`(`id`)
-    ON DELETE RESTRICT ON UPDATE CASCADE;
+CREATE TABLE IF NOT EXISTS `AdminUser` (
+    `id` INTEGER NOT NULL AUTO_INCREMENT,
+    `username` VARCHAR(80) NOT NULL,
+    `passwordHash` VARCHAR(255) NOT NULL,
+    `role` ENUM('ADMIN', 'EDITOR') NOT NULL DEFAULT 'ADMIN',
+    `sessionToken` VARCHAR(64) NULL,
+    `sessionExpiresAt` DATETIME(3) NULL,
+    `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
 
--- AddForeignKey
-ALTER TABLE `ProductSize` ADD CONSTRAINT `ProductSize_productId_fkey`
-    FOREIGN KEY (`productId`) REFERENCES `Product`(`id`)
-    ON DELETE CASCADE ON UPDATE CASCADE;
+    UNIQUE INDEX `AdminUser_username_key`(`username`),
+    UNIQUE INDEX `AdminUser_sessionToken_key`(`sessionToken`),
+    PRIMARY KEY (`id`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
--- AddForeignKey
-ALTER TABLE `ComboItem` ADD CONSTRAINT `ComboItem_comboId_fkey`
-    FOREIGN KEY (`comboId`) REFERENCES `Combo`(`id`)
-    ON DELETE CASCADE ON UPDATE CASCADE;
+CREATE TABLE IF NOT EXISTS `Order` (
+    `id` INTEGER NOT NULL AUTO_INCREMENT,
+    `orderNumber` VARCHAR(40) NOT NULL,
+    `customerName` VARCHAR(160) NOT NULL,
+    `phone` VARCHAR(30) NOT NULL,
+    `email` VARCHAR(160) NULL,
+    `address` TEXT NULL,
+    `notes` TEXT NULL,
+    `subtotalPaise` INTEGER NOT NULL,
+    `totalPaise` INTEGER NOT NULL,
+    `channel` ENUM('WHATSAPP', 'ONLINE') NOT NULL DEFAULT 'WHATSAPP',
+    `status` ENUM('NEW', 'CONFIRMED', 'PACKED', 'DELIVERED', 'CANCELLED') NOT NULL DEFAULT 'NEW',
+    `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+    `updatedAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3) ON UPDATE CURRENT_TIMESTAMP(3),
 
--- AddForeignKey
-ALTER TABLE `ComboItem` ADD CONSTRAINT `ComboItem_productId_fkey`
-    FOREIGN KEY (`productId`) REFERENCES `Product`(`id`)
-    ON DELETE SET NULL ON UPDATE CASCADE;
+    UNIQUE INDEX `Order_orderNumber_key`(`orderNumber`),
+    INDEX `Order_status_createdAt_idx`(`status`, `createdAt`),
+    PRIMARY KEY (`id`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS `OrderItem` (
+    `id` INTEGER NOT NULL AUTO_INCREMENT,
+    `orderId` INTEGER NOT NULL,
+    `productId` INTEGER NULL,
+    `comboId` INTEGER NULL,
+    `nameSnapshot` VARCHAR(200) NOT NULL,
+    `sizeLabel` VARCHAR(60) NULL,
+    `unitPricePaise` INTEGER NOT NULL,
+    `quantity` INTEGER NOT NULL,
+    `lineTotalPaise` INTEGER NOT NULL,
+
+    PRIMARY KEY (`id`),
+    CONSTRAINT `OrderItem_orderId_fkey` FOREIGN KEY (`orderId`)
+        REFERENCES `Order`(`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+    CONSTRAINT `OrderItem_productId_fkey` FOREIGN KEY (`productId`)
+        REFERENCES `Product`(`id`) ON DELETE SET NULL ON UPDATE CASCADE,
+    CONSTRAINT `OrderItem_comboId_fkey` FOREIGN KEY (`comboId`)
+        REFERENCES `Combo`(`id`) ON DELETE SET NULL ON UPDATE CASCADE
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS `NewsletterSubscriber` (
+    `id` INTEGER NOT NULL AUTO_INCREMENT,
+    `email` VARCHAR(200) NOT NULL,
+    `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+
+    UNIQUE INDEX `NewsletterSubscriber_email_key`(`email`),
+    PRIMARY KEY (`id`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS `Settings` (
+    `id` INTEGER NOT NULL AUTO_INCREMENT,
+    `key` VARCHAR(80) NOT NULL,
+    `value` TEXT NOT NULL,
+    `updatedAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3) ON UPDATE CURRENT_TIMESTAMP(3),
+
+    UNIQUE INDEX `Settings_key_key`(`key`),
+    PRIMARY KEY (`id`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;

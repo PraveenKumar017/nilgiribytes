@@ -1,5 +1,7 @@
 import catalogJson from "@/data/catalog.json";
 import blogJson from "@/data/blog.json";
+import type { RowDataPacket } from "mysql2";
+import { getPool } from "./db";
 import type {
   BlogBlock,
   Catalog,
@@ -67,6 +69,60 @@ type LegacyPost = {
   imageAlt?: string;
   excerpt?: string;
   content?: BlogBlock[];
+};
+
+type SizeJson = {
+  label: string;
+  grams: number | null;
+  mrpPaise: number;
+  discountPercent: number;
+  pricePaise: number;
+  imageUrl: string | null;
+};
+
+type ComboItemJson = {
+  productId: string | number | null;
+  name: string;
+  quantity: string;
+};
+
+type ProductRow = RowDataPacket & {
+  id: number;
+  sku: string | null;
+  slug: string;
+  name: string;
+  description: string;
+  categoryName: string;
+  sizes: unknown;
+  posterUrl: string | null;
+  imageUrl: string | null;
+  imageAlt: string | null;
+};
+
+type ComboRow = RowDataPacket & {
+  id: number;
+  sku: string | null;
+  slug: string;
+  name: string;
+  description: string;
+  items: unknown;
+  imageUrl: string | null;
+  imageAlt: string | null;
+  weightLabel: string | null;
+  pricePaise: number;
+};
+
+type BlogPostRow = RowDataPacket & {
+  slug: string;
+  title: string;
+  category: string;
+  author: string | null;
+  date: Date | string;
+  coverImage: string | null;
+  imageAlt: string | null;
+  excerpt: string | null;
+  content: unknown;
+  readingTimeMin: number | null;
 };
 
 const IMAGE_FALLBACK = "/assets/placeholder.svg";
@@ -189,6 +245,30 @@ function sanitizeBlocks(blocks: unknown): BlogBlock[] {
   });
 }
 
+function parseContent(value: unknown): BlogBlock[] {
+  if (typeof value === "string") {
+    try {
+      return sanitizeBlocks(JSON.parse(value));
+    } catch {
+      return [];
+    }
+  }
+  return sanitizeBlocks(value);
+}
+
+function parseJsonArray<T>(value: unknown): T[] {
+  if (Array.isArray(value)) return value as T[];
+  if (typeof value === "string") {
+    try {
+      const parsed = JSON.parse(value);
+      return Array.isArray(parsed) ? (parsed as T[]) : [];
+    } catch {
+      return [];
+    }
+  }
+  return [];
+}
+
 function wordCount(blocks: BlogBlock[]): number {
   let words = 0;
   for (const block of blocks) {
@@ -220,40 +300,40 @@ export function excerptFromBlocks(blocks: BlogBlock[], maxLength = 160): string 
 }
 
 export async function getCatalog(): Promise<Catalog> {
-  if (process.env.DATABASE_URL && !databaseFailed) {
+  const pool = getPool();
+  if (pool && !databaseFailed) {
     try {
-      const { prisma } = await import("./prisma");
-      const [products, combos] = await Promise.all([
-        prisma.product.findMany({
-          where: { isActive: true },
-          include: {
-            category: true,
-            sizes: { orderBy: [{ sortOrder: "asc" }, { id: "asc" }] },
-          },
-          orderBy: [{ sortOrder: "asc" }, { id: "asc" }],
-        }),
-        prisma.combo.findMany({
-          where: { isActive: true },
-          include: {
-            items: { orderBy: [{ sortOrder: "asc" }, { id: "asc" }] },
-          },
-          orderBy: [{ sortOrder: "asc" }, { id: "asc" }],
-        }),
+      const [productRows, comboRows] = await Promise.all([
+        pool.query<ProductRow[]>(
+          `SELECT p.id, p.sku, p.slug, p.name, p.description, p.sizes,
+                  c.name AS categoryName, p.posterUrl, p.imageUrl, p.imageAlt
+             FROM Product p
+             JOIN Category c ON c.id = p.categoryId
+            WHERE p.isActive = 1
+            ORDER BY p.sortOrder ASC, p.id ASC`
+        ),
+        pool.query<ComboRow[]>(
+          `SELECT id, sku, slug, name, description, items, imageUrl, imageAlt,
+                  weightLabel, pricePaise
+             FROM Combo
+            WHERE isActive = 1
+            ORDER BY sortOrder ASC, id ASC`
+        ),
       ]);
 
       return {
-        products: products.map((product) => ({
+        products: productRows[0].map((product) => ({
           kind: "product" as const,
           id: product.sku ?? product.slug,
           sku: product.sku,
           slug: product.slug,
           name: product.name,
-          category: product.category.name,
+          category: product.categoryName,
           description: product.description,
           image: assetUrl(product.imageUrl || product.posterUrl),
           poster: product.posterUrl ? assetUrl(product.posterUrl) : "",
           imageAlt: product.imageAlt || `${product.name} from Nilgiribytes`,
-          sizes: product.sizes.map((size) => ({
+          sizes: parseJsonArray<SizeJson>(product.sizes).map((size) => ({
             label: size.label,
             grams: size.grams,
             mrpPaise: size.mrpPaise,
@@ -262,7 +342,7 @@ export async function getCatalog(): Promise<Catalog> {
             imageUrl: assetUrl(size.imageUrl ?? product.imageUrl),
           })),
         })),
-        combos: combos.map((combo) => ({
+        combos: comboRows[0].map((combo) => ({
           kind: "combo" as const,
           id: combo.sku ?? combo.slug,
           sku: combo.sku,
@@ -274,10 +354,10 @@ export async function getCatalog(): Promise<Catalog> {
           imageAlt: combo.imageAlt || `${combo.name} from Nilgiribytes`,
           weight: combo.weightLabel ?? "1 kg total",
           pricePaise: combo.pricePaise,
-          includes: combo.items.map((item) => ({
+          includes: parseJsonArray<ComboItemJson>(combo.items).map((item) => ({
             productId: item.productId ? String(item.productId) : null,
-            name: item.nameSnapshot,
-            quantity: item.quantityLabel,
+            name: item.name,
+            quantity: item.quantity,
           })),
         })),
       };
@@ -294,22 +374,26 @@ export async function getCatalog(): Promise<Catalog> {
 }
 
 export async function getPublishedPosts(): Promise<StorePost[]> {
-  if (process.env.DATABASE_URL && !databaseFailed) {
+  const pool = getPool();
+  if (pool && !databaseFailed) {
     try {
-      const { prisma } = await import("./prisma");
-      const posts = await prisma.blogPost.findMany({
-        where: { status: "PUBLISHED" },
-        orderBy: [{ date: "desc" }, { id: "desc" }],
-      });
+      const [rows] = await pool.query<BlogPostRow[]>(
+        `SELECT slug, title, category, author, \`date\`, coverImage, imageAlt,
+                excerpt, content, readingTimeMin
+           FROM BlogPost
+          WHERE status = 'PUBLISHED'
+          ORDER BY \`date\` DESC, id DESC`
+      );
 
-      return posts.map((post) => {
-        const blocks = sanitizeBlocks(post.content);
+      return rows.map((post) => {
+        const blocks = parseContent(post.content);
+        const date = post.date instanceof Date ? post.date : new Date(post.date);
         return {
           slug: post.slug,
           title: post.title,
           category: post.category,
           author: post.author || "Nilgiribytes Team",
-          date: post.date.toISOString().slice(0, 10),
+          date: date.toISOString().slice(0, 10),
           readingTime: post.readingTimeMin
             ? `${post.readingTimeMin} min read`
             : readingTime(blocks),

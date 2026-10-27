@@ -1,7 +1,13 @@
+import "./load-env";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { hash } from "bcryptjs";
-import { PostStatus, Prisma, PrismaClient } from "@prisma/client";
+import {
+  createConnection,
+  type Connection,
+  type RowDataPacket,
+} from "mysql2/promise";
+import { databaseConfig } from "./db";
 
 type LegacySize = {
   label: string;
@@ -64,8 +70,6 @@ type LegacyPost = {
 type CatalogFile = { products: LegacyProduct[]; combos: LegacyCombo[] };
 type BlogFile = { posts: LegacyPost[] };
 
-const prisma = new PrismaClient();
-
 function readJson<T>(relativePath: string): T {
   const file = readFileSync(join(process.cwd(), relativePath), "utf8");
   return JSON.parse(file) as T;
@@ -98,26 +102,45 @@ function readingTimeMinutes(value: string | undefined): number | null {
   return match ? Number(match[0]) : null;
 }
 
-async function importCatalog(catalog: CatalogFile) {
+async function upsertCategory(
+  connection: Connection,
+  name: string,
+  sortOrder: number
+): Promise<number> {
+  const slug = slugify(name);
+
+  await connection.execute(
+    `INSERT INTO \`Category\` (\`slug\`, \`name\`, \`sortOrder\`, \`updatedAt\`)
+     VALUES (?, ?, ?, NOW(3))
+     ON DUPLICATE KEY UPDATE
+       \`name\` = VALUES(\`name\`),
+       \`sortOrder\` = VALUES(\`sortOrder\`),
+       \`updatedAt\` = NOW(3)`,
+    [slug, name, sortOrder]
+  );
+
+  const [rows] = await connection.query<RowDataPacket[]>(
+    "SELECT `id` FROM `Category` WHERE `slug` = ? LIMIT 1",
+    [slug]
+  );
+
+  return Number(rows[0].id);
+}
+
+async function importCatalog(connection: Connection, catalog: CatalogFile) {
   const usedProductSlugs = new Set<string>();
   const usedComboSlugs = new Set<string>();
   const categoryIds = new Map<string, number>();
-  const productIdsBySku = new Map<string, number>();
-  const productIdsByOldId = new Map<string, number>();
 
   let categoryOrder = 0;
   for (const product of catalog.products) {
     if (categoryIds.has(product.category)) continue;
-    const category = await prisma.category.upsert({
-      where: { slug: slugify(product.category) },
-      update: { name: product.category },
-      create: {
-        slug: slugify(product.category),
-        name: product.category,
-        sortOrder: categoryOrder,
-      },
-    });
-    categoryIds.set(product.category, category.id);
+    const categoryId = await upsertCategory(
+      connection,
+      product.category,
+      categoryOrder
+    );
+    categoryIds.set(product.category, categoryId);
     categoryOrder += 1;
   }
 
@@ -126,123 +149,150 @@ async function importCatalog(catalog: CatalogFile) {
     if (!categoryId) throw new Error(`Missing category for ${product.name}`);
 
     const slug = uniqueSlug(product.name, usedProductSlugs);
-    const sizes = (product.sizes ?? []).map((size, sizeIndex) => ({
-      label: size.label,
-      grams: size.grams ?? null,
-      ...sizePricing(size),
-      imageUrl: product.sizeImages?.[size.label] ?? product.image ?? null,
-      sortOrder: sizeIndex,
-    }));
+    const imageAlt = `${product.name} \u2014 ${product.category} from Nilgiribytes`;
 
-    const data = {
-      slug,
-      name: product.name,
-      description: product.description ?? "",
-      categoryId,
-      posterUrl: product.poster ?? null,
-      imageUrl: product.image ?? null,
-      imageAlt: `${product.name} \u2014 ${product.category} from Nilgiribytes`,
-      sortOrder: index,
-      isActive: true,
-    };
-
-    const saved = await prisma.product.upsert({
-      where: { sku: product.id },
-      update: data,
-      create: { ...data, sku: product.id },
+    const sizes = (product.sizes ?? []).map((size) => {
+      const pricing = sizePricing(size);
+      return {
+        label: size.label,
+        grams: size.grams ?? null,
+        mrpPaise: pricing.mrpPaise,
+        discountPercent: pricing.discountPercent,
+        pricePaise: pricing.pricePaise,
+        imageUrl: product.sizeImages?.[size.label] ?? product.image ?? null,
+      };
     });
 
-    await prisma.$transaction([
-      prisma.productSize.deleteMany({ where: { productId: saved.id } }),
-      prisma.productSize.createMany({
-        data: sizes.map((size) => ({ ...size, productId: saved.id })),
-      }),
-    ]);
+    await connection.execute(
+      `INSERT INTO \`Product\`
+         (\`sku\`, \`slug\`, \`name\`, \`description\`, \`categoryId\`, \`sizes\`,
+          \`posterUrl\`, \`imageUrl\`, \`imageAlt\`, \`sortOrder\`, \`isActive\`, \`updatedAt\`)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, NOW(3))
+       ON DUPLICATE KEY UPDATE
+         \`slug\` = VALUES(\`slug\`),
+         \`name\` = VALUES(\`name\`),
+         \`description\` = VALUES(\`description\`),
+         \`categoryId\` = VALUES(\`categoryId\`),
+         \`sizes\` = VALUES(\`sizes\`),
+         \`posterUrl\` = VALUES(\`posterUrl\`),
+         \`imageUrl\` = VALUES(\`imageUrl\`),
+         \`imageAlt\` = VALUES(\`imageAlt\`),
+         \`sortOrder\` = VALUES(\`sortOrder\`),
+         \`isActive\` = 1,
+         \`updatedAt\` = NOW(3)`,
+      [
+        product.id,
+        slug,
+        product.name,
+        product.description ?? "",
+        categoryId,
+        JSON.stringify(sizes),
+        product.poster ?? null,
+        product.image ?? null,
+        imageAlt,
+        index,
+      ]
+    );
 
-    productIdsBySku.set(product.id, saved.id);
-    productIdsByOldId.set(product.id, saved.id);
-    console.log(`  product ${saved.slug}`);
+    console.log(`  product ${slug}`);
   }
 
   for (const [index, combo] of catalog.combos.entries()) {
     const slug = uniqueSlug(combo.name, usedComboSlugs);
-    const items = (combo.includes ?? []).map((item, itemIndex) => ({
-      productId: item.productId
-        ? productIdsByOldId.get(item.productId) ?? null
-        : null,
-      nameSnapshot: item.name,
-      quantityLabel: item.quantity,
-      sortOrder: itemIndex,
+    const imageAlt = `${combo.name} \u2014 Nilgiribytes combo pack`;
+
+    const items = (combo.includes ?? []).map((item) => ({
+      productId: item.productId ?? null,
+      name: item.name,
+      quantity: item.quantity,
     }));
 
-    const data = {
-      slug,
-      name: combo.name,
-      description: combo.description ?? "",
-      imageUrl: combo.image ?? null,
-      imageAlt: `${combo.name} \u2014 Nilgiribytes combo pack`,
-      weightLabel: combo.weight ?? "1 kg total",
-      pricePaise: Math.round(combo.price * 100),
-      sortOrder: index,
-      isActive: true,
-    };
+    await connection.execute(
+      `INSERT INTO \`Combo\`
+         (\`sku\`, \`slug\`, \`name\`, \`description\`, \`items\`, \`imageUrl\`,
+          \`imageAlt\`, \`weightLabel\`, \`pricePaise\`, \`sortOrder\`, \`isActive\`, \`updatedAt\`)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, NOW(3))
+       ON DUPLICATE KEY UPDATE
+         \`slug\` = VALUES(\`slug\`),
+         \`name\` = VALUES(\`name\`),
+         \`description\` = VALUES(\`description\`),
+         \`items\` = VALUES(\`items\`),
+         \`imageUrl\` = VALUES(\`imageUrl\`),
+         \`imageAlt\` = VALUES(\`imageAlt\`),
+         \`weightLabel\` = VALUES(\`weightLabel\`),
+         \`pricePaise\` = VALUES(\`pricePaise\`),
+         \`sortOrder\` = VALUES(\`sortOrder\`),
+         \`isActive\` = 1,
+         \`updatedAt\` = NOW(3)`,
+      [
+        combo.id,
+        slug,
+        combo.name,
+        combo.description ?? "",
+        JSON.stringify(items),
+        combo.image ?? null,
+        imageAlt,
+        combo.weight ?? "1 kg total",
+        Math.round(combo.price * 100),
+        index,
+      ]
+    );
 
-    const saved = await prisma.combo.upsert({
-      where: { sku: combo.id },
-      update: data,
-      create: { ...data, sku: combo.id },
-    });
-
-    await prisma.$transaction([
-      prisma.comboItem.deleteMany({ where: { comboId: saved.id } }),
-      prisma.comboItem.createMany({
-        data: items.map((item) => ({ ...item, comboId: saved.id })),
-      }),
-    ]);
-
-    console.log(`  combo ${saved.slug}`);
+    console.log(`  combo ${slug}`);
   }
 
   return {
     categories: categoryIds.size,
-    products: productIdsBySku.size,
+    products: usedProductSlugs.size,
     combos: usedComboSlugs.size,
   };
 }
 
-async function importPosts(posts: LegacyPost[]) {
+async function importPosts(connection: Connection, posts: LegacyPost[]) {
   let imported = 0;
 
   for (const post of posts) {
     if (post.status !== "published") continue;
 
-    const data = {
-      title: post.title,
-      category: post.category,
-      author: post.author ?? "Nilgiribytes Team",
-      date: new Date(`${post.date}T00:00:00`),
-      coverImage: post.image ?? null,
-      imageAlt: post.imageAlt ?? post.title,
-      excerpt: post.excerpt ?? null,
-      status: PostStatus.PUBLISHED,
-      content: (post.content ?? []) as Prisma.InputJsonValue,
-      readingTimeMin: readingTimeMinutes(post.readingTime),
-    };
-
-    const saved = await prisma.blogPost.upsert({
-      where: { slug: post.slug },
-      update: data,
-      create: { ...data, slug: post.slug },
-    });
+    await connection.execute(
+      `INSERT INTO \`BlogPost\`
+         (\`slug\`, \`title\`, \`category\`, \`author\`, \`date\`, \`coverImage\`,
+          \`imageAlt\`, \`excerpt\`, \`status\`, \`content\`, \`readingTimeMin\`, \`updatedAt\`)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'PUBLISHED', ?, ?, NOW(3))
+       ON DUPLICATE KEY UPDATE
+         \`title\` = VALUES(\`title\`),
+         \`category\` = VALUES(\`category\`),
+         \`author\` = VALUES(\`author\`),
+         \`date\` = VALUES(\`date\`),
+         \`coverImage\` = VALUES(\`coverImage\`),
+         \`imageAlt\` = VALUES(\`imageAlt\`),
+         \`excerpt\` = VALUES(\`excerpt\`),
+         \`status\` = 'PUBLISHED',
+         \`content\` = VALUES(\`content\`),
+         \`readingTimeMin\` = VALUES(\`readingTimeMin\`),
+         \`updatedAt\` = NOW(3)`,
+      [
+        post.slug,
+        post.title,
+        post.category,
+        post.author ?? "Nilgiribytes Team",
+        new Date(`${post.date}T00:00:00`),
+        post.image ?? null,
+        post.imageAlt ?? post.title,
+        post.excerpt ?? null,
+        JSON.stringify(post.content ?? []),
+        readingTimeMinutes(post.readingTime),
+      ]
+    );
 
     imported += 1;
-    console.log(`  post ${saved.slug}`);
+    console.log(`  post ${post.slug}`);
   }
 
   return imported;
 }
 
-async function importAdmin() {
+async function importAdmin(connection: Connection) {
   const username = process.env.ADMIN_USERNAME;
   const password = process.env.ADMIN_PASSWORD;
 
@@ -256,41 +306,48 @@ async function importAdmin() {
   }
 
   const passwordHash = await hash(password, 12);
-  await prisma.adminUser.upsert({
-    where: { username },
-    update: { passwordHash },
-    create: { username, passwordHash },
-  });
+
+  await connection.execute(
+    `INSERT INTO \`AdminUser\` (\`username\`, \`passwordHash\`, \`role\`)
+     VALUES (?, ?, 'ADMIN')
+     ON DUPLICATE KEY UPDATE \`passwordHash\` = VALUES(\`passwordHash\`)`,
+    [username, passwordHash]
+  );
 
   console.log(`  admin ${username}`);
   return true;
 }
 
 async function main() {
-  if (!process.env.DATABASE_URL) {
-    throw new Error("DATABASE_URL is required to import data");
+  const connection = await createConnection(databaseConfig());
+
+  try {
+    await connection.beginTransaction();
+
+    console.log("Importing bundled JSON into MySQL...");
+    const catalogFile = readJson<CatalogFile>("src/data/catalog.json");
+    const blogFile = readJson<BlogFile>("src/data/blog.json");
+
+    const catalogResult = await importCatalog(connection, catalogFile);
+    const postCount = await importPosts(connection, blogFile.posts);
+    const admin = await importAdmin(connection);
+
+    await connection.commit();
+
+    console.log(
+      `Done: ${catalogResult.categories} categories, ${catalogResult.products} products, ` +
+        `${catalogResult.combos} combos, ${postCount} posts` +
+        `${admin ? ", 1 admin user" : ""}.`
+    );
+  } catch (error) {
+    await connection.rollback();
+    throw error;
+  } finally {
+    await connection.end();
   }
-
-  console.log("Importing bundled JSON into MySQL...");
-  const catalogFile = readJson<CatalogFile>("src/data/catalog.json");
-  const blogFile = readJson<BlogFile>("src/data/blog.json");
-
-  const catalogResult = await importCatalog(catalogFile);
-  const postCount = await importPosts(blogFile.posts);
-  const admin = await importAdmin();
-
-  console.log(
-    `Done: ${catalogResult.categories} categories, ${catalogResult.products} products, ` +
-      `${catalogResult.combos} combos, ${postCount} posts` +
-      `${admin ? ", 1 admin user" : ""}.`
-  );
 }
 
-main()
-  .catch((error) => {
-    console.error(error instanceof Error ? error.message : error);
-    process.exitCode = 1;
-  })
-  .finally(async () => {
-    await prisma.$disconnect();
-  });
+main().catch((error) => {
+  console.error(error instanceof Error ? error.message : error);
+  process.exitCode = 1;
+});

@@ -17,7 +17,7 @@ Everything a customer sees and uses:
 
 - Home, shop, cart, about, blog list, blog article, privacy policy, store policy, 404.
 - Shared header/footer, mobile navigation, search, cart badge, WhatsApp ordering.
-- Catalog and blog data served from MySQL through Prisma, with the existing JSON files
+- Catalog and blog data served from MySQL through mysql2, with the existing JSON files
   kept as a build-safe fallback until the database is provisioned.
 - Public read APIs for catalog and blog.
 - SEO: metadata, canonical URLs, Open Graph, JSON-LD, sitemap, robots, old-URL redirects.
@@ -49,7 +49,7 @@ Browser
   |
   |-- Server Components / route handlers
         |
-        |-- Prisma ORM
+        |-- mysql2 (connection pool)
         |
         |-- MySQL 8 (utf8mb4)
         |
@@ -59,7 +59,7 @@ Browser
 ### Stack
 
 - Next.js 16 (App Router) + React 19 + TypeScript
-- Prisma 6 + MySQL 8
+- mysql2 + MySQL 8
 - Zod for API validation
 - Existing CSS files reused unchanged apart from asset URLs
 - Local `localStorage` cart (`veb_cart`) preserved for customer continuity
@@ -106,7 +106,7 @@ src/
     catalog.json
     blog.json
   lib/
-    prisma.ts
+    db.ts
     storefront.ts
     types.ts
     format.ts
@@ -117,10 +117,9 @@ src/
     variables.css, style.css, responsive.css, animations.css, hero.css
 public/
   assets/...
-prisma/
-  schema.prisma
-  seed.ts
+table_creation.sql
 scripts/
+  setup-db.ts
   import-json.ts
 ```
 
@@ -128,13 +127,19 @@ scripts/
 
 ## 3. Data model
 
-Use the Prisma models defined in `react_migration.md`:
+Use the SQL schema defined in `table_creation.sql` (mirrors `react_migration.md`):
 
-`Category`, `Product`, `ProductSize`, `Combo`, `ComboItem`, `BlogPost`,
-`AdminUser`, `Session`, `Order`, `OrderItem`, `NewsletterSubscriber`, `Settings`.
+`Category`, `Product`, `Combo`, `BlogPost`, `AdminUser`, `Order`,
+`OrderItem`, `NewsletterSubscriber`, `Settings`.
+
+Admin authentication uses a single active session per user: `AdminUser.sessionToken`
+and `AdminUser.sessionExpiresAt` replace a separate session table.
+
+Product size variants are stored in `Product.sizes` (JSON) and combo contents in
+`Combo.items` (JSON), keeping the schema compact without separate variant tables.
 
 Phase 1 uses the catalog/blog models in read-only mode. Order and auth models are created now
-so Phase 2 does not need a destructive migration.
+so Phase 2 does not need a destructive schema change.
 
 Money is stored as integer paise. Prices are converted with `Math.round(price * 100)`.
 IDs such as `pr-001` / `cm-001` are kept as external `sku` values; the database uses numeric
@@ -147,10 +152,10 @@ primary keys and human-readable slugs.
 ### 4.1 Project setup
 
 - [x] Create `package.json`, TypeScript config, Next config, ESLint config.
-- [x] Install `next`, `react`, `react-dom`, `prisma`, `@prisma/client`, `zod`, `bcryptjs`.
+- [x] Install `next`, `react`, `react-dom`, `mysql2`, `zod`, `bcryptjs`.
 - [x] Add `.env.example` with `DATABASE_URL`, `AUTH_SECRET`, `NEXT_PUBLIC_SITE_URL`.
-- [x] Add npm scripts: `dev`, `build`, `start`, `typecheck`, `lint`, `db:generate`,
-      `db:migrate`, `db:seed`, `import:json`.
+- [x] Add npm scripts: `dev`, `build`, `start`, `typecheck`, `lint`, `db:setup`,
+      `db:seed`, `import:json`.
 
 ### 4.2 Assets and styles
 
@@ -166,10 +171,10 @@ primary keys and human-readable slugs.
 - [ ] Copy `data/catalog.json` and `data/blog.json` into `src/data/`.
 - [ ] Add `src/lib/types.ts` for normalized `StoreProduct`, `StoreCombo`, `StorePost`.
 - [ ] Add `src/lib/storefront.ts`:
-  - `getCatalog()` reads MySQL through Prisma when `DATABASE_URL` is set.
+  - `getCatalog()` reads MySQL through the mysql2 pool when `DATABASE_URL` is set.
   - Falls back to bundled JSON when the database is not configured or unreachable.
   - `getPublishedPosts()` and `getPostBySlug()` follow the same rule.
-  - Never leaks internal Prisma fields.
+  - Never leaks internal database fields.
 - [ ] Add `src/lib/format.ts` for `formatINR(paise)`.
 - [ ] Add `src/lib/whatsapp.ts` for the message builder and `wa.me` link.
 - [ ] Add `src/lib/cart.ts` for cart line keys, totals and localStorage helpers.
@@ -230,12 +235,12 @@ All responses use a consistent shape and `Cache-Control: public, s-maxage=60, st
 
 ### 4.8 Database import
 
+- [ ] `scripts/setup-db.ts` applies `table_creation.sql` to a fresh database.
 - [ ] `scripts/import-json.ts` is idempotent.
 - [ ] Creates categories, products, sizes, combos, combo items, blog posts and one admin user.
 - [ ] Cleans text (trim, UTF-8) and derives unique slugs.
 - [ ] Converts prices to paise.
 - [ ] Verifies counts: 8 products, 3 combos, 3 blog posts.
-- [ ] `prisma/seed.ts` calls the same logic for local development.
 
 ### 4.9 Verification
 
@@ -268,7 +273,7 @@ Do not migrate `GITHUB_*` variables. The database becomes the source of truth.
 
 ## 6. Deployment notes
 
-- Run `prisma migrate deploy` on deploy; never `migrate dev` in production.
+- Run `npm run db:setup` once on a fresh database before the first deploy.
 - Use a managed MySQL with a connection proxy/pooler if deploying to serverless.
 - Set `NEXT_PUBLIC_SITE_URL` to the canonical domain (`https://www.niligibytes.com`).
 - Keep the old static deployment available for rollback until Phase 2 is live.
