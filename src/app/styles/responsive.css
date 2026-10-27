@@ -81,10 +81,6 @@
   align-items: stretch;
 }
 
-.newsletter_form {
-  flex-direction: column;
-}
-
 /* ---------- Mobile-only: navigation & single-column stacks ---------- */
 @media (max-width: 767.98px) {
   .related {
@@ -371,10 +367,6 @@
 
   .product-card_action .qty-stepper--card span {
     height: 34px;
-  }
-
-  .newsletter_form {
-    flex-direction: row;
   }
 }
 

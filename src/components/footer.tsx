@@ -36,6 +36,9 @@ export function Footer() {
               <li>
                 <Link href="/blog">Blog</Link>
               </li>
+              <li>
+                <Link href="/admin">Admin</Link>
+              </li>
             </ul>
           </div>
 
@@ -73,9 +76,6 @@ export function Footer() {
         <div className="footer-bottom">
           <p>
             &copy; {new Date().getFullYear()} Nilgiribytes. All rights reserved.{" "}
-            <Link className="footer-admin-link" href="/admin">
-              Admin
-            </Link>
           </p>
           <div className="social-links" aria-label="Social media links">
             <a

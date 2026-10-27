@@ -1051,7 +1051,7 @@ p {
   justify-content: flex-end;
   padding: 1.6rem;
   border-color: var(--color-cinnamon);
-  background: var(--gradient-dark);
+  background: var(--color-cinnamon);
   color: var(--color-cream);
   isolation: isolate;
 }
@@ -1072,8 +1072,9 @@ p {
 }
 
 .category-card--feature .category-card_texture {
-  object-fit: contain;
-  object-position: center top;
+  object-fit: cover;
+  object-position: center;
+  background: transparent;
 }
 
 .category-card--feature .category-card_index {
