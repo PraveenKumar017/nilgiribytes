@@ -29,6 +29,13 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       images: [absoluteUrl("/assets/our_story.png")],
     },
     {
+      url: absoluteUrl("/wholesale"),
+      lastModified: now,
+      changeFrequency: "monthly",
+      priority: 0.8,
+      images: [absoluteUrl("/assets/Fresh_Pastries.png")],
+    },
+    {
       url: absoluteUrl("/blog"),
       lastModified: now,
       changeFrequency: "weekly",

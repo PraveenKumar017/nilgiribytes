@@ -251,7 +251,8 @@
 
   .page-hero--shop,
   .page-hero--blog,
-  .page-hero--about {
+  .page-hero--about,
+  .page-hero--wholesale {
     min-height: 0;
     padding-block: 2.75rem;
   }

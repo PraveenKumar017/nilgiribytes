@@ -31,6 +31,9 @@ export function Footer() {
                 <Link href="/shop">Shop</Link>
               </li>
               <li>
+                <Link href="/wholesale">Wholesale &amp; bulk orders</Link>
+              </li>
+              <li>
                 <Link href="/about">About</Link>
               </li>
               <li>
