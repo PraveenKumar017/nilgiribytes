@@ -7,10 +7,34 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const now = new Date();
 
   const staticPages: MetadataRoute.Sitemap = [
-    { url: absoluteUrl("/"), lastModified: now, changeFrequency: "weekly", priority: 1 },
-    { url: absoluteUrl("/shop"), lastModified: now, changeFrequency: "weekly", priority: 0.9 },
-    { url: absoluteUrl("/about"), lastModified: now, changeFrequency: "monthly", priority: 0.6 },
-    { url: absoluteUrl("/blog"), lastModified: now, changeFrequency: "weekly", priority: 0.7 },
+    {
+      url: absoluteUrl("/"),
+      lastModified: now,
+      changeFrequency: "weekly",
+      priority: 1,
+      images: [absoluteUrl("/assets/hero_image_bg.png")],
+    },
+    {
+      url: absoluteUrl("/shop"),
+      lastModified: now,
+      changeFrequency: "weekly",
+      priority: 0.9,
+      images: [absoluteUrl("/assets/Fresh_Pastries.png")],
+    },
+    {
+      url: absoluteUrl("/about"),
+      lastModified: now,
+      changeFrequency: "monthly",
+      priority: 0.6,
+      images: [absoluteUrl("/assets/our_story.png")],
+    },
+    {
+      url: absoluteUrl("/blog"),
+      lastModified: now,
+      changeFrequency: "weekly",
+      priority: 0.7,
+      images: [absoluteUrl("/assets/Craftsmanship.png")],
+    },
     {
       url: absoluteUrl("/policies/privacy"),
       lastModified: now,
@@ -30,6 +54,9 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     lastModified: new Date(`${post.date}T00:00:00`),
     changeFrequency: "monthly",
     priority: 0.6,
+    images: [
+      post.image.startsWith("http") ? post.image : absoluteUrl(post.image),
+    ],
   }));
 
   return [...staticPages, ...postPages];

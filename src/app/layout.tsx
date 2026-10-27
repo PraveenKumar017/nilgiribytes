@@ -6,7 +6,12 @@ import "./styles/responsive.css";
 import "./styles/animations.css";
 import "./styles/hero.css";
 import "./styles/site.css";
-import { SITE_DESCRIPTION, SITE_NAME, SITE_URL } from "@/lib/site";
+import {
+  SITE_DESCRIPTION,
+  SITE_KEYWORDS,
+  SITE_NAME,
+  SITE_URL,
+} from "@/lib/site";
 
 const playfair = Playfair_Display({
   subsets: ["latin"],
@@ -35,11 +40,26 @@ export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   title: "Nilgiribytes | Freshly Baked Varkey, Biscuits & Combos",
   description: SITE_DESCRIPTION,
+  keywords: SITE_KEYWORDS,
   applicationName: SITE_NAME,
   authors: [{ name: SITE_NAME }],
   creator: SITE_NAME,
   publisher: SITE_NAME,
+  category: "Food & Beverage",
+  classification: "Bakery & Confectionery",
+  manifest: "/manifest.webmanifest",
   alternates: { canonical: SITE_URL },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      "max-image-preview": "large",
+      "max-snippet": -1,
+      "max-video-preview": -1,
+    },
+  },
   icons: {
     icon: [
       { url: "/assets/favicon.ico", sizes: "any" },

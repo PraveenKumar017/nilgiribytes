@@ -1,10 +1,20 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { IntroOverlay } from "@/components/intro-overlay";
 import { JsonLd } from "@/components/json-ld";
 import { PosterRail } from "@/components/poster-rail";
 import { ProductCollection } from "@/components/product-collection";
-import { bakeryJsonLd } from "@/lib/seo";
+import { bakeryJsonLd, pageMetadata, websiteJsonLd } from "@/lib/seo";
 import { getCatalog } from "@/lib/storefront";
+
+export const metadata: Metadata = pageMetadata({
+  title:
+    "Nilgiribytes | Freshly Baked Ooty Varkey, Biscuits & Combos in Kotagiri",
+  description:
+    "Buy authentic Ooty Varkey, traditional Nilgiri biscuits and tea-time combos online from Nilgiribytes, a Kotagiri bakery baking fresh every day.",
+  path: "/",
+  image: "/assets/hero_image_bg.png",
+});
 
 export default async function HomePage() {
   const catalog = await getCatalog();
@@ -444,6 +454,7 @@ export default async function HomePage() {
         </section>
       </main>
 
+      <JsonLd data={websiteJsonLd()} />
       <JsonLd data={bakeryJsonLd()} />
     </>
   );

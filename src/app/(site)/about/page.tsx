@@ -13,6 +13,14 @@ export const metadata: Metadata = pageMetadata({
   title: "About Us | Nilgiribytes - A Tradition Baked into Every Bite",
   description:
     "The story, craft and people behind Nilgiribytes - a traditional bakery baking fresh varkey and biscuits with care.",
+  keywords: [
+    "Nilgiribytes",
+    "Nilgiribytes story",
+    "Kotagiri bakery",
+    "Ooty Varkey",
+    "traditional Nilgiri bakery",
+    "freshly baked biscuits",
+  ],
   path: "/about",
   image: "/assets/our_story.png",
 });

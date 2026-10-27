@@ -6,7 +6,7 @@ import { PostCard } from "@/components/post-card";
 import { ShareButtons } from "@/components/share-buttons";
 import { formatDate } from "@/lib/format";
 import { pageMetadata } from "@/lib/seo";
-import { absoluteUrl, SITE_NAME } from "@/lib/site";
+import { absoluteUrl, SITE_KEYWORDS, SITE_NAME } from "@/lib/site";
 import { getPostBySlug, getPublishedPosts } from "@/lib/storefront";
 import type { BlogBlock } from "@/lib/types";
 
@@ -31,6 +31,11 @@ export async function generateMetadata({ params }: PostPageProps): Promise<Metad
   return pageMetadata({
     title: `${post.title} | Nilgiribytes`,
     description: post.excerpt,
+    keywords: [
+      post.title,
+      post.category,
+      ...SITE_KEYWORDS.slice(0, 10),
+    ],
     path: `/blog/${post.slug}`,
     image: post.image,
     type: "article",

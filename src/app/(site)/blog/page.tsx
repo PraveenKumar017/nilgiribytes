@@ -7,6 +7,14 @@ export const metadata: Metadata = pageMetadata({
   title: "Blog | Nilgiribytes - Stories from Our Oven",
   description:
     "Baking tips, bakery stories, ingredient notes and recipes from Nilgiribytes.",
+  keywords: [
+    "Nilgiribytes blog",
+    "Ooty Varkey recipes",
+    "baking tips",
+    "Nilgiri bakery stories",
+    "tea time recipes",
+    "varkey ingredients",
+  ],
   path: "/blog",
   image: "/assets/Craftsmanship.png",
 });

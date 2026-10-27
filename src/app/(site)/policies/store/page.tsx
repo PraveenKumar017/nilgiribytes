@@ -6,6 +6,12 @@ export const metadata: Metadata = pageMetadata({
   title: "Store Policies | Nilgiribytes",
   description:
     "Nilgiribytes shipping, payments, returns and refund policies.",
+  keywords: [
+    "Nilgiribytes shipping policy",
+    "Nilgiribytes payment policy",
+    "Nilgiribytes returns",
+    "Nilgiribytes refunds",
+  ],
   path: "/policies/store",
 });
 

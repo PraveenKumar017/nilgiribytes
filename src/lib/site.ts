@@ -6,6 +6,43 @@ export const SITE_NAME = "Nilgiribytes";
 export const SITE_DESCRIPTION =
   "Nilgiribytes \u2014 traditional varkey, biscuits and signature combos baked fresh every day in Kotagiri.";
 
+export const SITE_KEYWORDS = [
+  "Nilgiribytes",
+  "Ooty Varkey",
+  "Original Ooty Varkey",
+  "Ooty Varkey biscuit",
+  "Crispy Ooty Varkey",
+  "Traditional Ooty Varkey",
+  "Nilgiris Varkey",
+  "buy Ooty Varkey online",
+  "order Ooty Varkey",
+  "Ooty Varkey online delivery",
+  "best Ooty Varkey brand",
+  "Ooty Varkey price",
+  "homemade Ooty snacks online",
+  "Ooty famous snacks",
+  "Nilgiri bakery products",
+  "Ooty GI tag varkey",
+  "Tamil Nadu traditional snacks",
+  "Ooty local food specialties",
+  "firewood baked varkey",
+  "tea time snacks varkey",
+  "crispy bakery biscuits",
+  "wheat Ooty varkey",
+  "Kotagiri bakery",
+  "Ooty bakery",
+  "Nilgiris bakery",
+  "Varkey biscuits",
+  "premium Varkey",
+  "mini Varkey",
+  "Varkey flakes",
+  "salt biscuits",
+  "sweet biscuits",
+  "bakery combos",
+  "wholesale bakery Nilgiris",
+  "freshly baked biscuits",
+];
+
 export const PHONE_DISPLAY = "+91 93449 21647";
 export const PHONE_TEL = "+919344921647";
 export const WHATSAPP_NUMBER = "919344921647";

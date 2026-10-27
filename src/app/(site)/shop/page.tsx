@@ -9,6 +9,23 @@ export const metadata: Metadata = pageMetadata({
   title: "Shop | Nilgiribytes - Varkey, Biscuits & Combos",
   description:
     "Shop freshly baked varkey, biscuits and signature combos from Nilgiribytes. Choose your size and order on WhatsApp.",
+  keywords: [
+    "buy Ooty Varkey online",
+    "Ooty Varkey",
+    "Original Ooty Varkey",
+    "Ooty Varkey biscuit",
+    "Crispy Ooty Varkey",
+    "Traditional Ooty Varkey",
+    "Nilgiris Varkey",
+    "order Ooty Varkey",
+    "Ooty Varkey online delivery",
+    "Ooty GI tag varkey",
+    "Varkey biscuits",
+    "Kotagiri bakery",
+    "tea time combos",
+    "bakery combos",
+    "traditional biscuits",
+  ],
   path: "/shop",
   image: "/assets/Fresh_Pastries.png",
 });

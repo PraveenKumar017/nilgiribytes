@@ -5,6 +5,11 @@ export const metadata: Metadata = pageMetadata({
   title: "Privacy Policy | Nilgiribytes",
   description:
     "How Nilgiribytes collects, uses, stores and protects your personal information.",
+  keywords: [
+    "Nilgiribytes privacy policy",
+    "Nilgiribytes data protection",
+    "Nilgiribytes personal information",
+  ],
   path: "/policies/privacy",
 });
 
