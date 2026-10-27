@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ActionForm, ConfirmSubmit } from "@/components/admin/admin-ui";
+import { EditIcon, TrashIcon } from "@/components/admin/icons";
 import {
   createCategoryAction,
   deleteCategoryAction,
@@ -158,17 +159,21 @@ export default async function AdminCategoriesPage({ searchParams }: PageProps) {
                     <td>
                       <div className="admin-row-actions">
                         <Link
-                          className="admin-btn admin-btn--small"
+                          className="admin-btn admin-btn--small admin-btn--icon"
                           href={`/admin/categories?id=${category.id}`}
+                          aria-label={`Edit ${category.name}`}
+                          title="Edit"
                         >
-                          Edit
+                          <EditIcon />
                         </Link>
                         <form action={deleteCategoryAction}>
                           <input type="hidden" name="id" value={category.id} />
                           <ConfirmSubmit
+                            className="admin-btn admin-btn--small admin-btn--danger admin-btn--icon"
                             message={`Delete "${category.name}"? This cannot be undone.`}
+                            label={`Delete ${category.name}`}
                           >
-                            Delete
+                            <TrashIcon />
                           </ConfirmSubmit>
                         </form>
                       </div>

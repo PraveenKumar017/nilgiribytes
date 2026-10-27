@@ -22,6 +22,7 @@ type ProductModalProps = {
 export function ProductModal({ item, onClose }: ProductModalProps) {
   const { add, changeQty, quantityOf } = useCart();
   const [sizeIndex, setSizeIndex] = useState(0);
+  const [imageIndex, setImageIndex] = useState(0);
   const closeRef = useRef<HTMLButtonElement>(null);
   const panelRef = useRef<HTMLDivElement>(null);
 
@@ -30,7 +31,13 @@ export function ProductModal({ item, onClose }: ProductModalProps) {
   const price = itemPrice(item, sizeIndex);
   const mrp = itemMrp(item, sizeIndex);
   const discount = itemDiscountPercent(item, sizeIndex);
-  const hasDiscount = item.kind === "product" && discount > 0 && mrp > price;
+  const hasDiscount = discount > 0 && mrp > price;
+  const sizeImages =
+    item.kind === "product"
+      ? item.sizes[sizeIndex]?.images?.filter(Boolean) ?? []
+      : item.images?.filter(Boolean) ?? [];
+  const images = sizeImages.length ? sizeImages : [itemImage(item, sizeIndex)];
+  const activeImage = images[Math.min(imageIndex, images.length - 1)] ?? images[0];
 
   useEffect(() => {
     document.body.classList.add("is-locked");
@@ -92,11 +99,29 @@ export function ProductModal({ item, onClose }: ProductModalProps) {
         <div className="modal_grid">
           <div className="modal_media">
             <SafeImage
-              src={itemImage(item, sizeIndex)}
+              src={activeImage}
               alt={`${item.name} \u2014 ${item.category}`}
               width={640}
               height={480}
             />
+            {images.length > 1 ? (
+              <div className="modal_thumbs" aria-label="Product images">
+                {images.map((image, index) => (
+                  <button
+                    key={`${image}-${index}`}
+                    type="button"
+                    className={`modal_thumbs_btn${
+                      index === imageIndex ? " is-active" : ""
+                    }`}
+                    aria-label={`Show image ${index + 1}`}
+                    aria-pressed={index === imageIndex}
+                    onClick={() => setImageIndex(index)}
+                  >
+                    <SafeImage src={image} alt="" width={80} height={80} />
+                  </button>
+                ))}
+              </div>
+            ) : null}
           </div>
 
           <div className="modal_body">
@@ -166,7 +191,10 @@ export function ProductModal({ item, onClose }: ProductModalProps) {
                       type="button"
                       className="size-select_btn"
                       aria-pressed={index === sizeIndex}
-                      onClick={() => setSizeIndex(index)}
+                      onClick={() => {
+                        setSizeIndex(index);
+                        setImageIndex(0);
+                      }}
                     >
                       {size.label} &middot; {formatINR(size.pricePaise)}
                     </button>

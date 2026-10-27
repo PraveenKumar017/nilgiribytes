@@ -36,7 +36,7 @@ export function ProductCard({
   const price = itemPrice(item, sizeIndex);
   const mrp = itemMrp(item, sizeIndex);
   const discount = itemDiscountPercent(item, sizeIndex);
-  const hasDiscount = item.kind === "product" && discount > 0 && mrp > price;
+  const hasDiscount = discount > 0 && mrp > price;
 
   return (
     <article

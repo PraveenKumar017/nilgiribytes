@@ -13,12 +13,14 @@ export function itemSizeLabel(item: StoreItem, sizeIndex = 0): string {
 }
 
 export function itemMrp(item: StoreItem, sizeIndex = 0): number {
-  if (item.kind === "combo") return item.pricePaise;
+  if (item.kind === "combo") return item.mrpPaise;
   return item.sizes[sizeIndex]?.mrpPaise ?? itemPrice(item, sizeIndex);
 }
 
 export function itemDiscountPercent(item: StoreItem, sizeIndex = 0): number {
-  if (item.kind === "combo") return 0;
+  if (item.kind === "combo") {
+    return item.mrpPaise > item.pricePaise ? item.discountPercent : 0;
+  }
   const size = item.sizes[sizeIndex];
   if (!size || size.mrpPaise <= size.pricePaise) return 0;
   return size.discountPercent;
@@ -29,7 +31,7 @@ export function itemSaving(item: StoreItem, sizeIndex = 0): number {
 }
 
 export function itemImage(item: StoreItem, sizeIndex = 0): string {
-  if (item.kind === "combo") return item.image;
+  if (item.kind === "combo") return item.images[0] || item.image;
   const size: StoreSize | undefined = item.sizes[sizeIndex];
   return size?.imageUrl || item.image;
 }

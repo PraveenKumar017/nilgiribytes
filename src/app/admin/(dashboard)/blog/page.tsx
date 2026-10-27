@@ -2,14 +2,22 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import {
   ActionForm,
+  AutoSubmitSelect,
   BlocksEditor,
   ConfirmSubmit,
   ImageField,
+  PostPreviewButton,
 } from "@/components/admin/admin-ui";
+import {
+  EditIcon,
+  ExternalLinkIcon,
+  TrashIcon,
+} from "@/components/admin/icons";
 import {
   createPostAction,
   deletePostAction,
   updatePostAction,
+  updatePostStatusAction,
 } from "@/app/admin/actions";
 import { getPost, listPosts, type AdminPost } from "@/lib/admin";
 import { formatDate } from "@/lib/format";
@@ -21,6 +29,7 @@ type PageProps = {
     created?: string;
     updated?: string;
     deleted?: string;
+    status?: string;
     error?: string;
   }>;
 };
@@ -34,6 +43,7 @@ function PostForm({ post }: { post?: AdminPost }) {
     <ActionForm
       action={post ? updatePostAction : createPostAction}
       submitLabel={post ? "Save post" : "Create post"}
+      extraActions={<PostPreviewButton />}
     >
       {post ? <input type="hidden" name="id" value={post.id} /> : null}
 
@@ -136,6 +146,11 @@ export default async function AdminBlogPage({ searchParams }: PageProps) {
             </p>
             <h1 className="admin-page-title">New post</h1>
           </div>
+          <div className="admin-page-actions">
+            <Link className="admin-btn" href="/admin/blog">
+              &larr; Back to blog
+            </Link>
+          </div>
         </header>
 
         <section className="admin-panel">
@@ -162,13 +177,11 @@ export default async function AdminBlogPage({ searchParams }: PageProps) {
               {post.category}
             </p>
           </div>
-          {post.status === "PUBLISHED" ? (
-            <div className="admin-page-actions">
-              <Link className="admin-btn" href={`/blog/${post.slug}`} target="_blank">
-                View post &#8599;
-              </Link>
-            </div>
-          ) : null}
+          <div className="admin-page-actions">
+            <Link className="admin-btn" href="/admin/blog">
+              &larr; Back to blog
+            </Link>
+          </div>
         </header>
 
         <section className="admin-panel">
@@ -196,6 +209,9 @@ export default async function AdminBlogPage({ searchParams }: PageProps) {
 
       {params.created ? <p className="admin-alert admin-alert--success">Post created.</p> : null}
       {params.updated ? <p className="admin-alert admin-alert--success">Post updated.</p> : null}
+      {params.status ? (
+        <p className="admin-alert admin-alert--success">Post status updated.</p>
+      ) : null}
       {params.deleted ? <p className="admin-alert admin-alert--success">Post deleted.</p> : null}
       {params.error === "not-found" ? (
         <p className="admin-alert admin-alert--error">Post not found.</p>
@@ -204,11 +220,11 @@ export default async function AdminBlogPage({ searchParams }: PageProps) {
       <section className="admin-panel">
         {posts.length ? (
           <div className="admin-table-wrap">
-            <table className="admin-table">
+            <table className="admin-table admin-table--blog">
               <thead>
                 <tr>
                   <th>Title</th>
-                  <th>Category</th>
+                  <th className="admin-col-category">Category</th>
                   <th>Date</th>
                   <th>Status</th>
                   <th>Updated</th>
@@ -218,47 +234,61 @@ export default async function AdminBlogPage({ searchParams }: PageProps) {
               <tbody>
                 {posts.map((post) => (
                   <tr key={post.id}>
-                    <td>
+                    <td data-label="Post">
                       <span className="admin-table_primary">{post.title}</span>
                       <span className="admin-table_sub">{post.slug}</span>
                     </td>
-                    <td>{post.category}</td>
-                    <td>{formatDate(post.date)}</td>
-                    <td>
-                      <span
-                        className={`admin-badge ${
-                          post.status === "PUBLISHED"
-                            ? "admin-badge--published"
-                            : "admin-badge--draft"
-                        }`}
-                      >
-                        {post.status === "PUBLISHED" ? "Published" : "Draft"}
-                      </span>
+                    <td className="admin-col-category" data-label="Category">
+                      {post.category}
                     </td>
-                    <td>{new Date(post.updatedAt).toLocaleDateString("en-IN")}</td>
-                    <td>
+                    <td data-label="Date">{formatDate(post.date)}</td>
+                    <td data-label="Status">
+                      <form action={updatePostStatusAction}>
+                        <input type="hidden" name="id" value={post.id} />
+                        <AutoSubmitSelect
+                          name="status"
+                          defaultValue={post.status}
+                          label={`Status for ${post.title}`}
+                          className={`admin-status-select admin-status-select--${post.status.toLowerCase()}`}
+                          options={[
+                            { value: "DRAFT", label: "Draft" },
+                            { value: "PUBLISHED", label: "Published" },
+                          ]}
+                        />
+                      </form>
+                    </td>
+                    <td data-label="Updated">
+                      {new Date(post.updatedAt).toLocaleDateString("en-IN")}
+                    </td>
+                    <td className="admin-table_actions" data-label="Actions">
                       <div className="admin-row-actions">
                         <Link
-                          className="admin-btn admin-btn--small"
+                          className="admin-btn admin-btn--small admin-btn--icon"
                           href={`/admin/blog?id=${post.id}`}
+                          aria-label={`Edit ${post.title}`}
+                          title="Edit"
                         >
-                          Edit
+                          <EditIcon />
                         </Link>
                         {post.status === "PUBLISHED" ? (
                           <Link
-                            className="admin-btn admin-btn--small admin-btn--ghost"
+                            className="admin-btn admin-btn--small admin-btn--ghost admin-btn--icon"
                             href={`/blog/${post.slug}`}
                             target="_blank"
+                            aria-label={`View ${post.title}`}
+                            title="View post"
                           >
-                            View
+                            <ExternalLinkIcon />
                           </Link>
                         ) : null}
                         <form action={deletePostAction}>
                           <input type="hidden" name="id" value={post.id} />
                           <ConfirmSubmit
+                            className="admin-btn admin-btn--small admin-btn--danger admin-btn--icon"
                             message={`Delete "${post.title}"? This cannot be undone.`}
+                            label={`Delete ${post.title}`}
                           >
-                            Delete
+                            <TrashIcon />
                           </ConfirmSubmit>
                         </form>
                       </div>

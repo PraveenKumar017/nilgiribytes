@@ -2,8 +2,10 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useActionState, useMemo, useState } from "react";
-import { loginAction } from "@/app/admin/actions";
+import { useActionState, useEffect, useMemo, useRef, useState } from "react";
+import { useFormStatus } from "react-dom";
+import { loginAction, logoutAction } from "@/app/admin/actions";
+import { formatDate } from "@/lib/format";
 import type { ActionState, LoginState } from "@/lib/admin";
 import type { BlogBlock } from "@/lib/types";
 
@@ -17,9 +19,10 @@ const LINKS = [
   { href: "/admin/combos", label: "Combos" },
   { href: "/admin/blog", label: "Blog" },
   { href: "/admin/orders", label: "Orders" },
+  { href: "/admin/settings", label: "Settings" },
 ];
 
-export function AdminNav() {
+export function AdminNav({ onNavigate }: { onNavigate?: () => void }) {
   const pathname = usePathname();
 
   return (
@@ -35,12 +38,95 @@ export function AdminNav() {
             href={link.href}
             className={`admin-nav_link${active ? " is-active" : ""}`}
             aria-current={active ? "page" : undefined}
+            onClick={onNavigate}
           >
             {link.label}
           </Link>
         );
       })}
     </nav>
+  );
+}
+
+export function AdminSidebar() {
+  const pathname = usePathname();
+  const [open, setOpen] = useState(false);
+
+  useEffect(() => {
+    setOpen(false);
+  }, [pathname]);
+
+  useEffect(() => {
+    if (!open) return;
+
+    function onKeyDown(event: KeyboardEvent) {
+      if (event.key === "Escape") setOpen(false);
+    }
+
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    document.addEventListener("keydown", onKeyDown);
+
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      document.removeEventListener("keydown", onKeyDown);
+    };
+  }, [open]);
+
+  return (
+    <>
+      <header className="admin-mobile-bar">
+        <Link href="/admin" className="admin-mobile-brand">
+          Nilgiribytes <span>Admin</span>
+        </Link>
+        <button
+          type="button"
+          className="admin-mobile-toggle"
+          aria-label={open ? "Close admin menu" : "Open admin menu"}
+          aria-expanded={open}
+          aria-controls="admin-sidebar"
+          onClick={() => setOpen((current) => !current)}
+        >
+          <span />
+          <span />
+          <span />
+        </button>
+      </header>
+
+      {open ? (
+        <button
+          type="button"
+          className="admin-sidebar_backdrop"
+          aria-label="Close admin menu"
+          onClick={() => setOpen(false)}
+        />
+      ) : null}
+
+      <aside
+        id="admin-sidebar"
+        className={`admin-sidebar${open ? " is-open" : ""}`}
+      >
+        <div className="admin-brand">
+          <Link href="/admin" className="admin-brand_name" onClick={() => setOpen(false)}>
+            Nilgiribytes
+          </Link>
+          <span className="admin-brand_tag">Admin</span>
+        </div>
+
+        <AdminNav onNavigate={() => setOpen(false)} />
+
+        <div className="admin-sidebar_footer">
+          <Link className="admin-sidebar_link" href="/" target="_blank">
+            View website &#8599;
+          </Link>
+          <form action={logoutAction}>
+            <button className="admin-btn" type="submit">
+              Sign out
+            </button>
+          </form>
+        </div>
+      </aside>
+    </>
   );
 }
 
@@ -53,6 +139,7 @@ type ActionFormProps = {
   children: React.ReactNode;
   submitLabel: string;
   className?: string;
+  extraActions?: React.ReactNode;
 };
 
 export function ActionForm({
@@ -60,14 +147,66 @@ export function ActionForm({
   children,
   submitLabel,
   className = "admin-form",
+  extraActions,
 }: ActionFormProps) {
   const [state, formAction, pending] = useActionState<ActionState, FormData>(
     action,
     null
   );
+  const formRef = useRef<HTMLFormElement>(null);
+  const snapshotRef = useRef<Record<string, string | string[]> | null>(null);
+
+  useEffect(() => {
+    const form = formRef.current;
+    const snapshot = snapshotRef.current;
+    if (!form || !snapshot || !state?.error) return;
+
+    for (const [name, value] of Object.entries(snapshot)) {
+      const values = Array.isArray(value) ? value : [value];
+      let index = 0;
+
+      for (const element of Array.from(form.elements)) {
+        if (!("name" in element) || element.name !== name) continue;
+
+        if (element instanceof HTMLInputElement) {
+          if (element.type === "file") continue;
+          if (element.type === "checkbox" || element.type === "radio") {
+            element.checked = values.includes(element.value);
+          } else {
+            element.value = values[index] ?? values[0] ?? "";
+            index += 1;
+          }
+        } else if (element instanceof HTMLSelectElement) {
+          element.value = values[0] ?? "";
+        } else if (element instanceof HTMLTextAreaElement) {
+          element.value = values[index] ?? values[0] ?? "";
+          index += 1;
+        }
+      }
+    }
+  }, [state]);
 
   return (
-    <form action={formAction} className={className}>
+    <form
+      ref={formRef}
+      action={formAction}
+      className={className}
+      onSubmit={(event) => {
+        const snapshot: Record<string, string | string[]> = {};
+
+        for (const [name, value] of new FormData(event.currentTarget)) {
+          if (typeof value !== "string") continue;
+          const existing = snapshot[name];
+          snapshot[name] = Array.isArray(existing)
+            ? [...existing, value]
+            : existing === undefined
+              ? value
+              : [existing, value];
+        }
+
+        snapshotRef.current = snapshot;
+      }}
+    >
       {children}
 
       {state?.error ? (
@@ -77,6 +216,7 @@ export function ActionForm({
       ) : null}
 
       <div className="admin-form_actions">
+        {extraActions}
         <button
           className="admin-btn admin-btn--primary"
           type="submit"
@@ -89,19 +229,214 @@ export function ActionForm({
   );
 }
 
+export function AutoSubmitSelect({
+  name,
+  defaultValue,
+  options,
+  className,
+  label,
+}: {
+  name: string;
+  defaultValue: string;
+  options: { value: string; label: string }[];
+  className?: string;
+  label?: string;
+}) {
+  const { pending } = useFormStatus();
+
+  return (
+    <select
+      name={name}
+      defaultValue={defaultValue}
+      className={className}
+      aria-label={label}
+      disabled={pending}
+      onChange={(event) => event.currentTarget.form?.requestSubmit()}
+    >
+      {options.map((option) => (
+        <option key={option.value} value={option.value}>
+          {option.label}
+        </option>
+      ))}
+    </select>
+  );
+}
+
+type PostPreview = {
+  title: string;
+  author: string;
+  date: string;
+  readingTime: string;
+  category: string;
+  status: string;
+  coverImage: string;
+  imageAlt: string;
+  blocks: BlogBlock[];
+};
+
+export function PostPreviewButton() {
+  const [preview, setPreview] = useState<PostPreview | null>(null);
+
+  useEffect(() => {
+    if (!preview) return;
+
+    function onKeyDown(event: KeyboardEvent) {
+      if (event.key === "Escape") setPreview(null);
+    }
+
+    document.addEventListener("keydown", onKeyDown);
+    return () => document.removeEventListener("keydown", onKeyDown);
+  }, [preview]);
+
+  function openPreview(event: React.MouseEvent<HTMLButtonElement>) {
+    const form = event.currentTarget.form;
+    if (!form) return;
+
+    const data = new FormData(form);
+    let blocks: BlogBlock[] = [];
+
+    try {
+      const parsed: unknown = JSON.parse(String(data.get("content") ?? "[]"));
+      if (Array.isArray(parsed)) {
+        blocks = parsed.filter((block): block is BlogBlock => {
+          if (!block || typeof block !== "object" || !("type" in block)) {
+            return false;
+          }
+          return typeof block.type === "string";
+        });
+      }
+    } catch {
+      blocks = [];
+    }
+
+    setPreview({
+      title: String(data.get("title") ?? "").trim() || "Untitled post",
+      author: String(data.get("author") ?? "").trim() || "Nilgiribytes Team",
+      date: String(data.get("date") ?? ""),
+      readingTime: String(data.get("readingTimeMin") ?? "").trim(),
+      category: String(data.get("category") ?? "").trim(),
+      status: String(data.get("status") ?? "DRAFT"),
+      coverImage: String(data.get("coverImage") ?? ""),
+      imageAlt: String(data.get("imageAlt") ?? ""),
+      blocks,
+    });
+  }
+
+  return (
+    <>
+      <button
+        type="button"
+        className="admin-btn admin-btn--ghost"
+        onClick={openPreview}
+      >
+        Preview
+      </button>
+
+      {preview ? (
+        <div
+          className="admin-image-modal"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="admin-post-preview-title"
+          onClick={(event) => {
+            if (event.target === event.currentTarget) setPreview(null);
+          }}
+        >
+          <div className="admin-image-modal_panel admin-post-preview">
+            <div className="admin-image-modal_head">
+              <div>
+                <h2>Post preview</h2>
+                <p>
+                  {preview.status === "PUBLISHED"
+                    ? "This is how the published post will look."
+                    : "Draft preview \u2014 not visible on the site yet."}
+                </p>
+              </div>
+              <button
+                type="button"
+                className="admin-btn admin-btn--small admin-btn--ghost"
+                onClick={() => setPreview(null)}
+              >
+                Close
+              </button>
+            </div>
+
+            <article className="admin-post-preview_body">
+              <h1 id="admin-post-preview-title">{preview.title}</h1>
+              <p className="admin-post-preview_meta">
+                <span>By {preview.author}</span>
+                {preview.date ? <span>{formatDate(preview.date)}</span> : null}
+                {preview.readingTime ? (
+                  <span>{preview.readingTime} min read</span>
+                ) : null}
+                {preview.category ? <span>{preview.category}</span> : null}
+              </p>
+
+              {preview.coverImage ? (
+                <img
+                  className="admin-post-preview_cover"
+                  src={imageSrc(preview.coverImage)}
+                  alt={preview.imageAlt || preview.title}
+                />
+              ) : null}
+
+              <div className="admin-post-preview_content">
+                {preview.blocks.map((block, index) => {
+                  if (block.type === "p") {
+                    return <p key={index}>{block.text}</p>;
+                  }
+                  if (block.type === "h2") {
+                    return <h2 key={index}>{block.text}</h2>;
+                  }
+                  if (block.type === "h3") {
+                    return <h3 key={index}>{block.text}</h3>;
+                  }
+                  if (block.type === "ol") {
+                    return (
+                      <ol key={index}>
+                        {block.items.map((item, itemIndex) => (
+                          <li key={itemIndex}>{item}</li>
+                        ))}
+                      </ol>
+                    );
+                  }
+                  if ("items" in block) {
+                    return (
+                      <ul key={index}>
+                        {block.items.map((item, itemIndex) => (
+                          <li key={itemIndex}>{item}</li>
+                        ))}
+                      </ul>
+                    );
+                  }
+                  return null;
+                })}
+              </div>
+            </article>
+          </div>
+        </div>
+      ) : null}
+    </>
+  );
+}
+
 export function ConfirmSubmit({
   children,
   message,
+  label,
   className = "admin-btn admin-btn--danger",
 }: {
   children: React.ReactNode;
   message: string;
+  label?: string;
   className?: string;
 }) {
   return (
     <button
       className={className}
       type="submit"
+      aria-label={label}
+      title={label}
       onClick={(event) => {
         if (!window.confirm(message)) event.preventDefault();
       }}
@@ -199,43 +534,324 @@ export function LoginForm() {
 /* Image field                                                                */
 /* -------------------------------------------------------------------------- */
 
+function imageSrc(value: string): string {
+  if (!value) return "/assets/placeholder.svg";
+  if (/^(https?:)?\/\//.test(value) || value.startsWith("data:")) return value;
+  return value.startsWith("/") ? value : `/${value}`;
+}
+
 export function ImageField({
   name,
   label,
   defaultValue,
-  placeholder = "/assets/images/...",
 }: {
   name: string;
   label: string;
   defaultValue?: string | null;
-  placeholder?: string;
 }) {
   const [value, setValue] = useState(defaultValue ?? "");
   const [failed, setFailed] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  async function upload(file: File) {
+    if (file.size > 2 * 1024 * 1024) {
+      setError("Each image must be 2 MB or smaller.");
+      return;
+    }
+
+    setUploading(true);
+    setError(null);
+
+    try {
+      const body = new FormData();
+      body.append("file", file);
+
+      const response = await fetch("/api/admin/upload", {
+        method: "POST",
+        body,
+      });
+      const result = (await response.json().catch(() => null)) as
+        | { url?: unknown; error?: unknown }
+        | null;
+
+      if (!response.ok || typeof result?.url !== "string") {
+        setError(
+          typeof result?.error === "string"
+            ? result.error
+            : "Could not upload the image."
+        );
+        return;
+      }
+
+      setValue(result.url);
+      setFailed(false);
+    } catch {
+      setError("Could not upload the image.");
+    } finally {
+      setUploading(false);
+    }
+  }
 
   return (
     <div className="admin-field admin-field--image">
       <span>{label}</span>
-      <input
-        name={name}
-        value={value}
-        onChange={(event) => {
-          setValue(event.target.value);
-          setFailed(false);
-        }}
-        placeholder={placeholder}
-      />
+      <input type="hidden" name={name} value={value} />
       <div className="admin-image-preview">
         {value ? (
           <img
-            src={failed ? "/assets/placeholder.svg" : value}
+            src={failed ? "/assets/placeholder.svg" : imageSrc(value)}
             alt=""
             onError={() => setFailed(true)}
           />
         ) : (
-          <span>Image preview</span>
+          <span>No image selected</span>
         )}
       </div>
+      <div className="admin-image-upload-actions">
+        <label className="admin-btn admin-btn--small">
+          {uploading ? "Uploading..." : value ? "Replace image" : "Upload image"}
+          <input
+            className="admin-image-file"
+            type="file"
+            accept="image/jpeg,image/png,image/webp,image/avif"
+            disabled={uploading}
+            onChange={(event) => {
+              const file = event.target.files?.[0];
+              event.currentTarget.value = "";
+              if (file) void upload(file);
+            }}
+          />
+        </label>
+        {value ? (
+          <button
+            type="button"
+            className="admin-btn admin-btn--small admin-btn--danger"
+            onClick={() => {
+              setValue("");
+              setFailed(false);
+              setError(null);
+            }}
+            disabled={uploading}
+          >
+            Remove
+          </button>
+        ) : null}
+      </div>
+      {error ? (
+        <p className="admin-alert admin-alert--error" role="alert">
+          {error}
+        </p>
+      ) : null}
+    </div>
+  );
+}
+
+export function ImagesField({
+  name,
+  label,
+  defaultImages = [],
+}: {
+  name: string;
+  label: string;
+  defaultImages?: (string | null)[] | null;
+}) {
+  const [images, setImages] = useState<string[]>(() =>
+    (defaultImages ?? [])
+      .filter((image): image is string => typeof image === "string" && image !== "")
+      .slice(0, 3)
+  );
+  const [open, setOpen] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!open) return;
+
+    function onKeyDown(event: KeyboardEvent) {
+      if (event.key === "Escape") setOpen(false);
+    }
+
+    document.addEventListener("keydown", onKeyDown);
+    return () => document.removeEventListener("keydown", onKeyDown);
+  }, [open]);
+
+  async function upload(index: number, file: File) {
+    if (file.size > 2 * 1024 * 1024) {
+      setError("Each image must be 2 MB or smaller.");
+      return;
+    }
+
+    setUploading(true);
+    setError(null);
+
+    try {
+      const body = new FormData();
+      body.append("file", file);
+
+      const response = await fetch("/api/admin/upload", {
+        method: "POST",
+        body,
+      });
+      const result = (await response.json().catch(() => null)) as
+        | { url?: unknown; error?: unknown }
+        | null;
+
+      if (!response.ok || typeof result?.url !== "string") {
+        setError(
+          typeof result?.error === "string"
+            ? result.error
+            : "Could not upload the image."
+        );
+        return;
+      }
+
+      setImages((current) => {
+        const next = [...current];
+        next[index] = result.url as string;
+        return next.filter(Boolean).slice(0, 3);
+      });
+    } catch {
+      setError("Could not upload the image.");
+    } finally {
+      setUploading(false);
+    }
+  }
+
+  return (
+    <div className="admin-field admin-field--image">
+      <span>{label}</span>
+      <input type="hidden" name={name} value={JSON.stringify(images)} />
+
+      <div className="admin-image-gallery">
+        {images.length ? (
+          images.map((image, index) => (
+            <img key={`${image}-${index}`} src={imageSrc(image)} alt="" />
+          ))
+        ) : (
+          <span>No images selected</span>
+        )}
+      </div>
+
+      <button
+        type="button"
+        className="admin-btn admin-btn--small"
+        onClick={() => {
+          setError(null);
+          setOpen(true);
+        }}
+      >
+        Images ({images.length}/3)
+      </button>
+
+      {open ? (
+        <div
+          className="admin-image-modal"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="admin-gallery-modal-title"
+          onClick={(event) => {
+            if (event.target === event.currentTarget) setOpen(false);
+          }}
+        >
+          <div className="admin-image-modal_panel">
+            <div className="admin-image-modal_head">
+              <div>
+                <h2 id="admin-gallery-modal-title">{label}</h2>
+                <p>Add, replace or delete up to three images.</p>
+              </div>
+              <button
+                type="button"
+                className="admin-btn admin-btn--small admin-btn--ghost"
+                onClick={() => setOpen(false)}
+                aria-label="Close image manager"
+              >
+                Close
+              </button>
+            </div>
+
+            {error ? (
+              <p className="admin-alert admin-alert--error" role="alert">
+                {error}
+              </p>
+            ) : null}
+
+            <div className="admin-image-modal_grid">
+              {[0, 1, 2].map((index) => {
+                const image = images[index] ?? "";
+                const inputId = `gallery-image-${name}-${index}`;
+
+                return (
+                  <div
+                    className={`admin-image-slot${image ? " has-image" : ""}`}
+                    key={index}
+                  >
+                    <span className="admin-image-slot_label">
+                      Image {index + 1}
+                    </span>
+
+                    {image ? (
+                      <img
+                        className="admin-image-slot_preview"
+                        src={imageSrc(image)}
+                        alt=""
+                      />
+                    ) : (
+                      <span className="admin-image-slot_empty">No image</span>
+                    )}
+
+                    <div className="admin-image-slot_actions">
+                      <label
+                        className="admin-btn admin-btn--small"
+                        htmlFor={inputId}
+                      >
+                        {image ? "Edit" : "Add"}
+                      </label>
+                      <input
+                        id={inputId}
+                        className="admin-image-file"
+                        type="file"
+                        accept="image/jpeg,image/png,image/webp,image/avif"
+                        disabled={uploading}
+                        onChange={(event) => {
+                          const file = event.target.files?.[0];
+                          event.currentTarget.value = "";
+                          if (file) void upload(index, file);
+                        }}
+                      />
+                      {image ? (
+                        <button
+                          type="button"
+                          className="admin-btn admin-btn--small admin-btn--danger"
+                          onClick={() =>
+                            setImages((current) =>
+                              current.filter((_, imageIndex) => imageIndex !== index)
+                            )
+                          }
+                          disabled={uploading}
+                        >
+                          Delete
+                        </button>
+                      ) : null}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            <div className="admin-image-modal_foot">
+              <span>{images.length} of 3 images</span>
+              <button
+                type="button"
+                className="admin-btn admin-btn--primary"
+                onClick={() => setOpen(false)}
+              >
+                Done
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 }
@@ -249,7 +865,7 @@ export type SizeDraft = {
   grams: number | null;
   mrpPaise: number;
   pricePaise: number;
-  imageUrl: string | null;
+  images: string[];
 };
 
 type SizeRow = {
@@ -259,7 +875,7 @@ type SizeRow = {
   mrp: string;
   price: string;
   discount: string;
-  imageUrl: string;
+  images: string[];
 };
 
 function toPaise(value: string): number {
@@ -291,7 +907,7 @@ function sizeToRow(size: SizeDraft, index: number): SizeRow {
     mrp: String(size.mrpPaise / 100),
     price: String(size.pricePaise / 100),
     discount: String(discountPercent(size.mrpPaise, size.pricePaise)),
-    imageUrl: size.imageUrl ?? "",
+    images: size.images,
   };
 }
 
@@ -299,6 +915,21 @@ export function SizesEditor({ defaultSizes }: { defaultSizes: SizeDraft[] }) {
   const [rows, setRows] = useState<SizeRow[]>(() =>
     defaultSizes.map((size, index) => sizeToRow(size, index))
   );
+  const [imageRowKey, setImageRowKey] = useState<string | null>(null);
+  const [uploading, setUploading] = useState(false);
+  const [uploadError, setUploadError] = useState<string | null>(null);
+  const imageRow = rows.find((row) => row.key === imageRowKey) ?? null;
+
+  useEffect(() => {
+    if (!imageRowKey) return;
+
+    function onKeyDown(event: KeyboardEvent) {
+      if (event.key === "Escape") setImageRowKey(null);
+    }
+
+    document.addEventListener("keydown", onKeyDown);
+    return () => document.removeEventListener("keydown", onKeyDown);
+  }, [imageRowKey]);
 
   const payload = useMemo(
     () =>
@@ -312,7 +943,8 @@ export function SizesEditor({ defaultSizes }: { defaultSizes: SizeDraft[] }) {
             mrpPaise,
             discountPercent: discountPercent(mrpPaise, pricePaise),
             pricePaise,
-            imageUrl: row.imageUrl.trim() === "" ? null : row.imageUrl.trim(),
+            images: row.images,
+            imageUrl: row.images[0] ?? null,
           };
         })
       ),
@@ -347,6 +979,67 @@ export function SizesEditor({ defaultSizes }: { defaultSizes: SizeDraft[] }) {
     );
   }
 
+  async function uploadImage(key: string, index: number, file: File) {
+    if (file.size > 2 * 1024 * 1024) {
+      setUploadError("Each image must be 2 MB or smaller.");
+      return;
+    }
+
+    setUploading(true);
+    setUploadError(null);
+
+    try {
+      const body = new FormData();
+      body.append("file", file);
+
+      const response = await fetch("/api/admin/upload", {
+        method: "POST",
+        body,
+      });
+      const result = (await response.json().catch(() => null)) as
+        | { url?: unknown; error?: unknown }
+        | null;
+
+      if (!response.ok || typeof result?.url !== "string") {
+        setUploadError(
+          typeof result?.error === "string"
+            ? result.error
+            : "Could not upload the image."
+        );
+        return;
+      }
+
+      setRows((current) =>
+        current.map((row) => {
+          if (row.key !== key) return row;
+          const images = [...row.images];
+          images[index] = result.url as string;
+          return {
+            ...row,
+            images: images.filter(Boolean).slice(0, 3),
+          };
+        })
+      );
+    } catch {
+      setUploadError("Could not upload the image.");
+    } finally {
+      setUploading(false);
+    }
+  }
+
+  function removeImage(key: string, index: number) {
+    setRows((current) =>
+      current.map((row) =>
+        row.key === key
+          ? {
+              ...row,
+              images: row.images.filter((_, imageIndex) => imageIndex !== index),
+            }
+          : row
+      )
+    );
+  }
+
   return (
     <div className="admin-sizes">
       <input type="hidden" name="sizes" value={payload} />
@@ -357,7 +1050,7 @@ export function SizesEditor({ defaultSizes }: { defaultSizes: SizeDraft[] }) {
         <span>MRP (₹)</span>
         <span>Discount</span>
         <span>Price (₹)</span>
-        <span>Image URL</span>
+        <span>Images</span>
         <span />
       </div>
 
@@ -407,12 +1100,16 @@ export function SizesEditor({ defaultSizes }: { defaultSizes: SizeDraft[] }) {
               onChange={(event) => update(row.key, "price", event.target.value)}
               required
             />
-            <input
-              aria-label="Size image URL"
-              value={row.imageUrl}
-              onChange={(event) => update(row.key, "imageUrl", event.target.value)}
-              placeholder="/assets/images/..."
-            />
+            <button
+              type="button"
+              className="admin-btn admin-btn--small"
+              onClick={() => {
+                setUploadError(null);
+                setImageRowKey(row.key);
+              }}
+            >
+              Images ({row.images.length}/3)
+            </button>
             <button
               type="button"
               className="admin-btn admin-btn--small admin-btn--ghost"
@@ -440,13 +1137,120 @@ export function SizesEditor({ defaultSizes }: { defaultSizes: SizeDraft[] }) {
               mrp: "0",
               price: "0",
               discount: "0",
-              imageUrl: "",
+              images: [],
             },
           ])
         }
       >
         Add size
       </button>
+
+      {imageRow ? (
+        <div
+          className="admin-image-modal"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="admin-image-modal-title"
+          onClick={(event) => {
+            if (event.target === event.currentTarget) setImageRowKey(null);
+          }}
+        >
+          <div className="admin-image-modal_panel">
+            <div className="admin-image-modal_head">
+              <div>
+                <h2 id="admin-image-modal-title">
+                  Images for {imageRow.label.trim() || "this size"}
+                </h2>
+                <p>Add, replace or delete up to three images.</p>
+              </div>
+              <button
+                type="button"
+                className="admin-btn admin-btn--small admin-btn--ghost"
+                onClick={() => setImageRowKey(null)}
+                aria-label="Close image manager"
+              >
+                Close
+              </button>
+            </div>
+
+            {uploadError ? (
+              <p className="admin-alert admin-alert--error" role="alert">
+                {uploadError}
+              </p>
+            ) : null}
+
+            <div className="admin-image-modal_grid">
+              {[0, 1, 2].map((index) => {
+                const image = imageRow.images[index] ?? "";
+                const inputId = `size-image-${imageRow.key}-${index}`;
+
+                return (
+                  <div
+                    className={`admin-image-slot${image ? " has-image" : ""}`}
+                    key={index}
+                  >
+                    <span className="admin-image-slot_label">
+                      Image {index + 1}
+                    </span>
+
+                    {image ? (
+                      <img
+                        className="admin-image-slot_preview"
+                        src={imageSrc(image)}
+                        alt=""
+                      />
+                    ) : (
+                      <span className="admin-image-slot_empty">No image</span>
+                    )}
+
+                    <div className="admin-image-slot_actions">
+                      <label
+                        className="admin-btn admin-btn--small"
+                        htmlFor={inputId}
+                      >
+                        {image ? "Edit" : "Add"}
+                      </label>
+                      <input
+                        id={inputId}
+                        className="admin-image-file"
+                        type="file"
+                        accept="image/jpeg,image/png,image/webp,image/avif"
+                        disabled={uploading}
+                        onChange={(event) => {
+                          const file = event.target.files?.[0];
+                          event.currentTarget.value = "";
+                          if (file) void uploadImage(imageRow.key, index, file);
+                        }}
+                      />
+                      {image ? (
+                        <button
+                          type="button"
+                          className="admin-btn admin-btn--small admin-btn--danger"
+                          onClick={() => removeImage(imageRow.key, index)}
+                          disabled={uploading}
+                        >
+                          Delete
+                        </button>
+                      ) : null}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            <div className="admin-image-modal_foot">
+              <span>{imageRow.images.length} of 3 images</span>
+              <button
+                type="button"
+                className="admin-btn admin-btn--primary"
+                onClick={() => setImageRowKey(null)}
+              >
+                Done
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 }

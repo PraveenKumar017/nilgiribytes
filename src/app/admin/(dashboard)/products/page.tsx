@@ -6,6 +6,7 @@ import {
   SizesEditor,
   type SizeDraft,
 } from "@/components/admin/admin-ui";
+import { EditIcon, TrashIcon } from "@/components/admin/icons";
 import {
   createProductAction,
   deleteProductAction,
@@ -18,6 +19,9 @@ import {
   type AdminCategory,
   type AdminProduct,
 } from "@/lib/admin";
+import { formatINR } from "@/lib/format";
+
+const SIZE_COLUMNS = [200, 250, 400, 500] as const;
 
 type PageProps = {
   searchParams: Promise<{
@@ -43,16 +47,14 @@ function ProductForm({
       grams: size.grams,
       mrpPaise: size.mrpPaise,
       pricePaise: size.pricePaise,
-      imageUrl: size.imageUrl,
-    })) ?? [
-      {
-        label: "500g",
-        grams: 500,
-        mrpPaise: 0,
-        pricePaise: 0,
-        imageUrl: null,
-      },
-    ];
+      images: size.images,
+    })) ?? [200, 250, 400, 500].map((grams) => ({
+      label: `${grams}g`,
+      grams,
+      mrpPaise: 0,
+      pricePaise: 0,
+      images: [],
+    }));
 
   return (
     <ActionForm
@@ -127,6 +129,11 @@ export default async function AdminProductsPage({ searchParams }: PageProps) {
             </p>
             <h1 className="admin-page-title">New product</h1>
           </div>
+          <div className="admin-page-actions">
+            <Link className="admin-btn" href="/admin/products">
+              &larr; Back to products
+            </Link>
+          </div>
         </header>
 
         {categories.length ? (
@@ -192,9 +199,14 @@ export default async function AdminProductsPage({ searchParams }: PageProps) {
             Manage varkey, biscuits and their size-wise pricing.
           </p>
         </div>
-        <Link className="admin-btn admin-btn--primary" href="/admin/products?new=1">
-          New product
-        </Link>
+        <div className="admin-page-actions">
+          <Link className="admin-btn" href="/admin/categories?new=1">
+            New category
+          </Link>
+          <Link className="admin-btn admin-btn--primary" href="/admin/products?new=1">
+            New product
+          </Link>
+        </div>
       </header>
 
       {params.created ? <p className="admin-alert admin-alert--success">Product created.</p> : null}
@@ -213,8 +225,9 @@ export default async function AdminProductsPage({ searchParams }: PageProps) {
                   <th>S.No</th>
                   <th>Name</th>
                   <th>Category</th>
-                  <th>Sizes</th>
-                  <th>Order</th>
+                  {SIZE_COLUMNS.map((grams) => (
+                    <th key={grams}>{grams}g</th>
+                  ))}
                   <th className="admin-table_actions">Actions</th>
                 </tr>
               </thead>
@@ -226,42 +239,37 @@ export default async function AdminProductsPage({ searchParams }: PageProps) {
                       <span className="admin-table_primary">{product.name}</span>
                     </td>
                     <td>{product.categoryName}</td>
-                    <td>{product.sizeCount}</td>
-                    <td>{product.sortOrder}</td>
+                    {SIZE_COLUMNS.map((grams) => {
+                      const size = product.sizes.find(
+                        (entry) =>
+                          entry.grams === grams ||
+                          entry.label.toLowerCase() === `${grams}g`
+                      );
+
+                      return (
+                        <td key={grams}>
+                          {size ? formatINR(size.pricePaise) : "\u2014"}
+                        </td>
+                      );
+                    })}
                     <td>
                       <div className="admin-row-actions">
                         <Link
-                          className="admin-btn admin-btn--small"
+                          className="admin-btn admin-btn--small admin-btn--icon"
                           href={`/admin/products?id=${product.id}`}
+                          aria-label={`Edit ${product.name}`}
+                          title="Edit"
                         >
-                          <svg viewBox="0 0 24 24" aria-hidden="true">
-                            <path
-                              d="M4 20h4.4L19 9.4a2 2 0 000-2.8l-1.6-1.6a2 2 0 00-2.8 0L4 15.6V20zM13.5 6.5l4 4"
-                              fill="none"
-                              stroke="currentColor"
-                              strokeWidth="1.8"
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                            />
-                          </svg>
-                          Edit
+                          <EditIcon />
                         </Link>
                         <form action={deleteProductAction}>
                           <input type="hidden" name="id" value={product.id} />
                           <ConfirmSubmit
+                            className="admin-btn admin-btn--small admin-btn--danger admin-btn--icon"
                             message={`Delete "${product.name}"? This cannot be undone.`}
+                            label={`Delete ${product.name}`}
                           >
-                            <svg viewBox="0 0 24 24" aria-hidden="true">
-                              <path
-                                d="M4 7h16M9 7V5.5A1.5 1.5 0 0110.5 4h3A1.5 1.5 0 0115 5.5V7M6.5 7l.8 12.1A1.9 1.9 0 009.2 21h5.6a1.9 1.9 0 001.9-1.9L17.5 7M10 11v6M14 11v6"
-                                fill="none"
-                                stroke="currentColor"
-                                strokeWidth="1.8"
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                              />
-                            </svg>
-                            Delete
+                            <TrashIcon />
                           </ConfirmSubmit>
                         </form>
                       </div>

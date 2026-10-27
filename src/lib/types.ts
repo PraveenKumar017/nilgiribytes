@@ -5,6 +5,7 @@ export type StoreSize = {
   discountPercent: number;
   pricePaise: number;
   imageUrl: string | null;
+  images: string[];
 };
 
 export type StoreProduct = {
@@ -37,9 +38,12 @@ export type StoreCombo = {
   category: "Combos";
   description: string;
   image: string;
+  images: string[];
   imageAlt: string;
   weight: string;
   pricePaise: number;
+  mrpPaise: number;
+  discountPercent: number;
   includes: ComboInclude[];
   sortOrder?: number;
 };

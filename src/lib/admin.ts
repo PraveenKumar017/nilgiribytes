@@ -91,6 +91,10 @@ export const productSizeSchema = z
     grams: z.number().int().positive().nullable(),
     mrpPaise: z.number().int().min(0),
     pricePaise: z.number().int().min(0),
+    images: z
+      .array(z.string().trim().min(1).max(500))
+      .max(3, "Add up to three images per size.")
+      .default([]),
     imageUrl: optionalString(500),
   })
   .refine((size) => size.mrpPaise >= size.pricePaise, {
@@ -124,10 +128,15 @@ export const comboSchema = z.object({
   name: z.string().trim().min(1, "Name is required.").max(160),
   description: z.string().trim().min(1, "Description is required.").max(5000),
   items: z.array(comboItemSchema).min(1, "Add at least one item."),
+  images: z
+    .array(z.string().trim().min(1).max(500))
+    .max(3, "Add up to three images per combo.")
+    .default([]),
   imageUrl: optionalString(500),
   imageAlt: optionalString(240),
   weightLabel: optionalString(60),
   pricePaise: z.number().int().positive("Price must be greater than zero."),
+  discountPercent: z.number().int().min(0).max(100).default(0),
   sortOrder: z.number().int().min(0),
   isActive: z.boolean(),
 });
@@ -144,6 +153,23 @@ export const blockSchema = z.union([
   listBlock,
 ]);
 
+export const settingsSchema = z.object({
+  codEnabled: z.boolean(),
+  offerBannerEnabled: z.boolean(),
+});
+
+export type AdminSettings = {
+  codEnabled: boolean;
+  offerBannerEnabled: boolean;
+};
+
+export const DEFAULT_SETTINGS: AdminSettings = {
+  codEnabled: false,
+  offerBannerEnabled: false,
+};
+
+export const postStatusSchema = z.enum(["DRAFT", "PUBLISHED"]);
+
 export const postSchema = z.object({
   slug,
   title: z.string().trim().min(1, "Title is required.").max(240),
@@ -156,7 +182,7 @@ export const postSchema = z.object({
   coverImage: optionalString(500),
   imageAlt: optionalString(240),
   excerpt: optionalString(2000),
-  status: z.enum(["DRAFT", "PUBLISHED"]),
+  status: postStatusSchema,
   content: z.array(blockSchema).min(1, "Add at least one content block."),
   readingTimeMin: z.number().int().min(0).nullable(),
 });
@@ -344,6 +370,7 @@ export type AdminSize = {
   mrpPaise: number;
   discountPercent: number;
   pricePaise: number;
+  images: string[];
   imageUrl: string | null;
 };
 
@@ -369,7 +396,7 @@ export type AdminProductRow = {
   slug: string;
   name: string;
   categoryName: string;
-  sizeCount: number;
+  sizes: { label: string; grams: number | null; pricePaise: number }[];
   isActive: boolean;
   sortOrder: number;
 };
@@ -381,10 +408,12 @@ export type AdminCombo = {
   name: string;
   description: string;
   items: { productId: string | null; name: string; quantity: string }[];
+  images: string[];
   imageUrl: string | null;
   imageAlt: string | null;
   weightLabel: string | null;
   pricePaise: number;
+  discountPercent: number;
   sortOrder: number;
   isActive: boolean;
 };
@@ -394,7 +423,9 @@ export type AdminComboRow = {
   sku: string | null;
   slug: string;
   name: string;
+  items: { productId: string | null; name: string; quantity: string }[];
   pricePaise: number;
+  discountPercent: number;
   isActive: boolean;
   sortOrder: number;
 };
@@ -544,8 +575,8 @@ export async function getCategory(id: number): Promise<AdminCategory | null> {
 
 export async function listProducts(): Promise<AdminProductRow[]> {
   const [rows] = await pool().query<RowDataPacket[]>(
-    `SELECT p.id, p.sku, p.slug, p.name, p.isActive, p.sortOrder,
-            c.name AS categoryName, JSON_LENGTH(p.sizes) AS sizeCount
+    `SELECT p.id, p.sku, p.slug, p.name, p.isActive, p.sortOrder, p.sizes,
+            c.name AS categoryName
        FROM Product p
        JOIN Category c ON c.id = p.categoryId
       ORDER BY p.sortOrder ASC, p.id ASC`
@@ -557,7 +588,14 @@ export async function listProducts(): Promise<AdminProductRow[]> {
     slug: String(row.slug),
     name: String(row.name),
     categoryName: String(row.categoryName),
-    sizeCount: Number(row.sizeCount ?? 0),
+    sizes: json<{ label: string; grams: number | null; pricePaise: number }[]>(
+      row.sizes,
+      []
+    ).map((size) => ({
+      label: String(size.label),
+      grams: size.grams == null ? null : Number(size.grams),
+      pricePaise: Number(size.pricePaise),
+    })),
     isActive: Boolean(row.isActive),
     sortOrder: Number(row.sortOrder),
   }));
@@ -584,7 +622,18 @@ export async function getProduct(id: number): Promise<AdminProduct | null> {
     description: String(row.description),
     categoryId: Number(row.categoryId),
     categoryName: String(row.categoryName),
-    sizes: json<AdminSize[]>(row.sizes, []),
+    sizes: json<(AdminSize & { images?: string[] | null })[]>(row.sizes, []).map(
+      (size) => {
+        const images = Array.isArray(size.images)
+          ? size.images.filter(
+              (image): image is string =>
+                typeof image === "string" && image.trim() !== ""
+            )
+          : [];
+        if (!images.length && size.imageUrl) images.push(size.imageUrl);
+        return { ...size, images, imageUrl: images[0] ?? null };
+      }
+    ),
     posterUrl: row.posterUrl ? String(row.posterUrl) : null,
     imageUrl: row.imageUrl ? String(row.imageUrl) : null,
     imageAlt: row.imageAlt ? String(row.imageAlt) : null,
@@ -595,7 +644,7 @@ export async function getProduct(id: number): Promise<AdminProduct | null> {
 
 export async function listCombos(): Promise<AdminComboRow[]> {
   const [rows] = await pool().query<RowDataPacket[]>(
-    `SELECT id, sku, slug, name, pricePaise, isActive, sortOrder
+    `SELECT id, sku, slug, name, items, pricePaise, discountPercent, isActive, sortOrder
        FROM Combo
       ORDER BY sortOrder ASC, id ASC`
   );
@@ -605,7 +654,9 @@ export async function listCombos(): Promise<AdminComboRow[]> {
     sku: row.sku ? String(row.sku) : null,
     slug: String(row.slug),
     name: String(row.name),
+    items: json<AdminComboRow["items"]>(row.items, []),
     pricePaise: Number(row.pricePaise),
+    discountPercent: Number(row.discountPercent ?? 0),
     isActive: Boolean(row.isActive),
     sortOrder: Number(row.sortOrder),
   }));
@@ -620,6 +671,11 @@ export async function getCombo(id: number): Promise<AdminCombo | null> {
   const row = rows[0];
   if (!row) return null;
 
+  const images = json<(string | null)[]>(row.images, []).filter(
+    (image): image is string => typeof image === "string" && image.trim() !== ""
+  );
+  if (!images.length && row.imageUrl) images.push(String(row.imageUrl));
+
   return {
     id: Number(row.id),
     sku: row.sku ? String(row.sku) : null,
@@ -627,10 +683,12 @@ export async function getCombo(id: number): Promise<AdminCombo | null> {
     name: String(row.name),
     description: String(row.description),
     items: json<AdminCombo["items"]>(row.items, []),
-    imageUrl: row.imageUrl ? String(row.imageUrl) : null,
+    images,
+    imageUrl: images[0] ?? null,
     imageAlt: row.imageAlt ? String(row.imageAlt) : null,
     weightLabel: row.weightLabel ? String(row.weightLabel) : null,
     pricePaise: Number(row.pricePaise),
+    discountPercent: Number(row.discountPercent ?? 0),
     sortOrder: Number(row.sortOrder),
     isActive: Boolean(row.isActive),
   };
@@ -648,6 +706,23 @@ export async function listProductOptions(): Promise<
     sku: row.sku ? String(row.sku) : null,
     name: String(row.name),
   }));
+}
+
+export async function getAdminSettings(): Promise<AdminSettings> {
+  const pool = getPool();
+  if (!pool) return DEFAULT_SETTINGS;
+
+  const [rows] = await pool.query<RowDataPacket[]>(
+    "SELECT `key`, value FROM Settings"
+  );
+  const settings = new Map(
+    rows.map((row) => [String(row.key), String(row.value)])
+  );
+
+  return {
+    codEnabled: settings.get("cod_enabled") === "true",
+    offerBannerEnabled: settings.get("offer_banner_enabled") === "true",
+  };
 }
 
 export async function listPosts(): Promise<AdminPostRow[]> {

@@ -16,9 +16,11 @@ import {
   orderStatusSchema,
   parseHidden,
   postSchema,
+  postStatusSchema,
   productSchema,
   revalidateStorefront,
   requireAdmin,
+  settingsSchema,
   type ActionState,
   type LoginState,
   type ProductInput,
@@ -155,10 +157,11 @@ type RawSize = {
   grams?: unknown;
   mrpPaise?: unknown;
   pricePaise?: unknown;
+  images?: unknown;
   imageUrl?: unknown;
 };
 
-function slugifyProductName(value: string): string {
+function slugifyName(value: string): string {
   return (
     value
       .toLowerCase()
@@ -187,27 +190,58 @@ async function uniqueProductSlug(base: string): Promise<string> {
   }
 }
 
+async function uniqueComboSlug(base: string): Promise<string> {
+  const pool = getPool();
+  const normalized = base || "combo";
+  let candidate = normalized;
+  let suffix = 2;
+
+  if (!pool) return candidate;
+
+  while (true) {
+    const [rows] = await pool.query<RowDataPacket[]>(
+      "SELECT id FROM Combo WHERE slug = ? LIMIT 1",
+      [candidate]
+    );
+    if (!rows.length) return candidate;
+    candidate = `${normalized}-${suffix++}`;
+  }
+}
+
 function readProduct(formData: FormData) {
   const rawSizes = parseHidden<RawSize[]>(formData, "sizes", []);
   const name = formText(formData, "name");
 
   return {
     sku: formText(formData, "sku"),
-    slug: formText(formData, "slug") || slugifyProductName(name),
+    slug: formText(formData, "slug") || slugifyName(name),
     name,
     description: formText(formData, "description"),
     categoryId: formInt(formData, "categoryId"),
-    sizes: rawSizes.map((size) => ({
-      label: typeof size.label === "string" ? size.label : "",
-      grams:
-        size.grams == null || size.grams === "" ? null : Number(size.grams),
-      mrpPaise: Number(size.mrpPaise ?? 0),
-      pricePaise: Number(size.pricePaise ?? 0),
-      imageUrl:
+    sizes: rawSizes.map((size) => {
+      const images = Array.isArray(size.images)
+        ? size.images.filter(
+            (image): image is string =>
+              typeof image === "string" && image.trim() !== ""
+          )
+        : [];
+      const legacyImage =
         typeof size.imageUrl === "string" && size.imageUrl.trim() !== ""
           ? size.imageUrl
-          : null,
-    })),
+          : null;
+
+      if (!images.length && legacyImage) images.push(legacyImage);
+
+      return {
+        label: typeof size.label === "string" ? size.label : "",
+        grams:
+          size.grams == null || size.grams === "" ? null : Number(size.grams),
+        mrpPaise: Number(size.mrpPaise ?? 0),
+        pricePaise: Number(size.pricePaise ?? 0),
+        images: images.slice(0, 3),
+        imageUrl: images[0] ?? null,
+      };
+    }),
     posterUrl: formText(formData, "posterUrl"),
     imageUrl: formText(formData, "imageUrl"),
     imageAlt: formText(formData, "imageAlt"),
@@ -226,7 +260,8 @@ function sizesForStorage(data: ProductInput) {
         ? Math.round(((size.mrpPaise - size.pricePaise) / size.mrpPaise) * 100)
         : 0,
     pricePaise: size.pricePaise,
-    imageUrl: size.imageUrl,
+    images: size.images,
+    imageUrl: size.images[0] ?? null,
   }));
 }
 
@@ -356,12 +391,17 @@ type RawItem = {
 
 function readCombo(formData: FormData) {
   const rawItems = parseHidden<RawItem[]>(formData, "items", []);
+  const rawImages = parseHidden<(string | null)[]>(formData, "images", []);
   const price = Number(formText(formData, "price"));
+  const name = formText(formData, "name");
+  const images = rawImages.filter(
+    (image): image is string => typeof image === "string" && image.trim() !== ""
+  );
 
   return {
     sku: formText(formData, "sku"),
-    slug: formText(formData, "slug"),
-    name: formText(formData, "name"),
+    slug: formText(formData, "slug") || slugifyName(name),
+    name,
     description: formText(formData, "description"),
     items: rawItems.map((item) => ({
       productId:
@@ -371,10 +411,12 @@ function readCombo(formData: FormData) {
       name: typeof item.name === "string" ? item.name : "",
       quantity: typeof item.quantity === "string" ? item.quantity : "",
     })),
-    imageUrl: formText(formData, "imageUrl"),
+    images,
+    imageUrl: images[0] ?? formText(formData, "imageUrl"),
     imageAlt: formText(formData, "imageAlt"),
     weightLabel: formText(formData, "weightLabel"),
     pricePaise: Number.isFinite(price) ? Math.round(price * 100) : 0,
+    discountPercent: formInt(formData, "discountPercent"),
     sortOrder: formInt(formData, "sortOrder"),
     isActive: formBool(formData, "isActive"),
   };
@@ -386,6 +428,7 @@ export async function createComboAction(
 ): Promise<ActionState> {
   await requireAdmin();
 
+  const requestedSlug = formText(formData, "slug");
   const parsed = comboSchema.safeParse(readCombo(formData));
   if (!parsed.success) return { error: firstIssue(parsed.error) };
 
@@ -393,23 +436,28 @@ export async function createComboAction(
   if (!pool) return { error: "Database is not configured." };
 
   const data = parsed.data;
+  if (!requestedSlug) {
+    data.slug = await uniqueComboSlug(data.slug);
+  }
 
   try {
     await pool.execute(
       `INSERT INTO Combo
-         (sku, slug, name, description, items, imageUrl, imageAlt, weightLabel,
-          pricePaise, sortOrder, isActive, updatedAt)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(3))`,
+         (sku, slug, name, description, items, images, imageUrl, imageAlt, weightLabel,
+          pricePaise, discountPercent, sortOrder, isActive, updatedAt)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(3))`,
       [
         data.sku,
         data.slug,
         data.name,
         data.description,
         JSON.stringify(data.items),
+        JSON.stringify(data.images),
         data.imageUrl,
         data.imageAlt,
         data.weightLabel,
         data.pricePaise,
+        data.discountPercent,
         data.sortOrder,
         data.isActive,
       ]
@@ -445,9 +493,9 @@ export async function updateComboAction(
   try {
     await pool.execute(
       `UPDATE Combo
-          SET sku = ?, slug = ?, name = ?, description = ?, items = ?,
+          SET sku = ?, slug = ?, name = ?, description = ?, items = ?, images = ?,
               imageUrl = ?, imageAlt = ?, weightLabel = ?, pricePaise = ?,
-              sortOrder = ?, isActive = ?, updatedAt = NOW(3)
+              discountPercent = ?, sortOrder = ?, isActive = ?, updatedAt = NOW(3)
         WHERE id = ?`,
       [
         data.sku,
@@ -455,10 +503,12 @@ export async function updateComboAction(
         data.name,
         data.description,
         JSON.stringify(data.items),
+        JSON.stringify(data.images),
         data.imageUrl,
         data.imageAlt,
         data.weightLabel,
         data.pricePaise,
+        data.discountPercent,
         data.sortOrder,
         data.isActive,
         id,
@@ -614,6 +664,35 @@ export async function updatePostAction(
   redirect(`/admin/blog?id=${id}&updated=1`);
 }
 
+export async function updatePostStatusAction(formData: FormData): Promise<void> {
+  await requireAdmin();
+
+  const id = formInt(formData, "id");
+  if (!id) redirect("/admin/blog?error=not-found");
+
+  const parsed = postStatusSchema.safeParse(formText(formData, "status"));
+  if (!parsed.success) redirect("/admin/blog?error=invalid-status");
+
+  const pool = getPool();
+  if (!pool) redirect("/admin/blog?error=database");
+
+  const [rows] = await pool.query<RowDataPacket[]>(
+    "SELECT slug FROM BlogPost WHERE id = ? LIMIT 1",
+    [id]
+  );
+  const slug = rows[0]?.slug ? String(rows[0].slug) : null;
+  if (!slug) redirect("/admin/blog?error=not-found");
+
+  await pool.execute(
+    "UPDATE BlogPost SET status = ?, updatedAt = NOW(3) WHERE id = ?",
+    [parsed.data, id]
+  );
+
+  revalidateStorefront();
+  revalidatePath(`/blog/${slug}`);
+  redirect("/admin/blog?status=1");
+}
+
 export async function deletePostAction(formData: FormData): Promise<void> {
   await requireAdmin();
 
@@ -627,6 +706,46 @@ export async function deletePostAction(formData: FormData): Promise<void> {
 
   revalidateStorefront();
   redirect("/admin/blog?deleted=1");
+}
+
+/* -------------------------------------------------------------------------- */
+/* Settings                                                                   */
+/* -------------------------------------------------------------------------- */
+
+export async function updateSettingsAction(
+  _previous: ActionState,
+  formData: FormData
+): Promise<ActionState> {
+  await requireAdmin();
+
+  const parsed = settingsSchema.safeParse({
+    codEnabled: formBool(formData, "codEnabled"),
+    offerBannerEnabled: formBool(formData, "offerBannerEnabled"),
+  });
+  if (!parsed.success) return { error: firstIssue(parsed.error) };
+
+  const pool = getPool();
+  if (!pool) return { error: "Database is not configured." };
+
+  const settings = [
+    ["cod_enabled", parsed.data.codEnabled ? "true" : "false"],
+    [
+      "offer_banner_enabled",
+      parsed.data.offerBannerEnabled ? "true" : "false",
+    ],
+  ];
+
+  for (const [key, value] of settings) {
+    await pool.execute(
+      "INSERT INTO Settings (`key`, value) VALUES (?, ?) ON DUPLICATE KEY UPDATE value = VALUES(value)",
+      [key, value]
+    );
+  }
+
+  revalidatePath("/admin/settings");
+  revalidatePath("/");
+  revalidatePath("/policies/store");
+  redirect("/admin/settings?saved=1");
 }
 
 /* -------------------------------------------------------------------------- */

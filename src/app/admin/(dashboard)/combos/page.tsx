@@ -3,10 +3,11 @@ import { notFound } from "next/navigation";
 import {
   ActionForm,
   ConfirmSubmit,
-  ImageField,
+  ImagesField,
   ItemsEditor,
   type ComboItemDraft,
 } from "@/components/admin/admin-ui";
+import { EditIcon, TrashIcon } from "@/components/admin/icons";
 import {
   createComboAction,
   deleteComboAction,
@@ -45,6 +46,15 @@ function ComboForm({
   return (
     <ActionForm action={combo ? updateComboAction : createComboAction} submitLabel={combo ? "Save combo" : "Create combo"}>
       {combo ? <input type="hidden" name="id" value={combo.id} /> : null}
+      <input type="hidden" name="sku" value={combo?.sku ?? ""} />
+      <input type="hidden" name="slug" value={combo?.slug ?? ""} />
+      <input type="hidden" name="imageAlt" value={combo?.imageAlt ?? ""} />
+      <input type="hidden" name="sortOrder" value={combo?.sortOrder ?? 0} />
+      <input
+        type="hidden"
+        name="isActive"
+        value={combo ? String(combo.isActive) : "true"}
+      />
 
       <div className="admin-form_grid">
         <label className="admin-field">
@@ -53,16 +63,13 @@ function ComboForm({
         </label>
 
         <label className="admin-field">
-          <span>SKU</span>
-          <input name="sku" defaultValue={combo?.sku ?? ""} placeholder="cm-004" />
-        </label>
-
-        <label className="admin-field">
-          <span>Slug</span>
+          <span>Price (₹)</span>
           <input
-            name="slug"
-            defaultValue={combo?.slug ?? ""}
-            placeholder="tea-time-combo"
+            name="price"
+            type="number"
+            min={0}
+            step="0.01"
+            defaultValue={combo ? String(combo.pricePaise / 100) : ""}
             required
           />
         </label>
@@ -73,6 +80,19 @@ function ComboForm({
             name="weightLabel"
             defaultValue={combo?.weightLabel ?? ""}
             placeholder="1 kg total"
+          />
+        </label>
+
+        <label className="admin-field">
+          <span>Discount (%)</span>
+          <input
+            name="discountPercent"
+            type="number"
+            min={0}
+            max={100}
+            step="1"
+            defaultValue={combo?.discountPercent ?? 0}
+            placeholder="0"
           />
         </label>
       </div>
@@ -96,39 +116,11 @@ function ComboForm({
       </div>
 
       <div className="admin-form_grid">
-        <ImageField name="imageUrl" label="Image" defaultValue={combo?.imageUrl} />
-        <label className="admin-field">
-          <span>Image alt text</span>
-          <input name="imageAlt" defaultValue={combo?.imageAlt ?? ""} />
-        </label>
-        <label className="admin-field">
-          <span>Price (₹)</span>
-          <input
-            name="price"
-            type="number"
-            min={0}
-            step="0.01"
-            defaultValue={combo ? String(combo.pricePaise / 100) : ""}
-            required
-          />
-        </label>
-        <label className="admin-field">
-          <span>Sort order</span>
-          <input
-            name="sortOrder"
-            type="number"
-            min={0}
-            defaultValue={combo?.sortOrder ?? 0}
-          />
-        </label>
-        <label className="admin-checkbox">
-          <input
-            name="isActive"
-            type="checkbox"
-            defaultChecked={combo?.isActive ?? true}
-          />
-          <span>Visible on the storefront</span>
-        </label>
+        <ImagesField
+          name="images"
+          label="Images"
+          defaultImages={combo?.images}
+        />
       </div>
     </ActionForm>
   );
@@ -150,6 +142,11 @@ export default async function AdminCombosPage({ searchParams }: PageProps) {
               <Link href="/admin/combos">Combos</Link> / New
             </p>
             <h1 className="admin-page-title">New combo</h1>
+          </div>
+          <div className="admin-page-actions">
+            <Link className="admin-btn" href="/admin/combos">
+              &larr; Back to combos
+            </Link>
           </div>
         </header>
 
@@ -178,6 +175,11 @@ export default async function AdminCombosPage({ searchParams }: PageProps) {
             <p className="admin-page-text">
               {combo.items.length} item{combo.items.length === 1 ? "" : "s"} in this combo.
             </p>
+          </div>
+          <div className="admin-page-actions">
+            <Link className="admin-btn" href="/admin/combos">
+              &larr; Back to combos
+            </Link>
           </div>
         </header>
 
@@ -218,10 +220,8 @@ export default async function AdminCombosPage({ searchParams }: PageProps) {
               <thead>
                 <tr>
                   <th>Name</th>
-                  <th>SKU</th>
+                  <th>Products</th>
                   <th>Price</th>
-                  <th>Order</th>
-                  <th>Status</th>
                   <th className="admin-table_actions">Actions</th>
                 </tr>
               </thead>
@@ -230,34 +230,37 @@ export default async function AdminCombosPage({ searchParams }: PageProps) {
                   <tr key={combo.id}>
                     <td>
                       <span className="admin-table_primary">{combo.name}</span>
-                      <span className="admin-table_sub">{combo.slug}</span>
                     </td>
-                    <td className="admin-mono">{combo.sku ?? "—"}</td>
-                    <td>{formatINR(combo.pricePaise)}</td>
-                    <td>{combo.sortOrder}</td>
                     <td>
-                      <span
-                        className={`admin-badge ${
-                          combo.isActive ? "admin-badge--published" : "admin-badge--draft"
-                        }`}
-                      >
-                        {combo.isActive ? "Active" : "Hidden"}
-                      </span>
+                      {combo.items.length
+                        ? combo.items
+                            .map((item) =>
+                              item.quantity
+                                ? `${item.name} (${item.quantity})`
+                                : item.name
+                            )
+                            .join(", ")
+                        : "\u2014"}
                     </td>
+                    <td>{formatINR(combo.pricePaise)}</td>
                     <td>
                       <div className="admin-row-actions">
                         <Link
-                          className="admin-btn admin-btn--small"
+                          className="admin-btn admin-btn--small admin-btn--icon"
                           href={`/admin/combos?id=${combo.id}`}
+                          aria-label={`Edit ${combo.name}`}
+                          title="Edit"
                         >
-                          Edit
+                          <EditIcon />
                         </Link>
                         <form action={deleteComboAction}>
                           <input type="hidden" name="id" value={combo.id} />
                           <ConfirmSubmit
+                            className="admin-btn admin-btn--small admin-btn--danger admin-btn--icon"
                             message={`Delete "${combo.name}"? This cannot be undone.`}
+                            label={`Delete ${combo.name}`}
                           >
-                            Delete
+                            <TrashIcon />
                           </ConfirmSubmit>
                         </form>
                       </div>

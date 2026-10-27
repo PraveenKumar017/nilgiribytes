@@ -78,6 +78,7 @@ type SizeJson = {
   discountPercent: number;
   pricePaise: number;
   imageUrl: string | null;
+  images?: (string | null)[] | null;
 };
 
 type ComboItemJson = {
@@ -106,10 +107,12 @@ type ComboRow = RowDataPacket & {
   name: string;
   description: string;
   items: unknown;
+  images: unknown;
   imageUrl: string | null;
   imageAlt: string | null;
   weightLabel: string | null;
   pricePaise: number;
+  discountPercent: number;
 };
 
 type BlogPostRow = RowDataPacket & {
@@ -160,12 +163,16 @@ function legacyProducts(): StoreProduct[] {
   const used = new Set<string>();
   return (catalogJson.products as LegacyProduct[]).map((product, index) => {
     const slug = uniqueSlug(product.name, used);
-    const sizes: StoreSize[] = (product.sizes ?? []).map((size) => ({
-      label: size.label,
-      grams: size.grams ?? null,
-      ...legacySizePricing(size),
-      imageUrl: assetUrl(product.sizeImages?.[size.label] ?? product.image),
-    }));
+    const sizes: StoreSize[] = (product.sizes ?? []).map((size) => {
+      const imageUrl = assetUrl(product.sizeImages?.[size.label] ?? product.image);
+      return {
+        label: size.label,
+        grams: size.grams ?? null,
+        ...legacySizePricing(size),
+        imageUrl,
+        images: [imageUrl],
+      };
+    });
 
     return {
       kind: "product",
@@ -197,9 +204,12 @@ function legacyCombos(): StoreCombo[] {
       category: "Combos",
       description: combo.description ?? "",
       image: assetUrl(combo.image),
+      images: [assetUrl(combo.image)],
       imageAlt: `${combo.name} \u2014 Nilgiribytes combo pack`,
       weight: combo.weight ?? "1 kg total",
       pricePaise: Math.round(combo.price * 100),
+      mrpPaise: Math.round(combo.price * 100),
+      discountPercent: 0,
       includes: (combo.includes ?? []).map((item) => ({
         productId: item.productId ?? null,
         name: item.name,
@@ -313,8 +323,8 @@ export async function getCatalog(): Promise<Catalog> {
             ORDER BY p.sortOrder ASC, p.id ASC`
         ),
         pool.query<ComboRow[]>(
-          `SELECT id, sku, slug, name, description, items, imageUrl, imageAlt,
-                  weightLabel, pricePaise
+          `SELECT id, sku, slug, name, description, items, images, imageUrl, imageAlt,
+                  weightLabel, pricePaise, discountPercent
              FROM Combo
             WHERE isActive = 1
             ORDER BY sortOrder ASC, id ASC`
@@ -333,33 +343,63 @@ export async function getCatalog(): Promise<Catalog> {
           image: assetUrl(product.imageUrl || product.posterUrl),
           poster: product.posterUrl ? assetUrl(product.posterUrl) : "",
           imageAlt: product.imageAlt || `${product.name} from Nilgiribytes`,
-          sizes: parseJsonArray<SizeJson>(product.sizes).map((size) => ({
-            label: size.label,
-            grams: size.grams,
-            mrpPaise: size.mrpPaise,
-            discountPercent: size.discountPercent,
-            pricePaise: size.pricePaise,
-            imageUrl: assetUrl(size.imageUrl ?? product.imageUrl),
-          })),
+          sizes: parseJsonArray<SizeJson>(product.sizes).map((size) => {
+            const images = (size.images ?? [])
+              .filter(
+                (image): image is string =>
+                  typeof image === "string" && image.trim() !== ""
+              )
+              .map(assetUrl);
+
+            if (!images.length) {
+              images.push(assetUrl(size.imageUrl ?? product.imageUrl));
+            }
+
+            return {
+              label: size.label,
+              grams: size.grams,
+              mrpPaise: size.mrpPaise,
+              discountPercent: size.discountPercent,
+              pricePaise: size.pricePaise,
+              imageUrl: images[0] ?? null,
+              images,
+            };
+          }),
         })),
-        combos: comboRows[0].map((combo) => ({
-          kind: "combo" as const,
-          id: combo.sku ?? combo.slug,
-          sku: combo.sku,
-          slug: combo.slug,
-          name: combo.name,
-          category: "Combos" as const,
-          description: combo.description,
-          image: assetUrl(combo.imageUrl),
-          imageAlt: combo.imageAlt || `${combo.name} from Nilgiribytes`,
-          weight: combo.weightLabel ?? "1 kg total",
-          pricePaise: combo.pricePaise,
-          includes: parseJsonArray<ComboItemJson>(combo.items).map((item) => ({
-            productId: item.productId ? String(item.productId) : null,
-            name: item.name,
-            quantity: item.quantity,
-          })),
-        })),
+        combos: comboRows[0].map((combo) => {
+          const mrpPaise = Number(combo.pricePaise);
+          const discountPercent = Math.min(
+            100,
+            Math.max(0, Number(combo.discountPercent ?? 0))
+          );
+          const images = parseJsonArray<string>(combo.images)
+            .filter((image) => typeof image === "string" && image.trim() !== "")
+            .map(assetUrl);
+          const image = assetUrl(combo.imageUrl);
+          if (!images.length) images.push(image);
+
+          return {
+            kind: "combo" as const,
+            id: combo.sku ?? combo.slug,
+            sku: combo.sku,
+            slug: combo.slug,
+            name: combo.name,
+            category: "Combos" as const,
+            description: combo.description,
+            image: images[0] ?? image,
+            images,
+            imageAlt: combo.imageAlt || `${combo.name} from Nilgiribytes`,
+            weight: combo.weightLabel ?? "1 kg total",
+            pricePaise: Math.round(mrpPaise * (100 - discountPercent) / 100),
+            mrpPaise,
+            discountPercent,
+              includes: parseJsonArray<ComboItemJson>(combo.items).map((item) => ({
+              productId: item.productId ? String(item.productId) : null,
+              name: item.name,
+              quantity: item.quantity,
+            })),
+          };
+        }),
       };
     } catch (error) {
       databaseFailed = true;
