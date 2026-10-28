@@ -28,6 +28,14 @@ export const metadata: Metadata = pageMetadata({
   image: "/assets/Fresh_Pastries.png",
 });
 
+const CARD_TYPE_TO_FORM_TYPE: Record<string, string> = {
+  "Wholesale supply": "Wholesale supply",
+  "Distributor partnership": "Distributor partnership",
+  "Cafes & restaurants": "Cafe / restaurant supply",
+  "Bulk orders": "Bulk order",
+  "Corporate gifting": "Corporate gifting",
+};
+
 const ENQUIRY_TYPES = [
   {
     title: "Wholesale supply",
@@ -211,7 +219,7 @@ export default function WholesalePage() {
                     <li>Direct bakery pricing</li>
                   </ul>
                 )}
-                <a className="wholesale-partner_link" href="#wholesale-enquiry">
+                <a className="wholesale-partner_link" href={`#wholesale-enquiry?type=${encodeURIComponent(CARD_TYPE_TO_FORM_TYPE[item.title])}`}>
                   Start an enquiry <span aria-hidden="true">&rarr;</span>
                 </a>
               </article>

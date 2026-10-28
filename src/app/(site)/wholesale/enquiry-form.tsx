@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { whatsappLink } from "@/lib/whatsapp";
 
 const ENQUIRY_TYPES = [
@@ -19,6 +19,36 @@ function formText(data: FormData, key: string): string {
 
 export function WholesaleEnquiryForm() {
   const [status, setStatus] = useState("");
+  const [enquiryType, setEnquiryType] = useState("");
+
+  useEffect(() => {
+    // Function to handle hash changes and scroll
+    const handleHashChange = () => {
+      const hash = window.location.hash;
+      const match = hash.match(/type=([^&]*)/);
+      if (match) {
+        const type = decodeURIComponent(match[1]);
+        
+        if (ENQUIRY_TYPES.includes(type)) {
+          setEnquiryType(type);
+          // Scroll to the form smoothly
+          setTimeout(() => {
+            const formElement = document.getElementById("wholesale-enquiry");
+            if (formElement) {
+              formElement.scrollIntoView({ behavior: "smooth", block: "start" });
+            }
+          }, 50);
+        }
+      }
+    };
+
+    // Handle initial load
+    handleHashChange();
+
+    // Listen for hash changes
+    window.addEventListener("hashchange", handleHashChange);
+    return () => window.removeEventListener("hashchange", handleHashChange);
+  }, []);
 
   function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -28,7 +58,7 @@ export function WholesaleEnquiryForm() {
     const phone = formText(data, "phone");
     const email = formText(data, "email");
     const city = formText(data, "city");
-    const enquiryType = formText(data, "enquiryType");
+    const selectedEnquiryType = formText(data, "enquiryType");
     const quantity = formText(data, "quantity");
     const timeline = formText(data, "timeline");
     const message = formText(data, "message");
@@ -36,7 +66,7 @@ export function WholesaleEnquiryForm() {
     const lines = [
       "Hello Nilgiribytes! I would like to make a business enquiry.",
       "",
-      `Enquiry type: ${enquiryType}`,
+      `Enquiry type: ${selectedEnquiryType}`,
       `Name: ${name}`,
       business ? `Business: ${business}` : "",
       `Phone: ${phone}`,
@@ -137,7 +167,8 @@ export function WholesaleEnquiryForm() {
             className="select"
             id="wholesale-type"
             name="enquiryType"
-            defaultValue=""
+            value={enquiryType}
+            onChange={(e) => setEnquiryType(e.target.value)}
             required
           >
             <option value="" disabled>

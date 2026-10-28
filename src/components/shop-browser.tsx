@@ -34,6 +34,7 @@ export function ShopBrowser({ catalog, initialCategory }: ShopBrowserProps) {
   );
   const [sort, setSort] = useState<Sort>("featured");
   const [selected, setSelected] = useState<StoreItem | null>(null);
+  const [filterOpen, setFilterOpen] = useState(false);
 
   const items = useMemo(() => {
     let list = allItems.slice();
@@ -61,6 +62,26 @@ export function ShopBrowser({ catalog, initialCategory }: ShopBrowserProps) {
   return (
     <>
       <div className="shop-toolbar reveal" data-reveal="fade-up">
+        <button
+          type="button"
+          className="filter-icon-btn"
+          aria-label="Open category filter"
+          onClick={() => setFilterOpen(true)}
+        >
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            aria-hidden="true"
+            focusable="false"
+          >
+            <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3" />
+          </svg>
+        </button>
+
         <div className="filter-chips" role="group" aria-label="Filter by category">
           {CATEGORIES.map((value) => (
             <button
@@ -92,6 +113,45 @@ export function ShopBrowser({ catalog, initialCategory }: ShopBrowserProps) {
           </div>
         </div>
       </div>
+
+      {/* Filter Sheet Modal for Mobile */}
+      {filterOpen && (
+        <>
+          <div
+            className="filter-sheet-overlay"
+            onClick={() => setFilterOpen(false)}
+            aria-hidden="true"
+          />
+          <div className="filter-sheet" role="dialog" aria-modal="true">
+            <div className="filter-sheet_header">
+              <h2>Filter by Category</h2>
+              <button
+                type="button"
+                className="filter-sheet_close"
+                aria-label="Close filter"
+                onClick={() => setFilterOpen(false)}
+              >
+                ✕
+              </button>
+            </div>
+            <div className="filter-sheet_content">
+              {CATEGORIES.map((value) => (
+                <button
+                  key={value}
+                  className={`filter-sheet_item${category === value ? " is-active" : ""}`}
+                  type="button"
+                  onClick={() => {
+                    setCategory(value);
+                    setFilterOpen(false);
+                  }}
+                >
+                  {value}
+                </button>
+              ))}
+            </div>
+          </div>
+        </>
+      )}
 
       <p className="form-hint" role="status" aria-live="polite">
         {items.length} {items.length === 1 ? "product" : "products"}

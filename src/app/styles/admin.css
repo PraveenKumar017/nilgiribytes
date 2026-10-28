@@ -536,6 +536,12 @@
   font-size: 0.86rem;
 }
 
+.admin-field input::placeholder,
+.admin-field textarea::placeholder {
+  font-size: 0.82rem;
+  color: var(--color-muted);
+}
+
 .admin-field textarea {
   resize: vertical;
   min-height: 80px;

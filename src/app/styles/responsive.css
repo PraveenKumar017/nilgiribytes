@@ -72,8 +72,21 @@
 }
 
 .shop-toolbar {
-  flex-direction: column;
-  align-items: stretch;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.filter-icon-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.filter-chips {
+  display: none;
 }
 
 .shop-controls {
@@ -346,6 +359,21 @@
   .shop-toolbar {
     flex-direction: row;
     align-items: center;
+  }
+
+  .filter-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+
+  .filter-icon-btn {
+    display: none;
+  }
+
+  .filter-sheet-overlay,
+  .filter-sheet {
+    display: none !important;
   }
 
   .shop-controls {
