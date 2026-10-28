@@ -97,16 +97,14 @@ export function ProductCard({
           <p className="product-card_price">
             {hasDiscount ? (
               <span className="price-offer">
-                <span className="price-current">{formatINR(price)}</span>
                 <s className="price-mrp">{formatINR(mrp)}</s>
-                <span className="price-discount">{discount}% OFF</span>
+                <span className="price-current">{formatINR(price)}</span>
               </span>
             ) : (
               <span className="price-offer">
                 <span className="price-current">{formatINR(price)}</span>
               </span>
             )}
-            {item.kind === "combo" ? null : null}
           </p>
         </div>
 

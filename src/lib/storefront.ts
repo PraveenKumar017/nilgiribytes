@@ -301,34 +301,32 @@ export async function getCatalog(): Promise<Catalog> {
   try {
     const [productRows, comboRows] = await Promise.all([
       pool.query<ProductRow[]>(
-        `SELECT p.id, p.sku, p.slug, p.name, p.description, p.sizes,
-                c.name AS categoryName, p.posterUrl, p.imageUrl, p.imageAlt
+        `SELECT p.id, p.name, p.description, p.sizes,
+                c.name AS categoryName, p.posterUrl, p.imageUrl
            FROM Product p
            JOIN Category c ON c.id = p.categoryId
-          WHERE p.isActive = 1
           ORDER BY p.sortOrder ASC, p.id ASC`
       ),
       pool.query<ComboRow[]>(
-        `SELECT id, sku, slug, name, description, items, images, imageUrl, imageAlt,
+        `SELECT id, name, description, items, imageUrl,
                 weightLabel, pricePaise, discountPercent
            FROM Combo
-          WHERE isActive = 1
           ORDER BY sortOrder ASC, id ASC`
       ),
     ]);
 
     return {
-      products: productRows[0].map((product) => ({
+      products: productRows[0].map((product, index) => ({
         kind: "product" as const,
-        id: product.sku ?? product.slug,
-        sku: product.sku,
-        slug: product.slug,
+        id: `p-${product.id}-${index}`,
+        sku: null,
+        slug: null,
         name: product.name,
         category: product.categoryName,
         description: product.description,
         image: assetUrl(product.imageUrl || product.posterUrl),
         poster: product.posterUrl ? assetUrl(product.posterUrl) : "",
-        imageAlt: product.imageAlt || `${product.name} from Nilgiribytes`,
+        imageAlt: `${product.name} from Nilgiribytes`,
         sizes: parseJsonArray<SizeJson>(product.sizes).map((size) => {
           const images = (size.images ?? [])
             .filter(
@@ -352,7 +350,7 @@ export async function getCatalog(): Promise<Catalog> {
           };
         }),
       })),
-      combos: comboRows[0].map((combo) => {
+      combos: comboRows[0].map((combo, index) => {
         const mrpPaise = Number(combo.pricePaise);
         const discountPercent = Math.min(
           100,
@@ -366,15 +364,15 @@ export async function getCatalog(): Promise<Catalog> {
 
         return {
           kind: "combo" as const,
-          id: combo.sku ?? combo.slug,
-          sku: combo.sku,
-          slug: combo.slug,
+          id: `c-${combo.id}-${index}`,
+          sku: null,
+          slug: null,
           name: combo.name,
           category: "Combos" as const,
           description: combo.description,
           image: images[0] ?? image,
           images,
-          imageAlt: combo.imageAlt || `${combo.name} from Nilgiribytes`,
+          imageAlt: `${combo.name} from Nilgiribytes`,
           weight: combo.weightLabel ?? "1 kg total",
           pricePaise: Math.round((mrpPaise * (100 - discountPercent)) / 100),
           mrpPaise,
@@ -400,7 +398,7 @@ export async function getPublishedPosts(): Promise<StorePost[]> {
 
   try {
     const [rows] = await pool.query<BlogPostRow[]>(
-      `SELECT slug, title, category, author, \`date\`, coverImage, imageAlt,
+      `SELECT id, title, category, author, \`date\`, coverImage,
               excerpt, content, readingTimeMin
          FROM BlogPost
         WHERE status = 'PUBLISHED'
@@ -411,7 +409,7 @@ export async function getPublishedPosts(): Promise<StorePost[]> {
       const blocks = parseContent(post.content);
       const date = post.date instanceof Date ? post.date : new Date(post.date);
       return {
-        slug: post.slug,
+        slug: String(post.id),
         title: post.title,
         category: post.category,
         author: post.author || "Nilgiribytes Team",
@@ -420,7 +418,7 @@ export async function getPublishedPosts(): Promise<StorePost[]> {
           ? `${post.readingTimeMin} min read`
           : readingTime(blocks),
         image: assetUrl(post.coverImage),
-        imageAlt: post.imageAlt || post.title,
+        imageAlt: post.title,
         excerpt: post.excerpt || excerptFromBlocks(blocks),
         content: blocks,
         status: "published" as const,
