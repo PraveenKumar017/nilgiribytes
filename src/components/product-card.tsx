@@ -96,14 +96,17 @@ export function ProductCard({
           </h3>
           <p className="product-card_price">
             {hasDiscount ? (
-              <s className="price-mrp">{formatINR(mrp)}</s>
-            ) : null}
-            <span className="price-current">{formatINR(price)}</span>
-            {item.kind === "combo" ? null : (
-              <span className="price-size">
-                / {itemSizeLabel(item, sizeIndex)}
+              <span className="price-offer">
+                <span className="price-current">{formatINR(price)}</span>
+                <s className="price-mrp">{formatINR(mrp)}</s>
+                <span className="price-discount">{discount}% OFF</span>
+              </span>
+            ) : (
+              <span className="price-offer">
+                <span className="price-current">{formatINR(price)}</span>
               </span>
             )}
+            {item.kind === "combo" ? null : null}
           </p>
         </div>
 
@@ -117,26 +120,26 @@ export function ProductCard({
         ) : null}
 
         <div className="product-card_footer">
-          {item.kind === "product" ? (
+          {item.kind === "product" && item.sizes.length > 1 ? (
             <div className="size-select_wrap">
-              <span className="size-select_label">Size</span>
-              <div
+              <select
+                id={`size-${item.id}`}
                 className="size-select"
-                role="group"
                 aria-label={`Choose size for ${item.name}`}
+                value={sizeIndex}
+                onChange={(event) => setSizeIndex(Number(event.target.value))}
               >
                 {item.sizes.map((size, index) => (
-                  <button
-                    key={size.label}
-                    type="button"
-                    className="size-select_btn"
-                    aria-pressed={index === sizeIndex}
-                    onClick={() => setSizeIndex(index)}
-                  >
+                  <option key={size.label} value={index}>
                     {size.label}
-                  </button>
+                  </option>
                 ))}
-              </div>
+              </select>
+            </div>
+          ) : item.kind === "product" && item.sizes.length === 1 ? (
+            <div className="size-select_wrap">
+              <span className="size-select_label">Size</span>
+              <div className="size-select_static">{item.sizes[0].label}</div>
             </div>
           ) : null}
 

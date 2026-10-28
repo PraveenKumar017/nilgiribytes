@@ -1,5 +1,3 @@
-import catalogJson from "@/data/catalog.json";
-import blogJson from "@/data/blog.json";
 import type { RowDataPacket } from "mysql2";
 import { getPool } from "./db";
 import type {
@@ -161,7 +159,7 @@ function uniqueSlug(base: string, used: Set<string>): string {
 
 function legacyProducts(): StoreProduct[] {
   const used = new Set<string>();
-  return (catalogJson.products as LegacyProduct[]).map((product, index) => {
+  return ([] as LegacyProduct[]).map((product, index) => {
     const slug = uniqueSlug(product.name, used);
     const sizes: StoreSize[] = (product.sizes ?? []).map((size) => {
       const imageUrl = assetUrl(product.sizeImages?.[size.label] ?? product.image);
@@ -193,7 +191,7 @@ function legacyProducts(): StoreProduct[] {
 
 function legacyCombos(): StoreCombo[] {
   const used = new Set<string>();
-  return (catalogJson.combos as LegacyCombo[]).map((combo, index) => {
+  return ([] as LegacyCombo[]).map((combo, index) => {
     const slug = uniqueSlug(combo.name, used);
     return {
       kind: "combo",
@@ -228,22 +226,7 @@ function legacyCatalog(): Catalog {
 }
 
 function legacyPosts(): StorePost[] {
-  return (blogJson.posts as LegacyPost[])
-    .filter((post) => post.status === "published")
-    .map((post) => ({
-      slug: post.slug,
-      title: post.title,
-      category: post.category,
-      author: post.author || "Nilgiribytes Team",
-      date: post.date,
-      readingTime: post.readingTime || readingTime(post.content ?? []),
-      image: assetUrl(post.image),
-      imageAlt: post.imageAlt || post.title,
-      excerpt: post.excerpt || excerptFromBlocks(post.content ?? []),
-      content: sanitizeBlocks(post.content ?? []),
-      status: "published" as const,
-    }))
-    .sort((a, b) => b.date.localeCompare(a.date));
+  return [];
 }
 
 function sanitizeBlocks(blocks: unknown): BlogBlock[] {
@@ -311,149 +294,141 @@ export function excerptFromBlocks(blocks: BlogBlock[], maxLength = 160): string 
 
 export async function getCatalog(): Promise<Catalog> {
   const pool = getPool();
-  if (pool && !databaseFailed) {
-    try {
-      const [productRows, comboRows] = await Promise.all([
-        pool.query<ProductRow[]>(
-          `SELECT p.id, p.sku, p.slug, p.name, p.description, p.sizes,
-                  c.name AS categoryName, p.posterUrl, p.imageUrl, p.imageAlt
-             FROM Product p
-             JOIN Category c ON c.id = p.categoryId
-            WHERE p.isActive = 1
-            ORDER BY p.sortOrder ASC, p.id ASC`
-        ),
-        pool.query<ComboRow[]>(
-          `SELECT id, sku, slug, name, description, items, images, imageUrl, imageAlt,
-                  weightLabel, pricePaise, discountPercent
-             FROM Combo
-            WHERE isActive = 1
-            ORDER BY sortOrder ASC, id ASC`
-        ),
-      ]);
-
-      return {
-        products: productRows[0].map((product) => ({
-          kind: "product" as const,
-          id: product.sku ?? product.slug,
-          sku: product.sku,
-          slug: product.slug,
-          name: product.name,
-          category: product.categoryName,
-          description: product.description,
-          image: assetUrl(product.imageUrl || product.posterUrl),
-          poster: product.posterUrl ? assetUrl(product.posterUrl) : "",
-          imageAlt: product.imageAlt || `${product.name} from Nilgiribytes`,
-          sizes: parseJsonArray<SizeJson>(product.sizes).map((size) => {
-            const images = (size.images ?? [])
-              .filter(
-                (image): image is string =>
-                  typeof image === "string" && image.trim() !== ""
-              )
-              .map(assetUrl);
-
-            if (!images.length) {
-              images.push(assetUrl(size.imageUrl ?? product.imageUrl));
-            }
-
-            return {
-              label: size.label,
-              grams: size.grams,
-              mrpPaise: size.mrpPaise,
-              discountPercent: size.discountPercent,
-              pricePaise: size.pricePaise,
-              imageUrl: images[0] ?? null,
-              images,
-            };
-          }),
-        })),
-        combos: comboRows[0].map((combo) => {
-          const mrpPaise = Number(combo.pricePaise);
-          const discountPercent = Math.min(
-            100,
-            Math.max(0, Number(combo.discountPercent ?? 0))
-          );
-          const images = parseJsonArray<string>(combo.images)
-            .filter((image) => typeof image === "string" && image.trim() !== "")
-            .map(assetUrl);
-          const image = assetUrl(combo.imageUrl);
-          if (!images.length) images.push(image);
-
-          return {
-            kind: "combo" as const,
-            id: combo.sku ?? combo.slug,
-            sku: combo.sku,
-            slug: combo.slug,
-            name: combo.name,
-            category: "Combos" as const,
-            description: combo.description,
-            image: images[0] ?? image,
-            images,
-            imageAlt: combo.imageAlt || `${combo.name} from Nilgiribytes`,
-            weight: combo.weightLabel ?? "1 kg total",
-            pricePaise: Math.round(mrpPaise * (100 - discountPercent) / 100),
-            mrpPaise,
-            discountPercent,
-              includes: parseJsonArray<ComboItemJson>(combo.items).map((item) => ({
-              productId: item.productId ? String(item.productId) : null,
-              name: item.name,
-              quantity: item.quantity,
-            })),
-          };
-        }),
-      };
-    } catch (error) {
-      databaseFailed = true;
-      console.warn(
-        "[storefront] Database unavailable, using bundled JSON fallback:",
-        error instanceof Error ? error.message : error
-      );
-    }
+  if (!pool) {
+    throw new Error("Database connection not available");
   }
 
-  return legacyCatalog();
+  try {
+    const [productRows, comboRows] = await Promise.all([
+      pool.query<ProductRow[]>(
+        `SELECT p.id, p.sku, p.slug, p.name, p.description, p.sizes,
+                c.name AS categoryName, p.posterUrl, p.imageUrl, p.imageAlt
+           FROM Product p
+           JOIN Category c ON c.id = p.categoryId
+          WHERE p.isActive = 1
+          ORDER BY p.sortOrder ASC, p.id ASC`
+      ),
+      pool.query<ComboRow[]>(
+        `SELECT id, sku, slug, name, description, items, images, imageUrl, imageAlt,
+                weightLabel, pricePaise, discountPercent
+           FROM Combo
+          WHERE isActive = 1
+          ORDER BY sortOrder ASC, id ASC`
+      ),
+    ]);
+
+    return {
+      products: productRows[0].map((product) => ({
+        kind: "product" as const,
+        id: product.sku ?? product.slug,
+        sku: product.sku,
+        slug: product.slug,
+        name: product.name,
+        category: product.categoryName,
+        description: product.description,
+        image: assetUrl(product.imageUrl || product.posterUrl),
+        poster: product.posterUrl ? assetUrl(product.posterUrl) : "",
+        imageAlt: product.imageAlt || `${product.name} from Nilgiribytes`,
+        sizes: parseJsonArray<SizeJson>(product.sizes).map((size) => {
+          const images = (size.images ?? [])
+            .filter(
+              (image): image is string =>
+                typeof image === "string" && image.trim() !== ""
+            )
+            .map(assetUrl);
+
+          if (!images.length) {
+            images.push(assetUrl(size.imageUrl ?? product.imageUrl));
+          }
+
+          return {
+            label: size.label,
+            grams: size.grams,
+            mrpPaise: size.mrpPaise,
+            discountPercent: size.discountPercent,
+            pricePaise: size.pricePaise,
+            imageUrl: images[0] ?? null,
+            images,
+          };
+        }),
+      })),
+      combos: comboRows[0].map((combo) => {
+        const mrpPaise = Number(combo.pricePaise);
+        const discountPercent = Math.min(
+          100,
+          Math.max(0, Number(combo.discountPercent ?? 0))
+        );
+        const images = parseJsonArray<string>(combo.images)
+          .filter((image) => typeof image === "string" && image.trim() !== "")
+          .map(assetUrl);
+        const image = assetUrl(combo.imageUrl);
+        if (!images.length) images.push(image);
+
+        return {
+          kind: "combo" as const,
+          id: combo.sku ?? combo.slug,
+          sku: combo.sku,
+          slug: combo.slug,
+          name: combo.name,
+          category: "Combos" as const,
+          description: combo.description,
+          image: images[0] ?? image,
+          images,
+          imageAlt: combo.imageAlt || `${combo.name} from Nilgiribytes`,
+          weight: combo.weightLabel ?? "1 kg total",
+          pricePaise: Math.round((mrpPaise * (100 - discountPercent)) / 100),
+          mrpPaise,
+          discountPercent,
+          includes: parseJsonArray<ComboItemJson>(combo.items).map((item) => ({
+            productId: item.productId ? String(item.productId) : null,
+            name: item.name,
+            quantity: item.quantity,
+          })),
+        };
+      }),
+    };
+  } catch (error) {
+    throw error;
+  }
 }
 
 export async function getPublishedPosts(): Promise<StorePost[]> {
   const pool = getPool();
-  if (pool && !databaseFailed) {
-    try {
-      const [rows] = await pool.query<BlogPostRow[]>(
-        `SELECT slug, title, category, author, \`date\`, coverImage, imageAlt,
-                excerpt, content, readingTimeMin
-           FROM BlogPost
-          WHERE status = 'PUBLISHED'
-          ORDER BY \`date\` DESC, id DESC`
-      );
-
-      return rows.map((post) => {
-        const blocks = parseContent(post.content);
-        const date = post.date instanceof Date ? post.date : new Date(post.date);
-        return {
-          slug: post.slug,
-          title: post.title,
-          category: post.category,
-          author: post.author || "Nilgiribytes Team",
-          date: date.toISOString().slice(0, 10),
-          readingTime: post.readingTimeMin
-            ? `${post.readingTimeMin} min read`
-            : readingTime(blocks),
-          image: assetUrl(post.coverImage),
-          imageAlt: post.imageAlt || post.title,
-          excerpt: post.excerpt || excerptFromBlocks(blocks),
-          content: blocks,
-          status: "published" as const,
-        };
-      });
-    } catch (error) {
-      databaseFailed = true;
-      console.warn(
-        "[storefront] Database unavailable, using bundled JSON fallback:",
-        error instanceof Error ? error.message : error
-      );
-    }
+  if (!pool) {
+    throw new Error("Database connection not available");
   }
 
-  return legacyPosts();
+  try {
+    const [rows] = await pool.query<BlogPostRow[]>(
+      `SELECT slug, title, category, author, \`date\`, coverImage, imageAlt,
+              excerpt, content, readingTimeMin
+         FROM BlogPost
+        WHERE status = 'PUBLISHED'
+        ORDER BY \`date\` DESC, id DESC`
+    );
+
+    return rows.map((post) => {
+      const blocks = parseContent(post.content);
+      const date = post.date instanceof Date ? post.date : new Date(post.date);
+      return {
+        slug: post.slug,
+        title: post.title,
+        category: post.category,
+        author: post.author || "Nilgiribytes Team",
+        date: date.toISOString().slice(0, 10),
+        readingTime: post.readingTimeMin
+          ? `${post.readingTimeMin} min read`
+          : readingTime(blocks),
+        image: assetUrl(post.coverImage),
+        imageAlt: post.imageAlt || post.title,
+        excerpt: post.excerpt || excerptFromBlocks(blocks),
+        content: blocks,
+        status: "published" as const,
+      };
+    });
+  } catch (error) {
+    throw error;
+  }
 }
 
 export async function getPostBySlug(slug: string): Promise<StorePost | null> {

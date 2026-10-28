@@ -1,4 +1,4 @@
--- Nilgiribytes — drop all tables
+-- Nilgiribytes – drop all tables
 -- Use only when intentionally resetting the database.
 
 SET FOREIGN_KEY_CHECKS = 0;

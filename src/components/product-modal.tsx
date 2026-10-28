@@ -137,11 +137,9 @@ export function ProductModal({ item, onClose }: ProductModalProps) {
                 {hasDiscount ? (
                   <span className="discount-pill">{discount}% OFF</span>
                 ) : null}
-                <span className="modal_price-meta">
-                  {item.kind === "combo"
-                    ? item.weight
-                    : itemSizeLabel(item, sizeIndex)}
-                </span>
+                {item.kind === "combo" ? (
+                  <span className="modal_price-meta">{item.weight}</span>
+                ) : null}
               </p>
               {hasDiscount ? (
                 <p className="modal_saving">
@@ -177,29 +175,32 @@ export function ProductModal({ item, onClose }: ProductModalProps) {
               &#10003; In stock &mdash; baked fresh daily
             </p>
 
-            {item.kind === "product" ? (
+            {item.kind === "product" && item.sizes.length > 1 ? (
               <div>
-                <p className="modal_label">Choose size</p>
-                <div
+                <label className="modal_label" htmlFor="modal-size-select">
+                  Choose size
+                </label>
+                <select
+                  id="modal-size-select"
                   className="size-select"
-                  role="group"
                   aria-label="Choose size"
+                  value={sizeIndex}
+                  onChange={(event) => {
+                    setSizeIndex(Number(event.target.value));
+                    setImageIndex(0);
+                  }}
                 >
                   {item.sizes.map((size, index) => (
-                    <button
-                      key={size.label}
-                      type="button"
-                      className="size-select_btn"
-                      aria-pressed={index === sizeIndex}
-                      onClick={() => {
-                        setSizeIndex(index);
-                        setImageIndex(0);
-                      }}
-                    >
-                      {size.label} &middot; {formatINR(size.pricePaise)}
-                    </button>
+                    <option key={size.label} value={index}>
+                      {size.label} · {formatINR(size.pricePaise)}
+                    </option>
                   ))}
-                </div>
+                </select>
+              </div>
+            ) : item.kind === "product" && item.sizes.length === 1 ? (
+              <div>
+                <p className="modal_label">Size</p>
+                <div className="size-select_static">{item.sizes[0].label} · {formatINR(item.sizes[0].pricePaise)}</div>
               </div>
             ) : null}
 

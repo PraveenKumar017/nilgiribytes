@@ -5,35 +5,28 @@ SET NAMES utf8mb4;
 
 CREATE TABLE IF NOT EXISTS `Category` (
     `id` INTEGER NOT NULL AUTO_INCREMENT,
-    `slug` VARCHAR(80) NOT NULL,
     `name` VARCHAR(120) NOT NULL,
     `sortOrder` INTEGER NOT NULL DEFAULT 0,
     `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
     `updatedAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3) ON UPDATE CURRENT_TIMESTAMP(3),
 
-    UNIQUE INDEX `Category_slug_key`(`slug`),
+    UNIQUE INDEX `Category_name_key`(`name`),
     PRIMARY KEY (`id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 CREATE TABLE IF NOT EXISTS `Product` (
     `id` INTEGER NOT NULL AUTO_INCREMENT,
-    `sku` VARCHAR(40) NULL,
-    `slug` VARCHAR(160) NOT NULL,
     `name` VARCHAR(160) NOT NULL,
     `description` TEXT NOT NULL,
     `categoryId` INTEGER NOT NULL,
     `sizes` JSON NOT NULL,
     `posterUrl` VARCHAR(500) NULL,
     `imageUrl` VARCHAR(500) NULL,
-    `imageAlt` VARCHAR(240) NULL,
     `sortOrder` INTEGER NOT NULL DEFAULT 0,
-    `isActive` BOOLEAN NOT NULL DEFAULT true,
     `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
     `updatedAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3) ON UPDATE CURRENT_TIMESTAMP(3),
 
-    UNIQUE INDEX `Product_sku_key`(`sku`),
-    UNIQUE INDEX `Product_slug_key`(`slug`),
-    INDEX `Product_categoryId_isActive_idx`(`categoryId`, `isActive`),
+    INDEX `Product_categoryId_idx`(`categoryId`),
     PRIMARY KEY (`id`),
     CONSTRAINT `Product_categoryId_fkey` FOREIGN KEY (`categoryId`)
         REFERENCES `Category`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE
@@ -41,36 +34,27 @@ CREATE TABLE IF NOT EXISTS `Product` (
 
 CREATE TABLE IF NOT EXISTS `Combo` (
     `id` INTEGER NOT NULL AUTO_INCREMENT,
-    `sku` VARCHAR(40) NULL,
-    `slug` VARCHAR(160) NOT NULL,
     `name` VARCHAR(160) NOT NULL,
     `description` TEXT NOT NULL,
     `items` JSON NOT NULL,
-    `images` JSON NULL,
     `imageUrl` VARCHAR(500) NULL,
-    `imageAlt` VARCHAR(240) NULL,
     `weightLabel` VARCHAR(60) NULL,
     `pricePaise` INTEGER NOT NULL,
     `discountPercent` INTEGER NOT NULL DEFAULT 0,
     `sortOrder` INTEGER NOT NULL DEFAULT 0,
-    `isActive` BOOLEAN NOT NULL DEFAULT true,
     `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
     `updatedAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3) ON UPDATE CURRENT_TIMESTAMP(3),
 
-    UNIQUE INDEX `Combo_sku_key`(`sku`),
-    UNIQUE INDEX `Combo_slug_key`(`slug`),
     PRIMARY KEY (`id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 CREATE TABLE IF NOT EXISTS `BlogPost` (
     `id` INTEGER NOT NULL AUTO_INCREMENT,
-    `slug` VARCHAR(200) NOT NULL,
     `title` VARCHAR(240) NOT NULL,
     `category` VARCHAR(80) NOT NULL,
     `author` VARCHAR(120) NULL,
     `date` DATETIME(3) NOT NULL,
     `coverImage` VARCHAR(500) NULL,
-    `imageAlt` VARCHAR(240) NULL,
     `excerpt` TEXT NULL,
     `status` ENUM('DRAFT', 'PUBLISHED') NOT NULL DEFAULT 'DRAFT',
     `content` JSON NOT NULL,
@@ -78,7 +62,6 @@ CREATE TABLE IF NOT EXISTS `BlogPost` (
     `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
     `updatedAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3) ON UPDATE CURRENT_TIMESTAMP(3),
 
-    UNIQUE INDEX `BlogPost_slug_key`(`slug`),
     INDEX `BlogPost_status_date_idx`(`status`, `date`),
     PRIMARY KEY (`id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
@@ -146,3 +129,4 @@ CREATE TABLE IF NOT EXISTS `Settings` (
     UNIQUE INDEX `Settings_key_key`(`key`),
     PRIMARY KEY (`id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
