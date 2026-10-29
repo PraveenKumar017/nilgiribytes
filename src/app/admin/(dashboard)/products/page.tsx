@@ -62,11 +62,8 @@ function ProductForm({
       submitLabel={product ? "Save product" : "Create product"}
     >
       {product ? <input type="hidden" name="id" value={product.id} /> : null}
-      <input type="hidden" name="sku" value={product?.sku ?? ""} />
       <input type="hidden" name="slug" value={product?.slug ?? ""} />
-      <input type="hidden" name="posterUrl" value={product?.posterUrl ?? ""} />
-      <input type="hidden" name="imageUrl" value={product?.imageUrl ?? ""} />
-      <input type="hidden" name="imageAlt" value={product?.imageAlt ?? ""} />
+      <input type="hidden" name="images" value={JSON.stringify(product?.images ?? [])} />
       <input type="hidden" name="sortOrder" value={product?.sortOrder ?? 0} />
 
       <div className="admin-form_grid">
@@ -87,6 +84,26 @@ function ProductForm({
               </option>
             ))}
           </select>
+        </label>
+      </div>
+
+      <div className="admin-form_grid">
+        <label className="admin-field">
+          <span>Ingredients</span>
+          <input
+            name="ingredients"
+            defaultValue={product?.ingredients ?? ""}
+            placeholder="e.g. Refined wheat flour, vegetable fat, sugar"
+          />
+        </label>
+
+        <label className="admin-field">
+          <span>Shelf life</span>
+          <input
+            name="shelfLife"
+            defaultValue={product?.shelfLife ?? ""}
+            placeholder="e.g. 30 days"
+          />
         </label>
       </div>
 

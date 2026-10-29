@@ -16,16 +16,19 @@ CREATE TABLE IF NOT EXISTS `Category` (
 
 CREATE TABLE IF NOT EXISTS `Product` (
     `id` INTEGER NOT NULL AUTO_INCREMENT,
+    `slug` VARCHAR(200) NOT NULL,
     `name` VARCHAR(160) NOT NULL,
     `description` TEXT NOT NULL,
+    `ingredients` TEXT NULL,
+    `shelfLife` VARCHAR(120) NULL,
     `categoryId` INTEGER NOT NULL,
     `sizes` JSON NOT NULL,
-    `posterUrl` VARCHAR(500) NULL,
-    `imageUrl` VARCHAR(500) NULL,
+    `imageUrl` JSON NULL,
     `sortOrder` INTEGER NOT NULL DEFAULT 0,
     `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
     `updatedAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3) ON UPDATE CURRENT_TIMESTAMP(3),
 
+    UNIQUE INDEX `Product_slug_key`(`slug`),
     INDEX `Product_categoryId_idx`(`categoryId`),
     PRIMARY KEY (`id`),
     CONSTRAINT `Product_categoryId_fkey` FOREIGN KEY (`categoryId`)
@@ -34,10 +37,13 @@ CREATE TABLE IF NOT EXISTS `Product` (
 
 CREATE TABLE IF NOT EXISTS `Combo` (
     `id` INTEGER NOT NULL AUTO_INCREMENT,
+    `slug` VARCHAR(200) NOT NULL,
     `name` VARCHAR(160) NOT NULL,
     `description` TEXT NOT NULL,
+    `ingredients` TEXT NULL,
+    `shelfLife` VARCHAR(120) NULL,
     `items` JSON NOT NULL,
-    `imageUrl` VARCHAR(500) NULL,
+    `imageUrl` JSON NULL,
     `weightLabel` VARCHAR(60) NULL,
     `pricePaise` INTEGER NOT NULL,
     `discountPercent` INTEGER NOT NULL DEFAULT 0,
@@ -45,6 +51,7 @@ CREATE TABLE IF NOT EXISTS `Combo` (
     `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
     `updatedAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3) ON UPDATE CURRENT_TIMESTAMP(3),
 
+    UNIQUE INDEX `Combo_slug_key`(`slug`),
     PRIMARY KEY (`id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 

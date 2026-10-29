@@ -16,8 +16,11 @@ export type StoreProduct = {
   name: string;
   category: string;
   description: string;
+  ingredients: string | null;
+  shelfLife: string | null;
   image: string;
   poster: string;
+  images: string[];
   imageAlt: string;
   sizes: StoreSize[];
   sortOrder?: number;
@@ -37,6 +40,8 @@ export type StoreCombo = {
   name: string;
   category: "Combos";
   description: string;
+  ingredients: string | null;
+  shelfLife: string | null;
   image: string;
   images: string[];
   imageAlt: string;

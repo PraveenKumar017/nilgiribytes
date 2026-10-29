@@ -60,7 +60,6 @@ export async function logoutAction(): Promise<void> {
 function readCategory(formData: FormData) {
   return {
     name: formText(formData, "name"),
-    slug: formText(formData, "slug"),
     sortOrder: formInt(formData, "sortOrder"),
   };
 }
@@ -79,13 +78,13 @@ export async function createCategoryAction(
 
   try {
     await pool.execute(
-      `INSERT INTO Category (slug, name, sortOrder, updatedAt)
-       VALUES (?, ?, ?, NOW(3))`,
-      [parsed.data.slug, parsed.data.name, parsed.data.sortOrder]
+      `INSERT INTO Category (name, sortOrder, updatedAt)
+       VALUES (?, ?, NOW(3))`,
+      [parsed.data.name, parsed.data.sortOrder]
     );
   } catch (error) {
     if (errorCode(error) === "ER_DUP_ENTRY") {
-      return { error: "A category with that slug already exists." };
+      return { error: "A category with that name already exists." };
     }
     throw error;
   }
@@ -111,13 +110,13 @@ export async function updateCategoryAction(
   try {
     await pool.execute(
       `UPDATE Category
-          SET slug = ?, name = ?, sortOrder = ?, updatedAt = NOW(3)
+          SET name = ?, sortOrder = ?, updatedAt = NOW(3)
         WHERE id = ?`,
-      [parsed.data.slug, parsed.data.name, parsed.data.sortOrder, id]
+      [parsed.data.name, parsed.data.sortOrder, id]
     );
   } catch (error) {
     if (errorCode(error) === "ER_DUP_ENTRY") {
-      return { error: "A category with that slug already exists." };
+      return { error: "A category with that name already exists." };
     }
     throw error;
   }
@@ -210,16 +209,21 @@ async function uniqueComboSlug(base: string): Promise<string> {
 
 function readProduct(formData: FormData) {
   const rawSizes = parseHidden<RawSize[]>(formData, "sizes", []);
+  const rawImages = parseHidden<(string | null)[]>(formData, "images", []);
   const name = formText(formData, "name");
+  const images = rawImages.filter(
+    (image): image is string => typeof image === "string" && image.trim() !== ""
+  );
 
   return {
-    sku: formText(formData, "sku"),
     slug: formText(formData, "slug") || slugifyName(name),
     name,
     description: formText(formData, "description"),
+    ingredients: formText(formData, "ingredients") || null,
+    shelfLife: formText(formData, "shelfLife") || null,
     categoryId: formInt(formData, "categoryId"),
     sizes: rawSizes.map((size) => {
-      const images = Array.isArray(size.images)
+      const sizeImages = Array.isArray(size.images)
         ? size.images.filter(
             (image): image is string =>
               typeof image === "string" && image.trim() !== ""
@@ -230,7 +234,7 @@ function readProduct(formData: FormData) {
           ? size.imageUrl
           : null;
 
-      if (!images.length && legacyImage) images.push(legacyImage);
+      if (!sizeImages.length && legacyImage) sizeImages.push(legacyImage);
 
       return {
         label: typeof size.label === "string" ? size.label : "",
@@ -238,15 +242,12 @@ function readProduct(formData: FormData) {
           size.grams == null || size.grams === "" ? null : Number(size.grams),
         mrpPaise: Number(size.mrpPaise ?? 0),
         pricePaise: Number(size.pricePaise ?? 0),
-        images: images.slice(0, 3),
-        imageUrl: images[0] ?? null,
+        images: sizeImages.slice(0, 3),
+        imageUrl: sizeImages[0] ?? null,
       };
     }),
-    posterUrl: formText(formData, "posterUrl"),
-    imageUrl: formText(formData, "imageUrl"),
-    imageAlt: formText(formData, "imageAlt"),
+    images,
     sortOrder: formInt(formData, "sortOrder"),
-    isActive: true,
   };
 }
 
@@ -286,26 +287,23 @@ export async function createProductAction(
   try {
     await pool.execute(
       `INSERT INTO Product
-         (sku, slug, name, description, categoryId, sizes, posterUrl, imageUrl,
-          imageAlt, sortOrder, isActive, updatedAt)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(3))`,
+         (slug, name, description, ingredients, shelfLife, categoryId, sizes, imageUrl, sortOrder, updatedAt)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(3))`,
       [
-        data.sku,
         data.slug,
         data.name,
         data.description,
+        data.ingredients,
+        data.shelfLife,
         data.categoryId,
         JSON.stringify(sizesForStorage(data)),
-        data.posterUrl,
-        data.imageUrl,
-        data.imageAlt,
+        JSON.stringify(data.images),
         data.sortOrder,
-        data.isActive,
       ]
     );
   } catch (error) {
     if (errorCode(error) === "ER_DUP_ENTRY") {
-      return { error: "A product with that SKU or slug already exists." };
+      return { error: "A product with that slug already exists." };
     }
     throw error;
   }
@@ -334,28 +332,25 @@ export async function updateProductAction(
   try {
     await pool.execute(
       `UPDATE Product
-          SET sku = ?, slug = ?, name = ?, description = ?, categoryId = ?,
-              sizes = ?, posterUrl = ?, imageUrl = ?, imageAlt = ?,
-              sortOrder = ?, isActive = ?, updatedAt = NOW(3)
+          SET slug = ?, name = ?, description = ?, ingredients = ?, shelfLife = ?, categoryId = ?,
+              sizes = ?, imageUrl = ?, sortOrder = ?, updatedAt = NOW(3)
         WHERE id = ?`,
       [
-        data.sku,
         data.slug,
         data.name,
         data.description,
+        data.ingredients,
+        data.shelfLife,
         data.categoryId,
         JSON.stringify(sizesForStorage(data)),
-        data.posterUrl,
-        data.imageUrl,
-        data.imageAlt,
+        JSON.stringify(data.images),
         data.sortOrder,
-        data.isActive,
         id,
       ]
     );
   } catch (error) {
     if (errorCode(error) === "ER_DUP_ENTRY") {
-      return { error: "A product with that SKU or slug already exists." };
+      return { error: "A product with that slug already exists." };
     }
     throw error;
   }
@@ -399,10 +394,11 @@ function readCombo(formData: FormData) {
   );
 
   return {
-    sku: formText(formData, "sku"),
     slug: formText(formData, "slug") || slugifyName(name),
     name,
     description: formText(formData, "description"),
+    ingredients: formText(formData, "ingredients") || null,
+    shelfLife: formText(formData, "shelfLife") || null,
     items: rawItems.map((item) => ({
       productId:
         typeof item.productId === "string" && item.productId.trim() !== ""
@@ -412,13 +408,10 @@ function readCombo(formData: FormData) {
       quantity: typeof item.quantity === "string" ? item.quantity : "",
     })),
     images,
-    imageUrl: images[0] ?? formText(formData, "imageUrl"),
-    imageAlt: formText(formData, "imageAlt"),
-    weightLabel: formText(formData, "weightLabel"),
+    weightLabel: formText(formData, "weightLabel") || null,
     pricePaise: Number.isFinite(price) ? Math.round(price * 100) : 0,
     discountPercent: formInt(formData, "discountPercent"),
     sortOrder: formInt(formData, "sortOrder"),
-    isActive: formBool(formData, "isActive"),
   };
 }
 
@@ -443,28 +436,26 @@ export async function createComboAction(
   try {
     await pool.execute(
       `INSERT INTO Combo
-         (sku, slug, name, description, items, images, imageUrl, imageAlt, weightLabel,
-          pricePaise, discountPercent, sortOrder, isActive, updatedAt)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(3))`,
+         (slug, name, description, ingredients, shelfLife, items, imageUrl, weightLabel,
+          pricePaise, discountPercent, sortOrder, updatedAt)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(3))`,
       [
-        data.sku,
         data.slug,
         data.name,
         data.description,
+        data.ingredients,
+        data.shelfLife,
         JSON.stringify(data.items),
         JSON.stringify(data.images),
-        data.imageUrl,
-        data.imageAlt,
         data.weightLabel,
         data.pricePaise,
         data.discountPercent,
         data.sortOrder,
-        data.isActive,
       ]
     );
   } catch (error) {
     if (errorCode(error) === "ER_DUP_ENTRY") {
-      return { error: "A combo with that SKU or slug already exists." };
+      return { error: "A combo with that slug already exists." };
     }
     throw error;
   }
@@ -493,30 +484,28 @@ export async function updateComboAction(
   try {
     await pool.execute(
       `UPDATE Combo
-          SET sku = ?, slug = ?, name = ?, description = ?, items = ?, images = ?,
-              imageUrl = ?, imageAlt = ?, weightLabel = ?, pricePaise = ?,
-              discountPercent = ?, sortOrder = ?, isActive = ?, updatedAt = NOW(3)
+          SET slug = ?, name = ?, description = ?, ingredients = ?, shelfLife = ?, items = ?,
+              imageUrl = ?, weightLabel = ?, pricePaise = ?,
+              discountPercent = ?, sortOrder = ?, updatedAt = NOW(3)
         WHERE id = ?`,
       [
-        data.sku,
         data.slug,
         data.name,
         data.description,
+        data.ingredients,
+        data.shelfLife,
         JSON.stringify(data.items),
         JSON.stringify(data.images),
-        data.imageUrl,
-        data.imageAlt,
         data.weightLabel,
         data.pricePaise,
         data.discountPercent,
         data.sortOrder,
-        data.isActive,
         id,
       ]
     );
   } catch (error) {
     if (errorCode(error) === "ER_DUP_ENTRY") {
-      return { error: "A combo with that SKU or slug already exists." };
+      return { error: "A combo with that slug already exists." };
     }
     throw error;
   }
@@ -548,13 +537,11 @@ function readPost(formData: FormData) {
   const readingTime = formText(formData, "readingTimeMin");
 
   return {
-    slug: formText(formData, "slug"),
     title: formText(formData, "title"),
     category: formText(formData, "category"),
     author: formText(formData, "author"),
     date: formText(formData, "date"),
     coverImage: formText(formData, "coverImage"),
-    imageAlt: formText(formData, "imageAlt"),
     excerpt: formText(formData, "excerpt"),
     status: formText(formData, "status"),
     content: parseHidden<unknown[]>(formData, "content", []),
@@ -582,35 +569,30 @@ export async function createPostAction(
   const data = parsed.data;
 
   try {
-    await pool.execute(
+    const [result] = await pool.execute<RowDataPacket[] & { insertId: number }>(
       `INSERT INTO BlogPost
-         (slug, title, category, author, \`date\`, coverImage, imageAlt, excerpt,
+         (title, category, author, \`date\`, coverImage, excerpt,
           status, content, readingTimeMin, updatedAt)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(3))`,
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(3))`,
       [
-        data.slug,
         data.title,
         data.category,
         data.author,
         new Date(`${data.date}T00:00:00`),
         data.coverImage,
-        data.imageAlt,
         data.excerpt,
         data.status,
         JSON.stringify(data.content),
         data.readingTimeMin,
       ]
     );
+
+    revalidateStorefront();
+    revalidatePath(`/blog/${(result as any).insertId}`);
+    redirect("/admin/blog?created=1");
   } catch (error) {
-    if (errorCode(error) === "ER_DUP_ENTRY") {
-      return { error: "A post with that slug already exists." };
-    }
     throw error;
   }
-
-  revalidateStorefront();
-  revalidatePath(`/blog/${data.slug}`);
-  redirect("/admin/blog?created=1");
 }
 
 export async function updatePostAction(
@@ -633,18 +615,16 @@ export async function updatePostAction(
   try {
     await pool.execute(
       `UPDATE BlogPost
-          SET slug = ?, title = ?, category = ?, author = ?, \`date\` = ?,
-              coverImage = ?, imageAlt = ?, excerpt = ?, status = ?,
+          SET title = ?, category = ?, author = ?, \`date\` = ?,
+              coverImage = ?, excerpt = ?, status = ?,
               content = ?, readingTimeMin = ?, updatedAt = NOW(3)
         WHERE id = ?`,
       [
-        data.slug,
         data.title,
         data.category,
         data.author,
         new Date(`${data.date}T00:00:00`),
         data.coverImage,
-        data.imageAlt,
         data.excerpt,
         data.status,
         JSON.stringify(data.content),
@@ -653,14 +633,11 @@ export async function updatePostAction(
       ]
     );
   } catch (error) {
-    if (errorCode(error) === "ER_DUP_ENTRY") {
-      return { error: "A post with that slug already exists." };
-    }
     throw error;
   }
 
   revalidateStorefront();
-  revalidatePath(`/blog/${data.slug}`);
+  revalidatePath(`/blog/${id}`);
   redirect(`/admin/blog?id=${id}&updated=1`);
 }
 

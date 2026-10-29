@@ -1265,7 +1265,7 @@ export type ComboItemDraft = {
   quantity: string;
 };
 
-type ProductOption = { id: number; sku: string | null; name: string };
+export type ProductOption = { id: number; sku?: string | null; name: string };
 type ItemRow = ComboItemDraft & { key: string };
 
 export function ItemsEditor({

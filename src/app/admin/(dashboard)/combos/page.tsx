@@ -6,6 +6,7 @@ import {
   ImagesField,
   ItemsEditor,
   type ComboItemDraft,
+  type ProductOption,
 } from "@/components/admin/admin-ui";
 import { EditIcon, TrashIcon } from "@/components/admin/icons";
 import {
@@ -27,8 +28,6 @@ type PageProps = {
   }>;
 };
 
-type ProductOption = { id: number; sku: string | null; name: string };
-
 function ComboForm({
   products,
   combo,
@@ -46,15 +45,9 @@ function ComboForm({
   return (
     <ActionForm action={combo ? updateComboAction : createComboAction} submitLabel={combo ? "Save combo" : "Create combo"}>
       {combo ? <input type="hidden" name="id" value={combo.id} /> : null}
-      <input type="hidden" name="sku" value={combo?.sku ?? ""} />
       <input type="hidden" name="slug" value={combo?.slug ?? ""} />
-      <input type="hidden" name="imageAlt" value={combo?.imageAlt ?? ""} />
+      <input type="hidden" name="images" value={JSON.stringify(combo?.images ?? [])} />
       <input type="hidden" name="sortOrder" value={combo?.sortOrder ?? 0} />
-      <input
-        type="hidden"
-        name="isActive"
-        value={combo ? String(combo.isActive) : "true"}
-      />
 
       <div className="admin-form_grid">
         <label className="admin-field">
@@ -93,6 +86,26 @@ function ComboForm({
             step="1"
             defaultValue={combo?.discountPercent ?? 0}
             placeholder="0"
+          />
+        </label>
+      </div>
+
+      <div className="admin-form_grid">
+        <label className="admin-field">
+          <span>Ingredients</span>
+          <input
+            name="ingredients"
+            defaultValue={combo?.ingredients ?? ""}
+            placeholder="e.g. Assorted traditional bakes"
+          />
+        </label>
+
+        <label className="admin-field">
+          <span>Shelf life</span>
+          <input
+            name="shelfLife"
+            defaultValue={combo?.shelfLife ?? ""}
+            placeholder="e.g. 30 days"
           />
         </label>
       </div>

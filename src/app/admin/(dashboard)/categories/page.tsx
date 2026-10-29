@@ -35,16 +35,6 @@ function CategoryForm({ category }: { category?: AdminCategory }) {
         </label>
 
         <label className="admin-field">
-          <span>Slug</span>
-          <input
-            name="slug"
-            defaultValue={category?.slug ?? ""}
-            placeholder="ooty-varkey"
-            required
-          />
-        </label>
-
-        <label className="admin-field">
           <span>Sort order</span>
           <input
             name="sortOrder"
@@ -143,7 +133,6 @@ export default async function AdminCategoriesPage({ searchParams }: PageProps) {
               <thead>
                 <tr>
                   <th>Name</th>
-                  <th>Slug</th>
                   <th>Products</th>
                   <th>Order</th>
                   <th className="admin-table_actions">Actions</th>
@@ -153,7 +142,6 @@ export default async function AdminCategoriesPage({ searchParams }: PageProps) {
                 {categories.map((category) => (
                   <tr key={category.id}>
                     <td>{category.name}</td>
-                    <td className="admin-mono">{category.slug}</td>
                     <td>{category.productCount}</td>
                     <td>{category.sortOrder}</td>
                     <td>

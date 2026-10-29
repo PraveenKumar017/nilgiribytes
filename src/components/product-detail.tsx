@@ -34,7 +34,13 @@ export function ProductDetail({ item }: ProductDetailProps) {
     item.kind === "product"
       ? item.sizes[sizeIndex]?.images?.filter(Boolean) ?? []
       : item.images?.filter(Boolean) ?? [];
-  const images = sizeImages.length ? sizeImages : [itemImage(item, sizeIndex)];
+  const fallbackImages =
+    item.kind === "product" ? item.images?.filter(Boolean) ?? [] : [];
+  const images = sizeImages.length
+    ? sizeImages
+    : fallbackImages.length
+      ? fallbackImages
+      : [itemImage(item, sizeIndex)];
   const activeIndex = Math.min(imageIndex, images.length - 1);
   const activeImage = images[activeIndex] ?? images[0];
 
@@ -136,6 +142,23 @@ export function ProductDetail({ item }: ProductDetailProps) {
         ) : (
           <p className="product-detail_desc">{item.description}</p>
         )}
+
+        {item.ingredients || item.shelfLife ? (
+          <dl className="product-detail_facts">
+            {item.ingredients ? (
+              <>
+                <dt>Ingredients</dt>
+                <dd>{item.ingredients}</dd>
+              </>
+            ) : null}
+            {item.shelfLife ? (
+              <>
+                <dt>Shelf life</dt>
+                <dd>{item.shelfLife}</dd>
+              </>
+            ) : null}
+          </dl>
+        ) : null}
 
         {item.kind === "combo" ? (
           <div>

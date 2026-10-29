@@ -87,33 +87,36 @@ type ComboItemJson = {
 
 type ProductRow = RowDataPacket & {
   id: number;
+  slug: string;
   name: string;
   description: string;
+  ingredients: string | null;
+  shelfLife: string | null;
   categoryName: string;
   sizes: unknown;
-  posterUrl: string | null;
-  imageUrl: string | null;
+  imageUrl: unknown;
 };
 
 type ComboRow = RowDataPacket & {
   id: number;
+  slug: string;
   name: string;
   description: string;
+  ingredients: string | null;
+  shelfLife: string | null;
   items: unknown;
-  imageUrl: string | null;
+  imageUrl: unknown;
   weightLabel: string | null;
   pricePaise: number;
   discountPercent: number;
 };
 
 type BlogPostRow = RowDataPacket & {
-  slug: string;
   title: string;
   category: string;
   author: string | null;
   date: Date | string;
   coverImage: string | null;
-  imageAlt: string | null;
   excerpt: string | null;
   content: unknown;
   readingTimeMin: number | null;
@@ -165,6 +168,8 @@ function legacyProducts(): StoreProduct[] {
       };
     });
 
+    const image = assetUrl(product.image || product.poster);
+
     return {
       kind: "product",
       id: product.id,
@@ -173,8 +178,11 @@ function legacyProducts(): StoreProduct[] {
       name: product.name,
       category: product.category,
       description: product.description ?? "",
-      image: assetUrl(product.image || product.poster),
-      poster: product.poster ? assetUrl(product.poster) : "",
+      ingredients: null,
+      shelfLife: null,
+      image,
+      poster: image,
+      images: [image],
       imageAlt: `${product.name} \u2014 ${product.category} from Nilgiribytes`,
       sizes,
       sortOrder: index,
@@ -186,6 +194,8 @@ function legacyCombos(): StoreCombo[] {
   const used = new Set<string>();
   return ([] as LegacyCombo[]).map((combo, index) => {
     const slug = uniqueSlug(combo.name, used);
+    const image = assetUrl(combo.image);
+
     return {
       kind: "combo",
       id: combo.id,
@@ -194,8 +204,10 @@ function legacyCombos(): StoreCombo[] {
       name: combo.name,
       category: "Combos",
       description: combo.description ?? "",
-      image: assetUrl(combo.image),
-      images: [assetUrl(combo.image)],
+      ingredients: null,
+      shelfLife: null,
+      image,
+      images: [image],
       imageAlt: `${combo.name} \u2014 Nilgiribytes combo pack`,
       weight: combo.weight ?? "1 kg total",
       pricePaise: Math.round(combo.price * 100),
@@ -294,35 +306,23 @@ export async function getCatalog(): Promise<Catalog> {
   try {
     const [productRows, comboRows] = await Promise.all([
       pool.query<ProductRow[]>(
-        `SELECT p.id, p.name, p.description, p.sizes,
-                c.name AS categoryName, p.posterUrl, p.imageUrl
+        `SELECT p.id, p.slug, p.name, p.description, p.ingredients,
+                p.shelfLife, p.sizes, c.name AS categoryName, p.imageUrl
            FROM Product p
            JOIN Category c ON c.id = p.categoryId
           ORDER BY p.sortOrder ASC, p.id ASC`
       ),
       pool.query<ComboRow[]>(
-        `SELECT id, name, description, items, imageUrl,
-                weightLabel, pricePaise, discountPercent
+        `SELECT id, slug, name, description, ingredients, shelfLife, items,
+                imageUrl, weightLabel, pricePaise, discountPercent
            FROM Combo
           ORDER BY sortOrder ASC, id ASC`
       ),
     ]);
 
-    const usedSlugs = new Set<string>();
-
     return {
-      products: productRows[0].map((product, index) => ({
-        kind: "product" as const,
-        id: `p-${product.id}-${index}`,
-        sku: null,
-        slug: uniqueSlug(product.name, usedSlugs),
-        name: product.name,
-        category: product.categoryName,
-        description: product.description,
-        image: assetUrl(product.imageUrl || product.posterUrl),
-        poster: product.posterUrl ? assetUrl(product.posterUrl) : "",
-        imageAlt: `${product.name} from Nilgiribytes`,
-        sizes: parseJsonArray<SizeJson>(product.sizes).map((size) => {
+      products: productRows[0].map((product, index) => {
+        const sizes = parseJsonArray<SizeJson>(product.sizes).map((size) => {
           const images = (size.images ?? [])
             .filter(
               (image): image is string =>
@@ -330,8 +330,8 @@ export async function getCatalog(): Promise<Catalog> {
             )
             .map(assetUrl);
 
-          if (!images.length) {
-            images.push(assetUrl(size.imageUrl ?? product.imageUrl));
+          if (!images.length && size.imageUrl) {
+            images.push(assetUrl(size.imageUrl));
           }
 
           return {
@@ -343,27 +343,59 @@ export async function getCatalog(): Promise<Catalog> {
             imageUrl: images[0] ?? null,
             images,
           };
-        }),
-      })),
+        });
+
+        const productImages = parseJsonArray<string>(product.imageUrl)
+          .filter(
+            (image): image is string =>
+              typeof image === "string" && image.trim() !== ""
+          )
+          .map(assetUrl);
+        const image = productImages[0] ?? sizes[0]?.imageUrl ?? IMAGE_FALLBACK;
+
+        return {
+          kind: "product" as const,
+          id: `p-${product.id}-${index}`,
+          sku: null,
+          slug: product.slug,
+          name: product.name,
+          category: product.categoryName,
+          description: product.description,
+          ingredients: product.ingredients,
+          shelfLife: product.shelfLife,
+          image,
+          poster: image,
+          images: productImages.length ? productImages : [image],
+          imageAlt: `${product.name} from Nilgiribytes`,
+          sizes,
+        };
+      }),
       combos: comboRows[0].map((combo, index) => {
         const mrpPaise = Number(combo.pricePaise);
         const discountPercent = Math.min(
           100,
           Math.max(0, Number(combo.discountPercent ?? 0))
         );
-        const image = assetUrl(combo.imageUrl);
-        const images = [image];
+        const images = parseJsonArray<string>(combo.imageUrl)
+          .filter(
+            (image): image is string =>
+              typeof image === "string" && image.trim() !== ""
+          )
+          .map(assetUrl);
+        const image = images[0] ?? IMAGE_FALLBACK;
 
         return {
           kind: "combo" as const,
           id: `c-${combo.id}-${index}`,
           sku: null,
-          slug: uniqueSlug(combo.name, usedSlugs),
+          slug: combo.slug,
           name: combo.name,
           category: "Combos" as const,
           description: combo.description,
+          ingredients: combo.ingredients,
+          shelfLife: combo.shelfLife,
           image,
-          images,
+          images: images.length ? images : [image],
           imageAlt: `${combo.name} from Nilgiribytes`,
           weight: combo.weightLabel ?? "1 kg total",
           pricePaise: Math.round((mrpPaise * (100 - discountPercent)) / 100),

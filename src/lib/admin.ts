@@ -81,7 +81,6 @@ const slug = z
 
 export const categorySchema = z.object({
   name: z.string().trim().min(1, "Name is required.").max(120),
-  slug,
   sortOrder: z.number().int().min(0),
 });
 
@@ -103,17 +102,18 @@ export const productSizeSchema = z
   });
 
 export const productSchema = z.object({
-  sku: optionalString(40),
   slug,
   name: z.string().trim().min(1, "Name is required.").max(160),
   description: z.string().trim().min(1, "Description is required.").max(5000),
+  ingredients: optionalString(5000),
+  shelfLife: optionalString(120),
   categoryId: z.number().int().positive("Choose a category."),
   sizes: z.array(productSizeSchema).min(1, "Add at least one size."),
-  posterUrl: optionalString(500),
-  imageUrl: optionalString(500),
-  imageAlt: optionalString(240),
+  images: z
+    .array(z.string().trim().min(1).max(500))
+    .max(3, "Add up to three images.")
+    .default([]),
   sortOrder: z.number().int().min(0),
-  isActive: z.boolean(),
 });
 
 export const comboItemSchema = z.object({
@@ -123,22 +123,20 @@ export const comboItemSchema = z.object({
 });
 
 export const comboSchema = z.object({
-  sku: optionalString(40),
   slug,
   name: z.string().trim().min(1, "Name is required.").max(160),
   description: z.string().trim().min(1, "Description is required.").max(5000),
+  ingredients: optionalString(5000),
+  shelfLife: optionalString(120),
   items: z.array(comboItemSchema).min(1, "Add at least one item."),
   images: z
     .array(z.string().trim().min(1).max(500))
     .max(3, "Add up to three images per combo.")
     .default([]),
-  imageUrl: optionalString(500),
-  imageAlt: optionalString(240),
   weightLabel: optionalString(60),
   pricePaise: z.number().int().positive("Price must be greater than zero."),
   discountPercent: z.number().int().min(0).max(100).default(0),
   sortOrder: z.number().int().min(0),
-  isActive: z.boolean(),
 });
 
 const listBlock = z.object({
@@ -171,7 +169,6 @@ export const DEFAULT_SETTINGS: AdminSettings = {
 export const postStatusSchema = z.enum(["DRAFT", "PUBLISHED"]);
 
 export const postSchema = z.object({
-  slug,
   title: z.string().trim().min(1, "Title is required.").max(240),
   category: z.string().trim().min(1, "Category is required.").max(80),
   author: optionalString(120),
@@ -180,7 +177,6 @@ export const postSchema = z.object({
     .trim()
     .regex(/^\d{4}-\d{2}-\d{2}$/, "Choose a valid date."),
   coverImage: optionalString(500),
-  imageAlt: optionalString(240),
   excerpt: optionalString(2000),
   status: postStatusSchema,
   content: z.array(blockSchema).min(1, "Add at least one content block."),
@@ -376,77 +372,66 @@ export type AdminSize = {
 
 export type AdminProduct = {
   id: number;
-  sku: string | null;
   slug: string;
   name: string;
   description: string;
+  ingredients: string | null;
+  shelfLife: string | null;
   categoryId: number;
   categoryName: string;
   sizes: AdminSize[];
-  posterUrl: string | null;
-  imageUrl: string | null;
-  imageAlt: string | null;
+  images: string[];
   sortOrder: number;
-  isActive: boolean;
 };
 
 export type AdminProductRow = {
   id: number;
-  sku: string | null;
   slug: string;
   name: string;
   categoryName: string;
   sizes: { label: string; grams: number | null; pricePaise: number }[];
-  isActive: boolean;
   sortOrder: number;
 };
 
 export type AdminCombo = {
   id: number;
-  sku: string | null;
   slug: string;
   name: string;
   description: string;
+  ingredients: string | null;
+  shelfLife: string | null;
   items: { productId: string | null; name: string; quantity: string }[];
   images: string[];
-  imageUrl: string | null;
-  imageAlt: string | null;
   weightLabel: string | null;
   pricePaise: number;
   discountPercent: number;
   sortOrder: number;
-  isActive: boolean;
 };
 
 export type AdminComboRow = {
   id: number;
-  sku: string | null;
   slug: string;
   name: string;
   items: { productId: string | null; name: string; quantity: string }[];
   pricePaise: number;
   discountPercent: number;
-  isActive: boolean;
   sortOrder: number;
 };
 
 export type AdminCategory = {
   id: number;
   name: string;
-  slug: string;
   sortOrder: number;
   productCount: number;
 };
 
 export type AdminPost = {
   id: number;
-  slug: string;
   title: string;
   category: string;
   author: string | null;
   date: string;
   coverImage: string | null;
-  imageAlt: string | null;
   excerpt: string | null;
   status: "DRAFT" | "PUBLISHED";
   content: BlogBlock[];
@@ -455,7 +440,6 @@ export type AdminPost = {
 
 export type AdminPostRow = {
   id: number;
-  slug: string;
   title: string;
   category: string;
   author: string | null;
@@ -532,18 +516,17 @@ export async function getDashboard(): Promise<AdminDashboard> {
 
 export async function listCategories(): Promise<AdminCategory[]> {
   const [rows] = await pool().query<RowDataPacket[]>(
-    `SELECT c.id, c.name, c.slug, c.sortOrder,
+    `SELECT c.id, c.name, c.sortOrder,
             COUNT(p.id) AS productCount
        FROM Category c
        LEFT JOIN Product p ON p.categoryId = c.id
-      GROUP BY c.id, c.name, c.slug, c.sortOrder
+      GROUP BY c.id, c.name, c.sortOrder
       ORDER BY c.sortOrder ASC, c.id ASC`
   );
 
   return rows.map((row) => ({
     id: Number(row.id),
     name: String(row.name),
-    slug: String(row.slug),
     sortOrder: Number(row.sortOrder),
     productCount: Number(row.productCount),
   }));
@@ -551,12 +534,12 @@ export async function listCategories(): Promise<AdminCategory[]> {
 
 export async function getCategory(id: number): Promise<AdminCategory | null> {
   const [rows] = await pool().query<RowDataPacket[]>(
-    `SELECT c.id, c.name, c.slug, c.sortOrder,
+    `SELECT c.id, c.name, c.sortOrder,
             COUNT(p.id) AS productCount
        FROM Category c
        LEFT JOIN Product p ON p.categoryId = c.id
       WHERE c.id = ?
-      GROUP BY c.id, c.name, c.slug, c.sortOrder
+      GROUP BY c.id, c.name, c.sortOrder
       LIMIT 1`,
     [id]
   );
@@ -567,7 +550,6 @@ export async function getCategory(id: number): Promise<AdminCategory | null> {
   return {
     id: Number(row.id),
     name: String(row.name),
-    slug: String(row.slug),
     sortOrder: Number(row.sortOrder),
     productCount: Number(row.productCount),
   };
@@ -575,7 +557,7 @@ export async function getCategory(id: number): Promise<AdminCategory | null> {
 
 export async function listProducts(): Promise<AdminProductRow[]> {
   const [rows] = await pool().query<RowDataPacket[]>(
-    `SELECT p.id, p.sku, p.slug, p.name, p.isActive, p.sortOrder, p.sizes,
+    `SELECT p.id, p.slug, p.name, p.sortOrder, p.sizes,
             c.name AS categoryName
        FROM Product p
        JOIN Category c ON c.id = p.categoryId
@@ -584,7 +566,6 @@ export async function listProducts(): Promise<AdminProductRow[]> {
 
   return rows.map((row) => ({
     id: Number(row.id),
-    sku: row.sku ? String(row.sku) : null,
     slug: String(row.slug),
     name: String(row.name),
     categoryName: String(row.categoryName),
@@ -596,7 +577,6 @@ export async function listProducts(): Promise<AdminProductRow[]> {
       grams: size.grams == null ? null : Number(size.grams),
       pricePaise: Number(size.pricePaise),
     })),
-    isActive: Boolean(row.isActive),
     sortOrder: Number(row.sortOrder),
   }));
 }
@@ -616,10 +596,11 @@ export async function getProduct(id: number): Promise<AdminProduct | null> {
 
   return {
     id: Number(row.id),
-    sku: row.sku ? String(row.sku) : null,
     slug: String(row.slug),
     name: String(row.name),
     description: String(row.description),
+    ingredients: row.ingredients ? String(row.ingredients) : null,
+    shelfLife: row.shelfLife ? String(row.shelfLife) : null,
     categoryId: Number(row.categoryId),
     categoryName: String(row.categoryName),
     sizes: json<(AdminSize & { images?: string[] | null })[]>(row.sizes, []).map(
@@ -634,30 +615,28 @@ export async function getProduct(id: number): Promise<AdminProduct | null> {
         return { ...size, images, imageUrl: images[0] ?? null };
       }
     ),
-    posterUrl: row.posterUrl ? String(row.posterUrl) : null,
-    imageUrl: row.imageUrl ? String(row.imageUrl) : null,
-    imageAlt: row.imageAlt ? String(row.imageAlt) : null,
+    images: json<(string | null)[]>(row.imageUrl, []).filter(
+      (image): image is string =>
+        typeof image === "string" && image.trim() !== ""
+    ),
     sortOrder: Number(row.sortOrder),
-    isActive: Boolean(row.isActive),
   };
 }
 
 export async function listCombos(): Promise<AdminComboRow[]> {
   const [rows] = await pool().query<RowDataPacket[]>(
-    `SELECT id, sku, slug, name, items, pricePaise, discountPercent, isActive, sortOrder
+    `SELECT id, slug, name, items, pricePaise, discountPercent, sortOrder
        FROM Combo
       ORDER BY sortOrder ASC, id ASC`
   );
 
   return rows.map((row) => ({
     id: Number(row.id),
-    sku: row.sku ? String(row.sku) : null,
     slug: String(row.slug),
     name: String(row.name),
     items: json<AdminComboRow["items"]>(row.items, []),
     pricePaise: Number(row.pricePaise),
     discountPercent: Number(row.discountPercent ?? 0),
-    isActive: Boolean(row.isActive),
     sortOrder: Number(row.sortOrder),
   }));
 }
@@ -671,39 +650,35 @@ export async function getCombo(id: number): Promise<AdminCombo | null> {
   const row = rows[0];
   if (!row) return null;
 
-  const images = json<(string | null)[]>(row.images, []).filter(
+  const images = json<(string | null)[]>(row.imageUrl, []).filter(
     (image): image is string => typeof image === "string" && image.trim() !== ""
   );
-  if (!images.length && row.imageUrl) images.push(String(row.imageUrl));
 
   return {
     id: Number(row.id),
-    sku: row.sku ? String(row.sku) : null,
     slug: String(row.slug),
     name: String(row.name),
     description: String(row.description),
+    ingredients: row.ingredients ? String(row.ingredients) : null,
+    shelfLife: row.shelfLife ? String(row.shelfLife) : null,
     items: json<AdminCombo["items"]>(row.items, []),
     images,
-    imageUrl: images[0] ?? null,
-    imageAlt: row.imageAlt ? String(row.imageAlt) : null,
     weightLabel: row.weightLabel ? String(row.weightLabel) : null,
     pricePaise: Number(row.pricePaise),
     discountPercent: Number(row.discountPercent ?? 0),
     sortOrder: Number(row.sortOrder),
-    isActive: Boolean(row.isActive),
   };
 }
 
 export async function listProductOptions(): Promise<
-  { id: number; sku: string | null; name: string }[]
+  { id: number; name: string }[]
 > {
   const [rows] = await pool().query<RowDataPacket[]>(
-    "SELECT id, sku, name FROM Product ORDER BY sortOrder ASC, id ASC"
+    "SELECT id, name FROM Product ORDER BY sortOrder ASC, id ASC"
   );
 
   return rows.map((row) => ({
     id: Number(row.id),
-    sku: row.sku ? String(row.sku) : null,
     name: String(row.name),
   }));
 }
@@ -727,14 +702,13 @@ export async function getAdminSettings(): Promise<AdminSettings> {
 
 export async function listPosts(): Promise<AdminPostRow[]> {
   const [rows] = await pool().query<RowDataPacket[]>(
-    `SELECT id, slug, title, category, author, \`date\`, status, updatedAt
+    `SELECT id, title, category, author, \`date\`, status, updatedAt
        FROM BlogPost
       ORDER BY \`date\` DESC, id DESC`
   );
 
   return rows.map((row) => ({
     id: Number(row.id),
-    slug: String(row.slug),
     title: String(row.title),
     category: String(row.category),
     author: row.author ? String(row.author) : null,
@@ -755,13 +729,11 @@ export async function getPost(id: number): Promise<AdminPost | null> {
 
   return {
     id: Number(row.id),
-    slug: String(row.slug),
     title: String(row.title),
     category: String(row.category),
     author: row.author ? String(row.author) : null,
     date: dateOnly(row.date as Date | string),
     coverImage: row.coverImage ? String(row.coverImage) : null,
-    imageAlt: row.imageAlt ? String(row.imageAlt) : null,
     excerpt: row.excerpt ? String(row.excerpt) : null,
     status: row.status,
     content: json<BlogBlock[]>(row.content, []),

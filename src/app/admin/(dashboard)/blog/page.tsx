@@ -54,16 +54,6 @@ function PostForm({ post }: { post?: AdminPost }) {
         </label>
 
         <label className="admin-field">
-          <span>Slug</span>
-          <input
-            name="slug"
-            defaultValue={post?.slug ?? ""}
-            placeholder="the-art-of-the-perfect-varkey"
-            required
-          />
-        </label>
-
-        <label className="admin-field">
           <span>Category</span>
           <input
             name="category"
@@ -114,10 +104,6 @@ function PostForm({ post }: { post?: AdminPost }) {
 
       <div className="admin-form_grid">
         <ImageField name="coverImage" label="Cover image" defaultValue={post?.coverImage} />
-        <label className="admin-field">
-          <span>Image alt text</span>
-          <input name="imageAlt" defaultValue={post?.imageAlt ?? ""} />
-        </label>
       </div>
 
       <div className="admin-form_section">
@@ -236,7 +222,7 @@ export default async function AdminBlogPage({ searchParams }: PageProps) {
                   <tr key={post.id}>
                     <td data-label="Post">
                       <span className="admin-table_primary">{post.title}</span>
-                      <span className="admin-table_sub">{post.slug}</span>
+                      <span className="admin-table_sub">#{post.id}</span>
                     </td>
                     <td className="admin-col-category" data-label="Category">
                       {post.category}
@@ -273,7 +259,7 @@ export default async function AdminBlogPage({ searchParams }: PageProps) {
                         {post.status === "PUBLISHED" ? (
                           <Link
                             className="admin-btn admin-btn--small admin-btn--ghost admin-btn--icon"
-                            href={`/blog/${post.slug}`}
+                            href={`/blog/${post.id}`}
                             target="_blank"
                             aria-label={`View ${post.title}`}
                             title="View post"
