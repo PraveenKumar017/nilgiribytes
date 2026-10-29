@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useState } from "react";
 import {
   cartLineKey,
@@ -16,14 +17,12 @@ import { SafeImage } from "./safe-image";
 
 type ProductCardProps = {
   item: StoreItem;
-  onOpen: (item: StoreItem) => void;
   animate?: boolean;
   quick?: boolean;
 };
 
 export function ProductCard({
   item,
-  onOpen,
   animate = true,
   quick = false,
 }: ProductCardProps) {
@@ -37,6 +36,7 @@ export function ProductCard({
   const mrp = itemMrp(item, sizeIndex);
   const discount = itemDiscountPercent(item, sizeIndex);
   const hasDiscount = discount > 0 && mrp > price;
+  const href = `/shop/${item.slug}`;
 
   return (
     <article
@@ -44,7 +44,11 @@ export function ProductCard({
       data-item-id={item.id}
       data-reveal={animate ? "fade-up" : undefined}
     >
-      <div className="product-card_media" onClick={() => onOpen(item)}>
+      <Link
+        className="product-card_media"
+        href={href}
+        aria-label={`View details for ${item.name}`}
+      >
         <SafeImage
           src={image}
           alt={`${item.name} \u2014 ${item.category} from Nilgiribytes`}
@@ -55,44 +59,18 @@ export function ProductCard({
         {hasDiscount ? (
           <span className="product-card_badge">{discount}% OFF</span>
         ) : null}
-        <button
-          type="button"
-          className="product-card_view"
-          aria-label={`View details for ${item.name}`}
-          onClick={(event) => {
-            event.stopPropagation();
-            onOpen(item);
-          }}
-        >
-          <svg
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            aria-hidden="true"
-            focusable="false"
-          >
-            <path d="M15 3h6v6" />
-            <path d="M9 21H3v-6" />
-            <path d="M21 3l-7 7" />
-            <path d="M3 21l7-7" />
-          </svg>
-        </button>
-      </div>
+      </Link>
 
       <div className="product-card_body">
         <div className="product-card_top">
           <h3 className="product-card_name">
-            <button
-              type="button"
+            <Link
               className="product-card_link-btn"
-              onClick={() => onOpen(item)}
+              href={href}
               aria-label={`View details for ${item.name}`}
             >
               {item.name}
-            </button>
+            </Link>
           </h3>
           <p className="product-card_price">
             {hasDiscount ? (

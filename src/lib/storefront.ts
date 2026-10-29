@@ -87,27 +87,20 @@ type ComboItemJson = {
 
 type ProductRow = RowDataPacket & {
   id: number;
-  sku: string | null;
-  slug: string;
   name: string;
   description: string;
   categoryName: string;
   sizes: unknown;
   posterUrl: string | null;
   imageUrl: string | null;
-  imageAlt: string | null;
 };
 
 type ComboRow = RowDataPacket & {
   id: number;
-  sku: string | null;
-  slug: string;
   name: string;
   description: string;
   items: unknown;
-  images: unknown;
   imageUrl: string | null;
-  imageAlt: string | null;
   weightLabel: string | null;
   pricePaise: number;
   discountPercent: number;
@@ -315,12 +308,14 @@ export async function getCatalog(): Promise<Catalog> {
       ),
     ]);
 
+    const usedSlugs = new Set<string>();
+
     return {
       products: productRows[0].map((product, index) => ({
         kind: "product" as const,
         id: `p-${product.id}-${index}`,
         sku: null,
-        slug: null,
+        slug: uniqueSlug(product.name, usedSlugs),
         name: product.name,
         category: product.categoryName,
         description: product.description,
@@ -356,21 +351,18 @@ export async function getCatalog(): Promise<Catalog> {
           100,
           Math.max(0, Number(combo.discountPercent ?? 0))
         );
-        const images = parseJsonArray<string>(combo.images)
-          .filter((image) => typeof image === "string" && image.trim() !== "")
-          .map(assetUrl);
         const image = assetUrl(combo.imageUrl);
-        if (!images.length) images.push(image);
+        const images = [image];
 
         return {
           kind: "combo" as const,
           id: `c-${combo.id}-${index}`,
           sku: null,
-          slug: null,
+          slug: uniqueSlug(combo.name, usedSlugs),
           name: combo.name,
           category: "Combos" as const,
           description: combo.description,
-          image: images[0] ?? image,
+          image,
           images,
           imageAlt: `${combo.name} from Nilgiribytes`,
           weight: combo.weightLabel ?? "1 kg total",

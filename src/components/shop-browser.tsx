@@ -4,7 +4,6 @@ import { useEffect, useMemo, useState } from "react";
 import { itemPrice } from "@/lib/cart";
 import type { Catalog, StoreItem } from "@/lib/types";
 import { ProductCard } from "./product-card";
-import { ProductModal } from "./product-modal";
 
 const CATEGORIES = [
   "All",
@@ -33,7 +32,6 @@ export function ShopBrowser({ catalog, initialCategory }: ShopBrowserProps) {
       : "All"
   );
   const [sort, setSort] = useState<Sort>("featured");
-  const [selected, setSelected] = useState<StoreItem | null>(null);
   const [filterOpen, setFilterOpen] = useState(false);
 
   const items = useMemo(() => {
@@ -160,12 +158,7 @@ export function ShopBrowser({ catalog, initialCategory }: ShopBrowserProps) {
       <div className="product-grid" id="shop-grid">
         {items.length ? (
           items.map((item) => (
-            <ProductCard
-              key={item.id}
-              item={item}
-              onOpen={setSelected}
-              animate={false}
-            />
+            <ProductCard key={item.id} item={item} animate={false} />
           ))
         ) : (
           <p className="empty-state">
@@ -173,10 +166,6 @@ export function ShopBrowser({ catalog, initialCategory }: ShopBrowserProps) {
           </p>
         )}
       </div>
-
-      {selected ? (
-        <ProductModal item={selected} onClose={() => setSelected(null)} />
-      ) : null}
     </>
   );
 }

@@ -244,10 +244,6 @@
     height: 280px;
   }
 
-  .modal_grid {
-    grid-template-columns: 1fr;
-  }
-
   .post-card--featured {
     grid-template-columns: 1fr;
   }
@@ -448,6 +444,25 @@
 
   .footer-grid {
     grid-template-columns: 1.4fr repeat(3, 1fr);
+  }
+}
+
+@media (max-width: 900px) {
+  .product-detail {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+  }
+
+  .product-detail_media {
+    position: static;
+  }
+
+  .product-detail_stage {
+    aspect-ratio: 4 / 3;
+  }
+
+  .product-detail_actions .btn {
+    flex: 1 1 auto;
   }
 }
 
