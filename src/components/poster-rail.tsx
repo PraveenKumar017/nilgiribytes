@@ -10,8 +10,24 @@ type PosterStyle = CSSProperties & {
   "--opacity": number;
 };
 
+const POSTER_BY_SLUG: Record<string, string> = {
+  "special-varkey": "/assets/images/product_poster/Special_Varkey.jpeg",
+  "regular-varkey": "/assets/images/product_poster/Regular_Varkey.jpeg",
+  "crispy-varkey": "/assets/images/product_poster/Crispy_Varkey.jpeg",
+  "mini-varkey": "/assets/images/product_poster/Mini_Varkey.jpeg",
+  "varkey-flakes": "/assets/images/product_poster/Varkey_Flakes.jpeg",
+  "salt-biscuit": "/assets/images/product_poster/Salt_Biscuit.jpeg",
+  "sweet-biscuit": "/assets/images/product_poster/Sweet_Biscuit.jpeg",
+};
+
 export function PosterRail({ products }: { products: StoreProduct[] }) {
-  const posters = products.filter((product) => Boolean(product.poster));
+  const posters = products
+    .filter((product) => Boolean(POSTER_BY_SLUG[product.slug]))
+    .map((product) => ({
+      id: product.id,
+      name: product.name,
+      poster: POSTER_BY_SLUG[product.slug],
+    }));
   const [active, setActive] = useState(0);
   const [paused, setPaused] = useState(false);
   const deckRef = useRef<HTMLDivElement>(null);
@@ -41,7 +57,7 @@ export function PosterRail({ products }: { products: StoreProduct[] }) {
       onPointerUp={() => window.setTimeout(() => setPaused(false), 900)}
     >
       <div className="poster-stage" id="poster-rail" aria-label="Signature product range">
-        {posters.map((product, index) => {
+        {posters.map((poster, index) => {
           const count = posters.length;
           let offset = index - active;
           if (offset > count / 2) offset -= count;
@@ -55,15 +71,15 @@ export function PosterRail({ products }: { products: StoreProduct[] }) {
           };
           return (
             <div
-              key={product.id}
+              key={poster.id}
               className={`poster-card${offset === 0 ? " is-active" : ""}`}
               data-offset={offset}
               style={style}
             >
               <SafeImage
                 className="poster-card_img"
-                src={product.poster}
-                alt={`${product.name} \u2014 Nilgiribytes`}
+                src={poster.poster}
+                alt={`${poster.name} \u2014 Nilgiribytes`}
                 width={1122}
                 height={1402}
                 loading="lazy"
