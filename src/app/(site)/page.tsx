@@ -15,7 +15,7 @@ export const metadata: Metadata = pageMetadata({
   description:
     "Buy authentic Ooty Varkey, traditional Nilgiri biscuits and tea-time combos online from Nilgiribytes, a Kotagiri bakery baking fresh every day.",
   path: "/",
-  image: "/assets/og-image.png",
+  image: "/assets/og-image.jpg",
   imageWidth: 768,
   imageHeight: 1257,
 });
