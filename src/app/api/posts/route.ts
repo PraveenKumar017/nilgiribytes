@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { getPublishedPosts } from "@/lib/storefront";
 
-export const revalidate = 300;
+export const dynamic = "force-dynamic";
 
 export async function GET() {
   const posts = await getPublishedPosts();

@@ -417,7 +417,7 @@ export async function getCatalog(): Promise<Catalog> {
 export async function getPublishedPosts(): Promise<StorePost[]> {
   const pool = getPool();
   if (!pool) {
-    throw new Error("Database connection not available");
+    return legacyPosts();
   }
 
   try {

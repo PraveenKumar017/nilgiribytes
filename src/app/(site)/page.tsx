@@ -7,6 +7,8 @@ import { ProductCollection } from "@/components/product-collection";
 import { bakeryJsonLd, pageMetadata, websiteJsonLd } from "@/lib/seo";
 import { getCatalog } from "@/lib/storefront";
 
+export const dynamic = "force-dynamic";
+
 export const metadata: Metadata = pageMetadata({
   title:
     "Nilgiribytes | Freshly Baked Ooty Varkey, Biscuits & Combos in Kotagiri",

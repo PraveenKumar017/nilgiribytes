@@ -3,6 +3,8 @@ import { pageMetadata } from "@/lib/seo";
 import { getPublishedPosts } from "@/lib/storefront";
 import { BlogList } from "./blog-list";
 
+export const dynamic = "force-dynamic";
+
 export const metadata: Metadata = pageMetadata({
   title: "Blog | Nilgiribytes - Stories from Our Oven",
   description:

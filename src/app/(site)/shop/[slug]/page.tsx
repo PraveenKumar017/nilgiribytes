@@ -15,6 +15,8 @@ import { absoluteUrl } from "@/lib/site";
 import { getCatalog } from "@/lib/storefront";
 import type { StoreItem } from "@/lib/types";
 
+export const dynamic = "force-dynamic";
+
 const loadCatalog = cache(async () => getCatalog());
 
 const loadItem = cache(async (slug: string): Promise<StoreItem | null> => {

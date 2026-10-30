@@ -5,6 +5,8 @@ import { pageMetadata } from "@/lib/seo";
 import { SITE_URL } from "@/lib/site";
 import { getCatalog } from "@/lib/storefront";
 
+export const dynamic = "force-dynamic";
+
 export const metadata: Metadata = pageMetadata({
   title: "Shop | Nilgiribytes - Varkey, Biscuits & Combos",
   description:
