@@ -15,6 +15,8 @@ type SeoInput = {
   keywords?: string[];
   path: string;
   image?: string;
+  imageWidth?: number;
+  imageHeight?: number;
   noIndex?: boolean;
   type?: "website" | "article";
   publishedTime?: string;
@@ -26,7 +28,9 @@ export function pageMetadata({
   description = SITE_DESCRIPTION,
   keywords = SITE_KEYWORDS,
   path,
-  image = "/assets/hero_image_bg.png",
+  image = "/assets/og-image.png",
+  imageWidth,
+  imageHeight,
   noIndex = false,
   type = "website",
   publishedTime,
@@ -60,7 +64,15 @@ export function pageMetadata({
       url,
       siteName: SITE_NAME,
       locale: "en_IN",
-      images: [{ url: imageUrl, alt: title }],
+      images: [
+        {
+          url: imageUrl,
+          alt: title,
+          ...(imageWidth && imageHeight
+            ? { width: imageWidth, height: imageHeight }
+            : {}),
+        },
+      ],
       ...(type === "article" ? { publishedTime, authors } : {}),
     },
     twitter: {

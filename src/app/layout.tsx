@@ -78,7 +78,10 @@ export const metadata: Metadata = {
       "Discover the warmth of freshly baked favourites - varkey, biscuits and combos made for life's sweetest moments.",
     images: [
       {
-        url: "/assets/hero_image_bg.png",
+        url: "/assets/og-image.png",
+        width: 768,
+        height: 1257,
+        type: "image/png",
         alt: "Freshly baked varkey and biscuits at Nilgiribytes",
       },
     ],
@@ -88,7 +91,7 @@ export const metadata: Metadata = {
     title: "Nilgiribytes | Every Bite Tells a Story",
     description:
       "Freshly baked varkey, biscuits and combos - made for life's sweetest moments.",
-    images: ["/assets/hero_image_bg.png"],
+    images: ["/assets/og-image.png"],
   },
 };
 
