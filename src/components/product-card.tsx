@@ -86,7 +86,14 @@ export function ProductCard({
           </p>
         </div>
 
-        {item.kind === "combo" ? (
+        <div className="product-card_reviews">
+          <span className="product-card_rating">{item.rating.toFixed(1)}</span>
+          <span className="product-card_stars" aria-hidden="true">
+            ★
+          </span>
+        </div>
+
+        {item.kind === "combo" && item.includes.length > 0 ? (
           <p className="product-card_includes">
             Includes:{" "}
             {item.includes

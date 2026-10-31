@@ -105,6 +105,18 @@ function ProductForm({
             placeholder="e.g. 30 days"
           />
         </label>
+
+        <label className="admin-field">
+          <span>Rating (0–5)</span>
+          <input
+            name="rating"
+            type="number"
+            min={0}
+            max={5}
+            step="0.1"
+            defaultValue={product?.rating ?? 4.3}
+          />
+        </label>
       </div>
 
       <label className="admin-field">

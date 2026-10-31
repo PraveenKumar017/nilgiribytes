@@ -88,6 +88,18 @@ function ComboForm({
             placeholder="0"
           />
         </label>
+
+        <label className="admin-field">
+          <span>Rating (0–5)</span>
+          <input
+            name="rating"
+            type="number"
+            min={0}
+            max={5}
+            step="0.1"
+            defaultValue={combo?.rating ?? 4.3}
+          />
+        </label>
       </div>
 
       <div className="admin-form_grid">

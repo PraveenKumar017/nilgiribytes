@@ -23,6 +23,7 @@ export type StoreProduct = {
   images: string[];
   imageAlt: string;
   sizes: StoreSize[];
+  rating: number;
   sortOrder?: number;
 };
 
@@ -50,6 +51,7 @@ export type StoreCombo = {
   mrpPaise: number;
   discountPercent: number;
   includes: ComboInclude[];
+  rating: number;
   sortOrder?: number;
 };
 

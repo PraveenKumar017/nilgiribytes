@@ -95,6 +95,7 @@ type ProductRow = RowDataPacket & {
   categoryName: string;
   sizes: unknown;
   imageUrl: unknown;
+  rating: number;
 };
 
 type ComboRow = RowDataPacket & {
@@ -109,6 +110,7 @@ type ComboRow = RowDataPacket & {
   weightLabel: string | null;
   pricePaise: number;
   discountPercent: number;
+  rating: number;
 };
 
 type BlogPostRow = RowDataPacket & {
@@ -185,6 +187,7 @@ function legacyProducts(): StoreProduct[] {
       images: [image],
       imageAlt: `${product.name} \u2014 ${product.category} from Nilgiribytes`,
       sizes,
+      rating: 4.3,
       sortOrder: index,
     };
   });
@@ -218,6 +221,7 @@ function legacyCombos(): StoreCombo[] {
         name: item.name,
         quantity: item.quantity,
       })),
+      rating: 4.3,
       sortOrder: index,
     };
   });
@@ -307,14 +311,15 @@ export async function getCatalog(): Promise<Catalog> {
     const [productRows, comboRows] = await Promise.all([
       pool.query<ProductRow[]>(
         `SELECT p.id, p.slug, p.name, p.description, p.ingredients,
-                p.shelfLife, p.sizes, c.name AS categoryName, p.imageUrl
+                p.shelfLife, p.sizes, c.name AS categoryName, p.imageUrl,
+                p.rating
            FROM Product p
            JOIN Category c ON c.id = p.categoryId
           ORDER BY p.sortOrder ASC, p.id ASC`
       ),
       pool.query<ComboRow[]>(
         `SELECT id, slug, name, description, ingredients, shelfLife, items,
-                imageUrl, weightLabel, pricePaise, discountPercent
+                imageUrl, weightLabel, pricePaise, discountPercent, rating
            FROM Combo
           ORDER BY sortOrder ASC, id ASC`
       ),
@@ -368,6 +373,7 @@ export async function getCatalog(): Promise<Catalog> {
           images: productImages.length ? productImages : [image],
           imageAlt: `${product.name} from Nilgiribytes`,
           sizes,
+          rating: Number(product.rating ?? 4.3),
         };
       }),
       combos: comboRows[0].map((combo, index) => {
@@ -406,6 +412,7 @@ export async function getCatalog(): Promise<Catalog> {
             name: item.name,
             quantity: item.quantity,
           })),
+          rating: Number(combo.rating ?? 4.3),
         };
       }),
     };

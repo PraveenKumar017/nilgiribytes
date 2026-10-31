@@ -1653,10 +1653,41 @@ p {
 }
 
 .product-card_includes {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  line-clamp: 2;
+  overflow: hidden;
   margin: 0;
   font-size: 0.82rem;
   line-height: 1.5;
   color: var(--color-muted);
+}
+
+.product-card_reviews {
+  display: inline-flex;
+  align-items: center;
+  align-self: flex-start;
+  gap: 0.3rem;
+  padding: 0.14rem 0.5rem;
+  border: 1px solid var(--hairline-gold);
+  border-radius: 999px;
+  background: rgba(199, 154, 66, 0.16);
+  font-size: 0.74rem;
+  line-height: 1.2;
+}
+
+.product-card_stars {
+  color: var(--color-gold);
+  font-size: 1.05rem;
+  line-height: 1;
+  letter-spacing: 0.08em;
+}
+
+.product-card_rating {
+  color: var(--color-cocoa);
+  font-size: 0.74rem;
+  font-weight: 700;
 }
 
 .product-card_action .btn {

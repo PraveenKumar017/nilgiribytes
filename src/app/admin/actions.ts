@@ -211,6 +211,8 @@ function readProduct(formData: FormData) {
   const rawSizes = parseHidden<RawSize[]>(formData, "sizes", []);
   const rawImages = parseHidden<(string | null)[]>(formData, "images", []);
   const name = formText(formData, "name");
+  const ratingRaw = formText(formData, "rating");
+  const rating = ratingRaw === "" ? 4.3 : Number(ratingRaw);
   const images = rawImages.filter(
     (image): image is string => typeof image === "string" && image.trim() !== ""
   );
@@ -248,6 +250,7 @@ function readProduct(formData: FormData) {
     }),
     images,
     sortOrder: formInt(formData, "sortOrder"),
+    rating: Number.isFinite(rating) ? rating : 4.3,
   };
 }
 
@@ -287,8 +290,8 @@ export async function createProductAction(
   try {
     await pool.execute(
       `INSERT INTO Product
-         (slug, name, description, ingredients, shelfLife, categoryId, sizes, imageUrl, sortOrder, updatedAt)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(3))`,
+         (slug, name, description, ingredients, shelfLife, categoryId, sizes, imageUrl, sortOrder, rating, updatedAt)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(3))`,
       [
         data.slug,
         data.name,
@@ -299,6 +302,7 @@ export async function createProductAction(
         JSON.stringify(sizesForStorage(data)),
         JSON.stringify(data.images),
         data.sortOrder,
+        data.rating,
       ]
     );
   } catch (error) {
@@ -333,7 +337,7 @@ export async function updateProductAction(
     await pool.execute(
       `UPDATE Product
           SET slug = ?, name = ?, description = ?, ingredients = ?, shelfLife = ?, categoryId = ?,
-              sizes = ?, imageUrl = ?, sortOrder = ?, updatedAt = NOW(3)
+              sizes = ?, imageUrl = ?, sortOrder = ?, rating = ?, updatedAt = NOW(3)
         WHERE id = ?`,
       [
         data.slug,
@@ -345,6 +349,7 @@ export async function updateProductAction(
         JSON.stringify(sizesForStorage(data)),
         JSON.stringify(data.images),
         data.sortOrder,
+        data.rating,
         id,
       ]
     );
@@ -389,6 +394,8 @@ function readCombo(formData: FormData) {
   const rawImages = parseHidden<(string | null)[]>(formData, "images", []);
   const price = Number(formText(formData, "price"));
   const name = formText(formData, "name");
+  const ratingRaw = formText(formData, "rating");
+  const rating = ratingRaw === "" ? 4.3 : Number(ratingRaw);
   const images = rawImages.filter(
     (image): image is string => typeof image === "string" && image.trim() !== ""
   );
@@ -412,6 +419,7 @@ function readCombo(formData: FormData) {
     pricePaise: Number.isFinite(price) ? Math.round(price * 100) : 0,
     discountPercent: formInt(formData, "discountPercent"),
     sortOrder: formInt(formData, "sortOrder"),
+    rating: Number.isFinite(rating) ? rating : 4.3,
   };
 }
 
@@ -437,8 +445,8 @@ export async function createComboAction(
     await pool.execute(
       `INSERT INTO Combo
          (slug, name, description, ingredients, shelfLife, items, imageUrl, weightLabel,
-          pricePaise, discountPercent, sortOrder, updatedAt)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(3))`,
+          pricePaise, discountPercent, sortOrder, rating, updatedAt)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(3))`,
       [
         data.slug,
         data.name,
@@ -451,6 +459,7 @@ export async function createComboAction(
         data.pricePaise,
         data.discountPercent,
         data.sortOrder,
+        data.rating,
       ]
     );
   } catch (error) {
@@ -486,7 +495,7 @@ export async function updateComboAction(
       `UPDATE Combo
           SET slug = ?, name = ?, description = ?, ingredients = ?, shelfLife = ?, items = ?,
               imageUrl = ?, weightLabel = ?, pricePaise = ?,
-              discountPercent = ?, sortOrder = ?, updatedAt = NOW(3)
+              discountPercent = ?, sortOrder = ?, rating = ?, updatedAt = NOW(3)
         WHERE id = ?`,
       [
         data.slug,
@@ -500,6 +509,7 @@ export async function updateComboAction(
         data.pricePaise,
         data.discountPercent,
         data.sortOrder,
+        data.rating,
         id,
       ]
     );

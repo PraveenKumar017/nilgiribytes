@@ -114,6 +114,7 @@ export const productSchema = z.object({
     .max(3, "Add up to three images.")
     .default([]),
   sortOrder: z.number().int().min(0),
+  rating: z.number().min(0).max(5).default(4.3),
 });
 
 export const comboItemSchema = z.object({
@@ -137,6 +138,7 @@ export const comboSchema = z.object({
   pricePaise: z.number().int().positive("Price must be greater than zero."),
   discountPercent: z.number().int().min(0).max(100).default(0),
   sortOrder: z.number().int().min(0),
+  rating: z.number().min(0).max(5).default(4.3),
 });
 
 const listBlock = z.object({
@@ -382,6 +384,7 @@ export type AdminProduct = {
   sizes: AdminSize[];
   images: string[];
   sortOrder: number;
+  rating: number;
 };
 
 export type AdminProductRow = {
@@ -391,6 +394,7 @@ export type AdminProductRow = {
   categoryName: string;
   sizes: { label: string; grams: number | null; pricePaise: number }[];
   sortOrder: number;
+  rating: number;
 };
 
 export type AdminCombo = {
@@ -406,6 +410,7 @@ export type AdminCombo = {
   pricePaise: number;
   discountPercent: number;
   sortOrder: number;
+  rating: number;
 };
 
 export type AdminComboRow = {
@@ -416,6 +421,7 @@ export type AdminComboRow = {
   pricePaise: number;
   discountPercent: number;
   sortOrder: number;
+  rating: number;
 };
 
 export type AdminCategory = {
@@ -557,7 +563,7 @@ export async function getCategory(id: number): Promise<AdminCategory | null> {
 
 export async function listProducts(): Promise<AdminProductRow[]> {
   const [rows] = await pool().query<RowDataPacket[]>(
-    `SELECT p.id, p.slug, p.name, p.sortOrder, p.sizes,
+    `SELECT p.id, p.slug, p.name, p.sortOrder, p.sizes, p.rating,
             c.name AS categoryName
        FROM Product p
        JOIN Category c ON c.id = p.categoryId
@@ -578,6 +584,7 @@ export async function listProducts(): Promise<AdminProductRow[]> {
       pricePaise: Number(size.pricePaise),
     })),
     sortOrder: Number(row.sortOrder),
+    rating: Number(row.rating ?? 4.3),
   }));
 }
 
@@ -620,12 +627,13 @@ export async function getProduct(id: number): Promise<AdminProduct | null> {
         typeof image === "string" && image.trim() !== ""
     ),
     sortOrder: Number(row.sortOrder),
+    rating: Number(row.rating ?? 4.3),
   };
 }
 
 export async function listCombos(): Promise<AdminComboRow[]> {
   const [rows] = await pool().query<RowDataPacket[]>(
-    `SELECT id, slug, name, items, pricePaise, discountPercent, sortOrder
+    `SELECT id, slug, name, items, pricePaise, discountPercent, sortOrder, rating
        FROM Combo
       ORDER BY sortOrder ASC, id ASC`
   );
@@ -638,6 +646,7 @@ export async function listCombos(): Promise<AdminComboRow[]> {
     pricePaise: Number(row.pricePaise),
     discountPercent: Number(row.discountPercent ?? 0),
     sortOrder: Number(row.sortOrder),
+    rating: Number(row.rating ?? 4.3),
   }));
 }
 
@@ -667,6 +676,7 @@ export async function getCombo(id: number): Promise<AdminCombo | null> {
     pricePaise: Number(row.pricePaise),
     discountPercent: Number(row.discountPercent ?? 0),
     sortOrder: Number(row.sortOrder),
+    rating: Number(row.rating ?? 4.3),
   };
 }
 
