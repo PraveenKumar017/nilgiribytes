@@ -173,7 +173,12 @@ export default async function ProductPage({ params }: ProductPageProps) {
       </section>
 
       {related.length ? (
-        <section className="section section--alt" aria-labelledby="related-title">
+        <section
+          className={`section section--alt${
+            item.kind === "combo" ? " section--combo-related" : ""
+          }`}
+          aria-labelledby="related-title"
+        >
           <div className="container">
             <span className="section-kicker reveal" data-reveal="fade-up">
               You may also like

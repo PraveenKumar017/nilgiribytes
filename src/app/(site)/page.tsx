@@ -4,10 +4,53 @@ import { IntroOverlay } from "@/components/intro-overlay";
 import { JsonLd } from "@/components/json-ld";
 import { PosterRail } from "@/components/poster-rail";
 import { ProductCollection } from "@/components/product-collection";
-import { bakeryJsonLd, pageMetadata, websiteJsonLd } from "@/lib/seo";
+import {
+  bakeryJsonLd,
+  faqJsonLd,
+  pageMetadata,
+  websiteJsonLd,
+} from "@/lib/seo";
 import { getCatalog } from "@/lib/storefront";
 
 export const dynamic = "force-dynamic";
+
+const faqs = [
+  {
+    question: "Where are Nilgiribytes products baked?",
+    answer:
+      "Every Nilgiribytes product is baked in Kotagiri, in the heart of the Nilgiris, using traditional methods and recipes we have followed since 1980.",
+  },
+  {
+    question: "How fresh are the varkey and biscuits?",
+    answer:
+      "We bake in small batches through the day and pack each order the same day it leaves the oven, so your varkey and biscuits arrive crisp and fresh.",
+  },
+  {
+    question: "How long do the products stay fresh?",
+    answer:
+      "Most of our varkey and biscuits have a shelf life of up to 90 days. Please check the freshness date printed on the pack and store items in an airtight container.",
+  },
+  {
+    question: "Do you deliver across India?",
+    answer:
+      "Yes. We deliver pan-India to more than 28,000 pin codes through trusted logistics partners.",
+  },
+  {
+    question: "How long will my order take to arrive?",
+    answer:
+      "Orders are processed within 24-48 hours. After pickup, delivery usually takes 3-4 days depending on your location. You will receive tracking updates by email and WhatsApp.",
+  },
+  {
+    question: "Do you supply wholesale or bulk orders?",
+    answer:
+      "Yes. We welcome retail and wholesale enquiries, including bulk gifting and corporate orders. Please use our wholesale enquiry form and our team will get back to you.",
+  },
+  {
+    question: "How should I store varkey and biscuits?",
+    answer:
+      "Keep them in an airtight container away from moisture and direct sunlight. In humid weather, a food-safe silica sachet in the container helps keep them crisp.",
+  },
+];
 
 export const metadata: Metadata = pageMetadata({
   title:
@@ -442,6 +485,41 @@ export default async function HomePage() {
           </div>
         </section>
 
+        <section
+          className="section"
+          aria-labelledby="faq-title"
+          id="faq"
+          style={{ background: "#FFFFFF" }}
+        >
+          <div className="container">
+            <span className="section-kicker reveal" data-reveal="fade-up">
+              Good to know
+            </span>
+            <h2
+              className="section-heading reveal"
+              data-reveal="fade-up"
+              id="faq-title"
+            >
+              Frequently Asked Questions
+            </h2>
+            <hr className="divider reveal" data-reveal="fade-in" />
+            <div className="faq-list">
+              {faqs.map((faq) => (
+                <details
+                  className="faq-item reveal"
+                  data-reveal="fade-up"
+                  key={faq.question}
+                >
+                  <summary className="faq-question">{faq.question}</summary>
+                  <div className="faq-answer">
+                    <p>{faq.answer}</p>
+                  </div>
+                </details>
+              ))}
+            </div>
+          </div>
+        </section>
+
         <section className="section" aria-labelledby="cta-title">
           <div className="container">
             <div className="cta reveal" data-reveal="zoom-in">
@@ -467,6 +545,7 @@ export default async function HomePage() {
 
       <JsonLd data={websiteJsonLd()} />
       <JsonLd data={bakeryJsonLd()} />
+      <JsonLd data={faqJsonLd(faqs)} />
     </>
   );
 }

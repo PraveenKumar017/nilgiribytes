@@ -9,6 +9,7 @@ import {
   SITE_URL,
 } from "@/lib/site";
 import { WholesaleEnquiryForm } from "./enquiry-form";
+import { PartnersMarquee } from "./partners-marquee";
 
 export const metadata: Metadata = pageMetadata({
   title: "Wholesale, Bulk Orders & Corporate Gifting | Nilgiribytes",
@@ -25,7 +26,7 @@ export const metadata: Metadata = pageMetadata({
     "bulk biscuits supplier",
   ],
   path: "/wholesale",
-  image: "/assets/Fresh_Pastries.png",
+  image: "/assets/wholesale_bg.png",
 });
 
 const CARD_TYPE_TO_FORM_TYPE: Record<string, string> = {
@@ -62,6 +63,32 @@ const ENQUIRY_TYPES = [
     text: "Thoughtful Nilgiri bakery gifts for employees, clients and occasions.",
     icon: "gift",
   },
+] as const;
+
+const WHY_REASONS = [
+  {
+    title: "Bakery-direct pricing",
+    text: "Straight-from-the-bakery wholesale rates with margin-friendly pack options for your business.",
+  },
+  {
+    title: "Small-batch freshness",
+    text: "Baked through the day and packed for dispatch, so your shelves get product that still tastes fresh.",
+  },
+  {
+    title: "Retail-ready range",
+    text: "Varkey, biscuits and gift combos in formats built for counters, cafes and corporate hampers.",
+  },
+  {
+    title: "Dependable repeat supply",
+    text: "Plan recurring orders with stable recipes, careful quality checks and responsive support.",
+  },
+] as const;
+
+const WHY_STATS = [
+  { value: "1980", label: "Baking since" },
+  { value: "28,000+", label: "Pin codes served" },
+  { value: "90 days", label: "Shelf life" },
+  { value: "5", label: "Ways to partner" },
 ] as const;
 
 type EnquiryIconName = (typeof ENQUIRY_TYPES)[number]["icon"];
@@ -140,38 +167,27 @@ const enquiryJsonLd = {
 export default function WholesalePage() {
   return (
     <main id="main-content">
-      <section
-        className="page-hero page-hero--wholesale"
-        aria-labelledby="wholesale-title"
-      >
+      <section className="page-hero page-hero--wholesale">
         <div className="page-hero_media" aria-hidden="true">
-          <img
-            src="/assets/Fresh_Pastries.png"
-            alt=""
-            width={2000}
-            height={1500}
-            fetchPriority="high"
-          />
+          <picture>
+            <source
+              media="(max-width: 767.98px)"
+              srcSet="/assets/wholesale_mobile_bg.png"
+              width={768}
+              height={1090}
+            />
+            <img
+              src="/assets/wholesale_bg.png"
+              alt=""
+              width={1376}
+              height={768}
+              fetchPriority="high"
+            />
+          </picture>
         </div>
-        <div className="page-hero_overlay" aria-hidden="true" />
-        <div className="container page-hero_content">
-          <span className="section-kicker">
-            Wholesale &middot; Cafes &middot; Gifting
-          </span>
-          <h1 className="page-hero_title" id="wholesale-title">
-            Bring Nilgiribytes to Your Business.
-          </h1>
-          <p className="page-hero_text">
-            Authentic Ooty Varkey and Nilgiri biscuits for wholesale, retail,
-            cafes, bulk orders and corporate gifting - baked in Kotagiri since
-            1980.
-          </p>
-          <ul className="page-hero_pills">
-            <li>Wholesale supply</li>
-            <li>Distributors</li>
-            <li>Bulk &amp; corporate</li>
-          </ul>
-        </div>
+        <h1 className="sr-only" id="wholesale-title">
+          Wholesale, Bulk Orders &amp; Corporate Gifting
+        </h1>
       </section>
 
       <section
@@ -195,35 +211,137 @@ export default function WholesalePage() {
             you need and we will help you plan the right supply.
           </p>
 
-          <div className="wholesale-partners_grid">
-            {ENQUIRY_TYPES.map((item, index) => (
-              <article
-                className={`wholesale-partner-card reveal${
-                  index === 0 ? " is-featured" : ""
-                }`}
+          <PartnersMarquee>
+            <div className="wholesale-partners_grid">
+              {[0, 1].map((group) => (
+                <div
+                  className="wholesale-partners_group"
+                  key={group}
+                  aria-hidden={group === 1 ? true : undefined}
+                >
+                  {ENQUIRY_TYPES.map((item, index) => (
+                    <article
+                      className="wholesale-partner-card"
+                      key={item.title}
+                    >
+                      <span
+                        className="wholesale-partner_index"
+                        aria-hidden="true"
+                      >
+                        {String(index + 1).padStart(2, "0")}
+                      </span>
+                      {index === 0 && (
+                        <span className="wholesale-partner_badge">
+                          Most requested
+                        </span>
+                      )}
+                      <div className="wholesale-partner_top">
+                        <span
+                          className="wholesale-partner_icon"
+                          aria-hidden="true"
+                        >
+                          <EnquiryIcon name={item.icon} />
+                        </span>
+                      </div>
+                      <h3>{item.title}</h3>
+                      <p>{item.text}</p>
+                      <a
+                        className="wholesale-partner_link"
+                        href={`#wholesale-enquiry?type=${encodeURIComponent(CARD_TYPE_TO_FORM_TYPE[item.title])}`}
+                        tabIndex={group === 1 ? -1 : undefined}
+                      >
+                        Start an enquiry{" "}
+                        <span aria-hidden="true">&rarr;</span>
+                      </a>
+                    </article>
+                  ))}
+                </div>
+              ))}
+            </div>
+          </PartnersMarquee>
+        </div>
+      </section>
+
+      <section
+        className="section wholesale-why"
+        aria-labelledby="wholesale-why-title"
+        id="why-nilgiribytes"
+      >
+        <div className="container">
+          <div className="wholesale-why_head">
+            <div>
+              <span
+                className="section-kicker text-left reveal"
                 data-reveal="fade-up"
-                key={item.title}
               >
-                <span className="wholesale-partner_index" aria-hidden="true">
+                The Nilgiribytes advantage
+              </span>
+              <h2
+                className="wholesale-why_title reveal"
+                data-reveal="fade-up"
+                id="wholesale-why-title"
+              >
+                Why Businesses Choose <em>Nilgiribytes</em>
+              </h2>
+            </div>
+            <p className="wholesale-why_intro reveal" data-reveal="fade-up">
+              A Nilgiri bakery with a name customers trust, and a supply partner
+              built around the way your business orders.
+            </p>
+          </div>
+
+          <div className="wholesale-why_grid">
+            <article
+              className="wholesale-why_feature reveal"
+              data-reveal="fade-up"
+            >
+              <span className="wholesale-why_badge">Since 1980</span>
+              <h3>Four decades of Nilgiri baking heritage</h3>
+              <p>
+                We have baked authentic Ooty varkey and Nilgiri biscuits in
+                Kotagiri for generations. Partners choose us for recipes their
+                customers recognise, quality that stays consistent batch after
+                batch, and a team that understands repeat supply.
+              </p>
+              <ul className="wholesale-why_checks">
+                <li>Traditional recipes, consistent batches</li>
+                <li>Retail, bulk and gifting support</li>
+                <li>Pan-India dispatch through trusted partners</li>
+              </ul>
+            </article>
+
+            {WHY_REASONS.map((reason, index) => (
+              <article
+                className="wholesale-why_card reveal"
+                data-reveal="fade-up"
+                key={reason.title}
+              >
+                <span className="wholesale-why_card-index" aria-hidden="true">
                   {String(index + 1).padStart(2, "0")}
                 </span>
-                <span className="wholesale-partner_icon" aria-hidden="true">
-                  <EnquiryIcon name={item.icon} />
-                </span>
-                <h3>{item.title}</h3>
-                <p>{item.text}</p>
-                {index === 0 && (
-                  <ul className="wholesale-partner_highlights">
-                    <li>Retail-ready packs</li>
-                    <li>Repeat supply</li>
-                    <li>Direct bakery pricing</li>
-                  </ul>
-                )}
-                <a className="wholesale-partner_link" href={`#wholesale-enquiry?type=${encodeURIComponent(CARD_TYPE_TO_FORM_TYPE[item.title])}`}>
-                  Start an enquiry <span aria-hidden="true">&rarr;</span>
-                </a>
+                <h3>{reason.title}</h3>
+                <p>{reason.text}</p>
               </article>
             ))}
+          </div>
+
+          <dl className="wholesale-why_stats">
+            {WHY_STATS.map((stat) => (
+              <div className="wholesale-why_stat" key={stat.label}>
+                <dt className="wholesale-why_stat-label">{stat.label}</dt>
+                <dd className="wholesale-why_stat-value">{stat.value}</dd>
+              </div>
+            ))}
+          </dl>
+
+          <div
+            className="wholesale-why_footer reveal"
+            data-reveal="fade-up"
+          >
+            <p>Ready to stock the taste of the Nilgiris?</p>
+            <a className="btn btn--primary" href="#wholesale-enquiry">
+              Start a wholesale enquiry
+            </a>
           </div>
         </div>
       </section>

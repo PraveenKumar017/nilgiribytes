@@ -266,6 +266,15 @@
     padding-block: 2.75rem;
   }
 
+  .page-hero--wholesale {
+    min-height: clamp(28rem, 66vh, 36rem);
+    padding-block: 3rem;
+  }
+
+  .page-hero--wholesale .page-hero_media img {
+    object-position: center;
+  }
+
   .hero_text {
     margin-inline: auto;
   }
