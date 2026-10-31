@@ -267,8 +267,10 @@
   }
 
   .page-hero--wholesale {
-    min-height: clamp(28rem, 66vh, 36rem);
-    padding-block: 3rem;
+    min-height: 0;
+    padding-block: 0;
+    aspect-ratio: 768 / 1090;
+    max-height: 100svh;
   }
 
   .page-hero--wholesale .page-hero_media img {

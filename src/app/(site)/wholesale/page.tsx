@@ -88,7 +88,6 @@ const WHY_STATS = [
   { value: "1980", label: "Baking since" },
   { value: "28,000+", label: "Pin codes served" },
   { value: "90 days", label: "Shelf life" },
-  { value: "5", label: "Ways to partner" },
 ] as const;
 
 type EnquiryIconName = (typeof ENQUIRY_TYPES)[number]["icon"];
@@ -268,12 +267,9 @@ export default function WholesalePage() {
         id="why-nilgiribytes"
       >
         <div className="container">
-          <div className="wholesale-why_head">
-            <div>
-              <span
-                className="section-kicker text-left reveal"
-                data-reveal="fade-up"
-              >
+          <div className="wholesale-why_layout">
+            <div className="wholesale-why_head">
+              <span className="section-kicker reveal" data-reveal="fade-up">
                 The Nilgiribytes advantage
               </span>
               <h2
@@ -283,49 +279,38 @@ export default function WholesalePage() {
               >
                 Why Businesses Choose <em>Nilgiribytes</em>
               </h2>
-            </div>
-            <p className="wholesale-why_intro reveal" data-reveal="fade-up">
-              A Nilgiri bakery with a name customers trust, and a supply partner
-              built around the way your business orders.
-            </p>
-          </div>
-
-          <div className="wholesale-why_grid">
-            <article
-              className="wholesale-why_feature reveal"
-              data-reveal="fade-up"
-            >
-              <span className="wholesale-why_badge">Since 1980</span>
-              <h3>Four decades of Nilgiri baking heritage</h3>
-              <p>
-                We have baked authentic Ooty varkey and Nilgiri biscuits in
-                Kotagiri for generations. Partners choose us for recipes their
-                customers recognise, quality that stays consistent batch after
-                batch, and a team that understands repeat supply.
+              <p className="wholesale-why_intro reveal" data-reveal="fade-up">
+                A Nilgiri bakery with a name customers trust, and a supply
+                partner built around the way your business orders.
               </p>
-              <ul className="wholesale-why_checks">
-                <li>Traditional recipes, consistent batches</li>
-                <li>Retail, bulk and gifting support</li>
-                <li>Pan-India dispatch through trusted partners</li>
-              </ul>
-            </article>
+              <div className="wholesale-why_cta reveal" data-reveal="fade-up">
+                <span className="wholesale-why_badge">Since 1980</span>
+                <a className="btn btn--primary" href="#wholesale-enquiry">
+                  Start a wholesale enquiry
+                </a>
+              </div>
+            </div>
 
-            {WHY_REASONS.map((reason, index) => (
-              <article
-                className="wholesale-why_card reveal"
-                data-reveal="fade-up"
-                key={reason.title}
-              >
-                <span className="wholesale-why_card-index" aria-hidden="true">
-                  {String(index + 1).padStart(2, "0")}
-                </span>
-                <h3>{reason.title}</h3>
-                <p>{reason.text}</p>
-              </article>
-            ))}
+            <div className="wholesale-why_list">
+              {WHY_REASONS.map((reason, index) => (
+                <article
+                  className="wholesale-why_item reveal"
+                  data-reveal="fade-up"
+                  key={reason.title}
+                >
+                  <span className="wholesale-why_item-index" aria-hidden="true">
+                    {String(index + 1).padStart(2, "0")}
+                  </span>
+                  <div>
+                    <h3>{reason.title}</h3>
+                    <p>{reason.text}</p>
+                  </div>
+                </article>
+              ))}
+            </div>
           </div>
 
-          <dl className="wholesale-why_stats">
+          <dl className="wholesale-why_stats reveal" data-reveal="fade-up">
             {WHY_STATS.map((stat) => (
               <div className="wholesale-why_stat" key={stat.label}>
                 <dt className="wholesale-why_stat-label">{stat.label}</dt>
@@ -333,16 +318,6 @@ export default function WholesalePage() {
               </div>
             ))}
           </dl>
-
-          <div
-            className="wholesale-why_footer reveal"
-            data-reveal="fade-up"
-          >
-            <p>Ready to stock the taste of the Nilgiris?</p>
-            <a className="btn btn--primary" href="#wholesale-enquiry">
-              Start a wholesale enquiry
-            </a>
-          </div>
         </div>
       </section>
 
