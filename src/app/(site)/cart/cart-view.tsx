@@ -7,6 +7,8 @@ import { buildOrderMessage, whatsappLink } from "@/lib/whatsapp";
 import { useCart } from "@/components/cart-provider";
 import { SafeImage } from "@/components/safe-image";
 import { PaymentCheckout } from "@/components/payment-checkout";
+import type { StoreProduct, Catalog } from "@/lib/types";
+import { ProductCollection } from "@/components/product-collection";
 
 interface CustomerDetails {
   name: string;
@@ -22,9 +24,12 @@ const STORAGE_KEY = "nilgiribytes_customer_details";
 export function CartView() {
   const { lines, ready, count, subtotal, changeQty } = useCart();
   const [showCustomerModal, setShowCustomerModal] = useState(false);
+  const [hasShownModalOnce, setHasShownModalOnce] = useState(false);
   const [showPaymentForm, setShowPaymentForm] = useState(false);
   const [paymentError, setPaymentError] = useState("");
   const [previousCount, setPreviousCount] = useState(0);
+  const [catalog, setCatalog] = useState<Catalog | null>(null);
+  const [relatedProducts, setRelatedProducts] = useState<StoreProduct[]>([]);
   const [customerDetails, setCustomerDetails] = useState<CustomerDetails>({
     name: "",
     mobile: "",
@@ -47,20 +52,71 @@ export function CartView() {
     }
   }, []);
 
-  // Show modal when cart count increases
+  // Fetch catalog and generate related products
   useEffect(() => {
-    if (ready && count > 0 && previousCount === 0) {
-      // First item added
-      console.log("First item added, showing customer modal");
-      setShowCustomerModal(true);
-    } else if (ready && count > previousCount && previousCount > 0) {
-      // Cart count increased but customer details already saved
-      if (!customerDetails.name) {
-        setShowCustomerModal(true);
+    const fetchCatalog = async () => {
+      try {
+        const response = await fetch("/api/catalog");
+        if (response.ok) {
+          const data: Catalog = await response.json();
+          console.log("Catalog fetched, total products:", data.products.length);
+          console.log("Cart lines:", lines.length);
+          console.log("Cart item details:", lines.map(l => ({ id: l.id, name: l.name, kind: l.kind })));
+
+          // Get IDs of items already in cart (both products and combos)
+          const cartItemIds = new Set(lines.map((line) => line.id));
+          console.log("Cart item IDs to exclude:", Array.from(cartItemIds));
+
+          // Filter products not in cart
+          const availableProducts = data.products.filter(
+            (p) => !cartItemIds.has(p.id)
+          );
+          console.log("Available products after filtering:", availableProducts.length);
+          console.log("Available product IDs:", availableProducts.map(p => p.id).slice(0, 4));
+
+          if (availableProducts.length > 0) {
+            // Shuffle and select 4 random products
+            const shuffled = availableProducts.sort(() => Math.random() - 0.5);
+            const selected = shuffled.slice(0, Math.min(4, shuffled.length));
+            console.log("Selected related products count:", selected.length);
+            console.log("Selected products:", selected.map(p => ({ id: p.id, name: p.name })));
+            setRelatedProducts(selected);
+          } else {
+            console.warn("No products available after filtering - showing first 4 products anyway");
+            // If all products are in cart, show the first 4 anyway
+            const fallback = data.products.slice(0, 4).sort(() => Math.random() - 0.5);
+            setRelatedProducts(fallback);
+          }
+        } else {
+          console.error("Failed to fetch catalog, status:", response.status);
+        }
+      } catch (error) {
+        console.error("Failed to fetch catalog:", error);
       }
+    };
+
+    if (lines.length > 0) {
+      console.log("Fetching catalog for", lines.length, "cart items");
+      fetchCatalog();
+    } else {
+      console.log("No items in cart, clearing related products");
+      setRelatedProducts([]);
     }
-    setPreviousCount(count);
-  }, [count, ready, previousCount, customerDetails.name]);
+  }, [lines]);
+
+  // Show modal only on FIRST cart item add if no customer details are saved yet
+  useEffect(() => {
+    if (ready && count > 0 && previousCount === 0 && !customerDetails.name && !hasShownModalOnce) {
+      // First item added, no saved details, and haven't shown modal before
+      console.log("First item added and no saved details, showing customer modal");
+      setShowCustomerModal(true);
+      setHasShownModalOnce(true); // Mark that we've shown the modal once
+    }
+    // Update previous count
+    if (count !== previousCount) {
+      setPreviousCount(count);
+    }
+  }, [count, ready, previousCount, customerDetails.name, hasShownModalOnce]);
 
   const handleInputChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
@@ -120,13 +176,17 @@ export function CartView() {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(customerDetails));
       console.log("Customer details saved:", customerDetails);
       setShowCustomerModal(false);
+      // Don't show modal again even if cart count changes
     }
   };
 
   const handlePaymentSuccess = (data: any) => {
     setShowPaymentForm(false);
     alert(`Payment successful! Order ID: ${data.orderId}`);
-    // TODO: Clear cart and redirect to success page
+    // Clear cart by resetting to initial state
+    // The cart provider should handle this through its own logic
+    // For now, we'll navigate to order confirmation page
+    window.location.href = `/order-confirmation?orderId=${data.orderId}`;
   };
 
   const handlePaymentError = (error: string) => {
@@ -222,21 +282,23 @@ export function CartView() {
 
   return (
     <>
-      {/* Customer Details Modal */}
-      {showCustomerModal && (
+      {/* Customer Details Modal - Show on first item add (no saved details) or when user clicks Edit Details */}
+      {showCustomerModal && !customerDetails.name && (
         <>
           <div
             className="modal-overlay"
-            onClick={() => {
-              if (customerDetails.name) setShowCustomerModal(false);
-            }}
+            // Don't allow dismissing until details are saved
+            onClick={() => {}}
+            style={{ pointerEvents: customerDetails.name ? "auto" : "none" }}
           />
           <div className="modal modal-customer" role="dialog" aria-modal="true">
             <div className="modal-header">
               <h2 className="modal-title">Delivery Details</h2>
             </div>
             <div className="modal-body">
-              <p className="modal-description">Please provide your delivery details to proceed.</p>
+              <p className="modal-description">
+                Please provide your delivery details. This will be saved for future orders.
+              </p>
 
               <div className="form-group">
                 <label htmlFor="modal-name">Name *</label>
@@ -453,7 +515,10 @@ export function CartView() {
                   <button
                     type="button"
                     className="btn btn--outline"
-                    onClick={() => setShowPaymentForm(false)}
+                    onClick={() => {
+                      setShowPaymentForm(false);
+                      setShowCustomerModal(true);
+                    }}
                   >
                     Edit Details
                   </button>
@@ -508,6 +573,48 @@ export function CartView() {
           )}
         </aside>
       </div>
+
+      {/* You may also like section - Full width white background */}
+      {relatedProducts.length > 0 && (
+        <section 
+          className="section section--alt" 
+          aria-labelledby="related-title" 
+          style={{ 
+            marginTop: "3rem",
+            marginLeft: "calc(-50vw + 50%)", 
+            marginRight: "calc(-50vw + 50%)",
+            marginBottom: 0,
+            paddingTop: "3rem",
+            paddingBottom: "3rem",
+            paddingLeft: "var(--page-padding)",
+            paddingRight: "var(--page-padding)"
+          }}
+        >
+          <div className="container">
+            <span className="section-kicker reveal" data-reveal="fade-up">
+              You may also like
+            </span>
+            <h2
+              className="section-heading"
+              style={{ fontSize: "clamp(2rem, 4vw, 2.8rem)" }}
+              data-reveal="fade-up"
+              id="related-title"
+            >
+              More Products
+            </h2>
+            <p 
+              className="section-intro reveal" 
+              data-reveal="fade-up"
+              style={{ marginTop: "1rem", marginBottom: "2rem" }}
+            >
+              Explore our other delicious offerings and discover your next favorite treat.
+            </p>
+            <div className="product-grid" style={{ marginTop: "2.5rem" }}>
+              <ProductCollection items={relatedProducts} />
+            </div>
+          </div>
+        </section>
+      )}
     </>
   );
 }
