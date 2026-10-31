@@ -31,15 +31,14 @@
 /* Pinned Hero Stage */
 .hero-stage {
   position: relative;
-  height: 100svh;
-  min-height: 640px;
-  max-height: 1100px;
+  min-height: clamp(78vh, 92vh, 960px);
   width: 100%;
   overflow: hidden;
   isolation: isolate;
   display: flex;
   align-items: center;
   z-index: 5;
+  padding: clamp(2rem, 6vw, 4rem) 0 clamp(4rem, 10vw, 8rem);
 }
 
 /* Soft Left Vignette for Typography Legibility */

@@ -65,13 +65,6 @@ export function Header() {
         Skip to content
       </a>
 
-      <div className="scroll-progress" aria-hidden="true">
-        <div
-          className="scroll-progress-bar"
-          data-scroll-progress
-          style={{ width: `${progress * 100}%` }}
-        />
-      </div>
 
       <header className="site-header">
         <div className="container site-header_inner">

@@ -63,6 +63,7 @@ export default async function HomePage() {
           className="section category-collection"
           id="categories-section"
           aria-labelledby="categories-title"
+          style={{ background: "#FFFFFF" }}
         >
           <div className="container">
             <div className="category-collection_head">
@@ -95,11 +96,15 @@ export default async function HomePage() {
 
             <div className="category-grid">
               <Link
-                className="category-card category-card--feature reveal"
+                className="category-card category-card--light reveal"
                 data-reveal="drop"
                 href="/shop?category=Varkey"
+                style={{ gridRow: "span 2" }}
               >
-                <div className="category-card_media">
+                <div
+                  className="category-card_media"
+                  style={{ flex: "0 0 auto", aspectRatio: "4 / 4" }}
+                >
                   <img
                     className="category-card_texture"
                     src="/assets/images/Categories/varkey.png"
@@ -111,11 +116,13 @@ export default async function HomePage() {
                 <span className="category-card_index" aria-hidden="true">
                   01
                 </span>
-                <div className="category-card_body">
+                <div
+                  className="category-card_body"
+                  style={{ marginTop: "auto" }}
+                >
                   <h3 className="category-card_title">Ooty Varkey</h3>
                   <p className="category-card_text">
-                    Flaky, buttery layers baked fresh every morning - the taste
-                    the Nilgiris is known for.
+                    Crisp, golden perfection defines the flaky, buttery layers baked fresh every morning - the taste the Nilgiris is known for.
                   </p>
                   <span className="category-card_link">Shop varkey</span>
                 </div>

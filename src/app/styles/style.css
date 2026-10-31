@@ -17,7 +17,7 @@
 html {
   scroll-behavior: smooth;
   /* Sticky header must not cover the target of an in-page anchor. */
-  scroll-padding-top: calc(var(--header-height) + 16px);
+  scroll-padding-top: calc(var(--announcement-height, 28px) + var(--header-height) + 16px);
   background: var(--color-background);
   /* Reveal animations shift elements sideways before they fade in; clip that
      so the page never gains a horizontal scrollbar on phones. */
@@ -396,15 +396,20 @@ p {
 
 /* ---------- Announcement bar ---------- */
 .announcement {
+  position: sticky;
+  top: 0;
+  z-index: 700;
+  display: flex;
+  align-items: center;
+  height: var(--announcement-height, 36px);
+  overflow: hidden;
   background: var(--color-chocolate);
-  color: var(--color-gold);
-  text-align: center;
-  font-size: 0.76rem;
-  font-weight: 600;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
-  padding: 0.65rem var(--page-padding);
+  color: var(--header-bg);
   border-bottom: 1px solid var(--hairline-gold);
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
 }
 
 /* ---------- Scroll progress ---------- */
@@ -429,14 +434,12 @@ p {
 
 /* ---------- Header ---------- */
 .site-shell {
-  padding-top: calc(var(--header-height) + 3px);
+  padding-top: 0;
 }
 
 .site-header {
-  position: fixed;
-  top: 3px;
-  left: 0;
-  right: 0;
+  position: sticky;
+  top: var(--announcement-height, 36px);
   z-index: 500;
   background: var(--header-bg);
   backdrop-filter: blur(12px);
@@ -4192,4 +4195,43 @@ a.map-placeholder:hover {
 
 body.is-locked {
   overflow: hidden;
+}
+
+.announcement-track {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: 2rem;
+  width: max-content;
+  animation: announcement-scroll 28s linear infinite;
+  will-change: transform;
+}
+
+:root {
+  --announcement-height: 36px;
+}
+
+.announcement:hover .announcement-track {
+  animation-play-state: paused;
+}
+
+.announcement-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.8rem;
+  white-space: nowrap;
+}
+
+.announcement-dot {
+  color: var(--header-bg);
+  opacity: 0.8;
+}
+
+@keyframes announcement-scroll {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
 }

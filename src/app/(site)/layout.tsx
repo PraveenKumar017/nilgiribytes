@@ -1,3 +1,4 @@
+import { AnnouncementBar } from "@/components/announcement-bar";
 import { CartBar } from "@/components/cart-bar";
 import { CartProvider } from "@/components/cart-provider";
 import { FloatingWhatsApp } from "@/components/floating-whatsapp";
@@ -12,6 +13,7 @@ export default function SiteLayout({
     <CartProvider>
       <SiteEffects />
       <div className="site-shell">
+        <AnnouncementBar />
         <Header />
         {children}
         <Footer />
