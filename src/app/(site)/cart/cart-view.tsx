@@ -139,6 +139,28 @@ export function CartView() {
 
   const handlePayOnlineClick = () => {
     console.log("Pay online clicked");
+    
+    // Store cart data in window object for PaymentCheckout to access
+    const cartItems = lines.map((line) => ({
+      name: line.name,
+      sizeLabel: line.sizeLabel,
+      quantity: line.qty,
+      unitPricePaise: line.pricePaise,
+      lineTotalPaise: line.pricePaise * line.qty,
+      // productId and comboId would need to be tracked in cart state
+    }));
+
+    (window as any).__cartData = {
+      address: customerDetails.address,
+      pincode: customerDetails.pincode,
+      state: customerDetails.state,
+      district: customerDetails.district,
+      items: cartItems,
+      subtotalPaise: subtotal,
+      totalPaise: subtotal, // Add delivery charges if needed
+    };
+
+    console.log("Showing payment form with cart data:", (window as any).__cartData);
     setShowPaymentForm(true);
     setPaymentError("");
   };

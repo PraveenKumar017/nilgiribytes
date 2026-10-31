@@ -196,6 +196,17 @@ export function PaymentCheckout({
                 razorpay_order_id: response.razorpay_order_id,
                 razorpay_payment_id: response.razorpay_payment_id,
                 razorpay_signature: response.razorpay_signature,
+                customerName: customerName,
+                customerPhone: customerPhone,
+                customerEmail: customerEmail,
+                // These will be passed from cart view
+                address: (window as any).__cartData?.address || "",
+                pincode: (window as any).__cartData?.pincode || "",
+                state: (window as any).__cartData?.state || "",
+                district: (window as any).__cartData?.district || "",
+                items: (window as any).__cartData?.items || [],
+                subtotalPaise: (window as any).__cartData?.subtotalPaise || 0,
+                totalPaise: (window as any).__cartData?.totalPaise || 0,
               }),
             });
 
