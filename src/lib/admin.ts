@@ -16,6 +16,7 @@ export type ActionState = { error: string } | null;
 export type LoginState = { error: string } | null;
 
 export function formText(formData: FormData, key: string): string {
+  if (!formData || typeof formData.get !== "function") return "";
   return String(formData.get(key) ?? "").trim();
 }
 

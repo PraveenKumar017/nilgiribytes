@@ -9,15 +9,11 @@ import {
 import { ConfirmSubmit } from "@/components/admin/admin-ui";
 import {
   CloseIcon,
-  CopyIcon,
   DownloadIcon,
   EyeIcon,
-  MailIcon,
-  PhoneIcon,
   PrintIcon,
   SearchIcon,
   TrashIcon,
-  WhatsAppIcon,
 } from "@/components/admin/icons";
 import type { AdminOrderRow } from "@/lib/admin";
 import { formatINR } from "@/lib/format";
@@ -32,44 +28,60 @@ const STATUSES = [
 
 type StatusType = (typeof STATUSES)[number];
 
-function formatOrderDateTime(date: Date | string) {
+function formatOrderDateTime(date: Date | string): string {
   const d = new Date(date);
   if (Number.isNaN(d.getTime())) return String(date);
 
-  const dateStr = d.toLocaleDateString("en-IN", {
-    day: "2-digit",
-    month: "short",
-    year: "numeric",
-  });
-  const timeStr = d.toLocaleTimeString("en-IN", {
-    hour: "2-digit",
-    minute: "2-digit",
-    hour12: true,
-  });
+  const day = String(d.getDate()).padStart(2, "0");
+  const month = String(d.getMonth() + 1).padStart(2, "0");
+  const year = d.getFullYear();
+  const hours = String(d.getHours()).padStart(2, "0");
+  const minutes = String(d.getMinutes()).padStart(2, "0");
 
-  return { dateStr, timeStr, full: `${dateStr}, ${timeStr}` };
+  return `${day}/${month}/${year} ${hours}:${minutes}`;
 }
 
-function timeAgo(date: Date | string): string {
-  const diffMs = Date.now() - new Date(date).getTime();
-  const diffMins = Math.floor(diffMs / 60000);
-  if (diffMins < 1) return "Just now";
-  if (diffMins < 60) return `${diffMins}m ago`;
-  const diffHours = Math.floor(diffMins / 60);
-  if (diffHours < 24) return `${diffHours}h ago`;
-  const diffDays = Math.floor(diffHours / 24);
-  if (diffDays === 1) return "Yesterday";
-  if (diffDays < 30) return `${diffDays}d ago`;
-  return new Date(date).toLocaleDateString("en-IN", {
-    day: "numeric",
-    month: "short",
-  });
-}
+function numberToWordsINR(amountPaise: number): string {
+  const amountRupees = Math.floor(amountPaise / 100);
+  if (amountRupees <= 0) return "Zero Rupees Only";
 
-function sanitizePhoneForWhatsApp(phone: string): string {
-  const digits = phone.replace(/\D/g, "");
-  if (digits.length === 10) return `91${digits}`;
-  return digits;
+  const ones = [
+    "", "One", "Two", "Three", "Four", "Five", "Six", "Seven", "Eight", "Nine",
+    "Ten", "Eleven", "Twelve", "Thirteen", "Fourteen", "Fifteen", "Sixteen",
+    "Seventeen", "Eighteen", "Nineteen",
+  ];
+  const tens = [
+    "", "", "Twenty", "Thirty", "Forty", "Fifty", "Sixty", "Seventy", "Eighty", "Ninety",
+  ];
+
+  function convertChunk(num: number): string {
+    let s = "";
+    if (num >= 100) {
+      s += ones[Math.floor(num / 100)] + " Hundred ";
+      num %= 100;
+    }
+    if (num >= 20) {
+      s += tens[Math.floor(num / 10)] + " ";
+      num %= 10;
+    }
+    if (num > 0) {
+      s += ones[num] + " ";
+    }
+    return s.trim();
+  }
+
+  const crore = Math.floor(amountRupees / 10000000);
+  const lakh = Math.floor((amountRupees % 10000000) / 100000);
+  const thousand = Math.floor((amountRupees % 100000) / 1000);
+  const remainder = amountRupees % 1000;
+
+  let res = "";
+  if (crore) res += convertChunk(crore) + " Crore ";
+  if (lakh) res += convertChunk(lakh) + " Lakh ";
+  if (thousand) res += convertChunk(thousand) + " Thousand ";
+  if (remainder) res += convertChunk(remainder) + " ";
+
+  return res.trim() + " Rupees Only";
 }
 
 export function OrdersTable({ orders }: { orders: AdminOrderRow[] }) {
@@ -80,6 +92,7 @@ export function OrdersTable({ orders }: { orders: AdminOrderRow[] }) {
   const [activeModalOrder, setActiveModalOrder] = useState<AdminOrderRow | null>(
     null
   );
+  const [printOrder, setPrintOrder] = useState<AdminOrderRow | null>(null);
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
 
   // Statistics
@@ -239,10 +252,11 @@ export function OrdersTable({ orders }: { orders: AdminOrderRow[] }) {
   }
 
   function handlePrintInvoice(order: AdminOrderRow) {
-    setActiveModalOrder(order);
+    setPrintOrder(order);
     setTimeout(() => {
       window.print();
-    }, 200);
+      setTimeout(() => setPrintOrder(null), 500);
+    }, 80);
   }
 
   return (
@@ -398,7 +412,7 @@ export function OrdersTable({ orders }: { orders: AdminOrderRow[] }) {
                   <th>Date & Time</th>
                   <th>Customer</th>
                   <th>Items</th>
-                  <th>Channel & Payment</th>
+                  <th>Channel</th>
                   <th>Total</th>
                   <th>Status</th>
                   <th className="admin-table_actions">Actions</th>
@@ -406,17 +420,10 @@ export function OrdersTable({ orders }: { orders: AdminOrderRow[] }) {
               </thead>
               <tbody>
                 {filteredOrders.map((order, index) => {
-                  const { dateStr, timeStr } = formatOrderDateTime(order.createdAt);
-                  const waNumber = sanitizePhoneForWhatsApp(order.phone);
-                  const waUrl = `https://wa.me/${waNumber}?text=${encodeURIComponent(
-                    `Hello ${order.customerName}, regarding your Nilgiribytes order ${order.orderNumber}:`
-                  )}`;
-
                   return (
                     <tr key={order.id} className="admin-orders_row">
                       <td className="admin-orders_sno">{index + 1}</td>
 
-                      {/* Order Number */}
                       <td>
                         <button
                           type="button"
@@ -428,103 +435,46 @@ export function OrdersTable({ orders }: { orders: AdminOrderRow[] }) {
                             {order.orderNumber}
                           </span>
                         </button>
-                        <span className="admin-orders_time-ago">
-                          {timeAgo(order.createdAt)}
+                      </td>
+
+                      {/* Date & Time (dd/mm/yyyy HH:mm) */}
+                      <td>
+                        <span className="admin-orders_date">
+                          {formatOrderDateTime(order.createdAt)}
                         </span>
                       </td>
 
-                      {/* Date & Time */}
-                      <td>
-                        <span className="admin-orders_date">{dateStr}</span>
-                        <span className="admin-orders_time">{timeStr}</span>
-                      </td>
-
-                      {/* Customer info */}
+                      {/* Customer info: Name and Phone only */}
                       <td>
                         <span className="admin-table_primary">
                           {order.customerName}
                         </span>
-                        <div className="admin-orders_contact-row">
-                          <a
-                            href={`tel:${order.phone}`}
-                            className="admin-orders_contact-link"
-                            title="Call customer"
-                          >
-                            <PhoneIcon className="admin-orders_inline-icon" />
-                            <span>{order.phone}</span>
-                          </a>
-
-                          <a
-                            href={waUrl}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="admin-orders_wa-link"
-                            title="Message customer on WhatsApp"
-                          >
-                            <WhatsAppIcon className="admin-orders_inline-icon admin-orders_inline-icon--wa" />
-                            <span>Chat</span>
-                          </a>
-                        </div>
-                        {order.email ? (
-                          <a
-                            href={`mailto:${order.email}`}
-                            className="admin-orders_email-link"
-                            title={order.email}
-                          >
-                            <MailIcon className="admin-orders_inline-icon" />
-                            <span>{order.email}</span>
-                          </a>
-                        ) : null}
-                        {order.address ? (
-                          <p className="admin-orders_address-preview" title={order.address}>
-                            {order.address}
-                          </p>
-                        ) : null}
+                        <span
+                          className="admin-table_sub"
+                          style={{
+                            fontSize: "0.8rem",
+                            color: "var(--color-ink)",
+                            marginTop: "0.2rem",
+                          }}
+                        >
+                          {order.phone}
+                        </span>
                       </td>
 
-                      {/* Items */}
+                      {/* Items: count only */}
                       <td>
-                        <div className="admin-orders_items-cell">
-                          <span className="admin-orders_items-badge">
-                            {order.itemsCount} item{order.itemsCount === 1 ? "" : "s"}
-                          </span>
-                          <span
-                            className="admin-orders_items-summary"
-                            title={order.itemsSummary}
-                          >
-                            {order.itemsSummary || "—"}
-                          </span>
-                        </div>
+                        <span className="admin-orders_items-badge">
+                          {order.itemsCount} item{order.itemsCount === 1 ? "" : "s"}
+                        </span>
                       </td>
 
-                      {/* Channel & Payment */}
+                      {/* Channel: badge only (no payment ID) */}
                       <td>
-                        <div className="admin-orders_channel-cell">
-                          <span
-                            className={`admin-orders_channel-badge admin-orders_channel-badge--${order.channel.toLowerCase()}`}
-                          >
-                            {order.channel}
-                          </span>
-
-                          {order.paymentId ? (
-                            <button
-                              type="button"
-                              className="admin-orders_payment-pill"
-                              onClick={() =>
-                                copyToClipboard(order.paymentId!, `pay-${order.id}`)
-                              }
-                              title="Click to copy Razorpay Payment ID"
-                            >
-                              <span className="admin-mono">{order.paymentId}</span>
-                              <CopyIcon className="admin-orders_copy-icon" />
-                              {copiedKey === `pay-${order.id}` ? (
-                                <span className="admin-orders_copied-tooltip">
-                                  Copied!
-                                </span>
-                              ) : null}
-                            </button>
-                          ) : null}
-                        </div>
+                        <span
+                          className={`admin-orders_channel-badge admin-orders_channel-badge--${order.channel.toLowerCase()}`}
+                        >
+                          {order.channel}
+                        </span>
                       </td>
 
                       {/* Total */}
@@ -558,7 +508,7 @@ export function OrdersTable({ orders }: { orders: AdminOrderRow[] }) {
                         </form>
                       </td>
 
-                      {/* Actions */}
+                      {/* Actions: Eye, Print, Delete icon only */}
                       <td className="admin-table_actions">
                         <div className="admin-row-actions">
                           <button
@@ -573,21 +523,13 @@ export function OrdersTable({ orders }: { orders: AdminOrderRow[] }) {
 
                           <button
                             type="button"
-                            className="admin-btn admin-btn--small admin-btn--ghost admin-btn--icon"
+                            className="admin-btn admin-btn--small admin-btn--icon"
                             onClick={() => handlePrintInvoice(order)}
                             title="Print invoice slip"
                             aria-label={`Print order ${order.orderNumber}`}
                           >
                             <PrintIcon />
                           </button>
-
-                          <Link
-                            className="admin-btn admin-btn--small"
-                            href={`/admin/orders?id=${order.id}`}
-                            title="Open full order page"
-                          >
-                            Detail
-                          </Link>
 
                           <form action={deleteOrderAction}>
                             <input type="hidden" name="id" value={order.id} />
@@ -627,7 +569,7 @@ export function OrdersTable({ orders }: { orders: AdminOrderRow[] }) {
         )}
       </section>
 
-      {/* Quick View / Invoice Slip Modal */}
+      {/* Order Detail Modal */}
       {activeModalOrder ? (
         <div
           className="admin-orders_modal-backdrop"
@@ -640,213 +582,339 @@ export function OrdersTable({ orders }: { orders: AdminOrderRow[] }) {
             className="admin-orders_modal-dialog"
             onClick={(e) => e.stopPropagation()}
           >
-            {/* Modal Head */}
-            <div className="admin-orders_modal-head">
-              <div>
-                <p className="admin-orders_modal-sub">Order Details</p>
-                <h2 id="modal-order-title" className="admin-orders_modal-title">
+            {/* Modal Header */}
+            <div className="odm-head">
+              <div className="odm-head_info">
+                <span className={`admin-badge admin-badge--${activeModalOrder.status.toLowerCase()} odm-status-badge`}>
+                  {activeModalOrder.status}
+                </span>
+                <h2 id="modal-order-title" className="odm-order-num">
                   {activeModalOrder.orderNumber}
                 </h2>
+                <span className="odm-date">{formatOrderDateTime(activeModalOrder.createdAt)}</span>
               </div>
-              <div className="admin-orders_modal-head-actions">
+              <div className="odm-head_actions">
                 <button
                   type="button"
-                  className="admin-btn admin-btn--small"
-                  onClick={() => window.print()}
-                  title="Print invoice slip"
+                  className="admin-btn admin-btn--small admin-btn--ghost"
+                  onClick={() => handlePrintInvoice(activeModalOrder)}
+                  title="Print invoice"
                 >
                   <PrintIcon className="admin-orders_btn-icon" />
-                  <span>Print Slip</span>
+                  <span>Print</span>
                 </button>
                 <button
                   type="button"
                   className="admin-btn admin-btn--small admin-btn--ghost admin-btn--icon"
                   onClick={() => setActiveModalOrder(null)}
-                  aria-label="Close dialog"
+                  aria-label="Close"
                 >
                   <CloseIcon />
                 </button>
               </div>
             </div>
 
-            {/* Modal Body / Invoice View */}
-            <div className="admin-orders_modal-body admin-print-invoice">
-              {/* Brand Header for Print */}
-              <div className="admin-invoice_brand">
-                <div>
-                  <h3 className="admin-invoice_brand-name">NILGIRIBYTES</h3>
-                  <p className="admin-invoice_brand-sub">
-                    Authentic Ooty Varkey & Hill Confections
-                  </p>
-                </div>
-                <div className="admin-invoice_meta-head">
-                  <p>
-                    <strong>Invoice / Packing Slip</strong>
-                  </p>
-                  <p className="admin-mono">{activeModalOrder.orderNumber}</p>
-                  <p>{new Date(activeModalOrder.createdAt).toLocaleString("en-IN")}</p>
-                </div>
-              </div>
+            {/* Modal Body */}
+            <div className="odm-body">
 
-              {/* Status and summary chips */}
-              <div className="admin-invoice_chips no-print">
-                <span
-                  className={`admin-badge admin-badge--${activeModalOrder.status.toLowerCase()}`}
-                >
-                  Status: {activeModalOrder.status}
-                </span>
-                <span
-                  className={`admin-orders_channel-badge admin-orders_channel-badge--${activeModalOrder.channel.toLowerCase()}`}
-                >
-                  Channel: {activeModalOrder.channel}
-                </span>
-                {activeModalOrder.paymentId ? (
-                  <span className="admin-orders_payment-pill">
-                    Payment ID: {activeModalOrder.paymentId}
+              {/* Top info row: channel + payment */}
+              <div className="odm-meta-row">
+                <div className="odm-meta-item">
+                  <span className="odm-meta-label">Channel</span>
+                  <span className={`admin-orders_channel-badge admin-orders_channel-badge--${activeModalOrder.channel.toLowerCase()}`}>
+                    {activeModalOrder.channel}
                   </span>
+                </div>
+                <div className="odm-meta-item">
+                  <span className="odm-meta-label">Payment</span>
+                  <span className="odm-meta-value">
+                    {activeModalOrder.channel === "ONLINE" ? "Online (Razorpay)" : "WhatsApp / COD"}
+                  </span>
+                </div>
+                {activeModalOrder.paymentId ? (
+                  <div className="odm-meta-item odm-meta-item--wide">
+                    <span className="odm-meta-label">Payment ID</span>
+                    <span className="odm-meta-value admin-mono" style={{ fontSize: "0.78rem" }}>
+                      {activeModalOrder.paymentId}
+                    </span>
+                  </div>
                 ) : null}
               </div>
 
-              {/* Grid: Customer & Shipping Details */}
-              <div className="admin-invoice_grid">
-                <div className="admin-invoice_card">
-                  <h4 className="admin-invoice_card-title">Customer Information</h4>
-                  <dl className="admin-details">
-                    <div>
-                      <dt>Name</dt>
-                      <dd>
-                        <strong>{activeModalOrder.customerName}</strong>
-                      </dd>
+              {/* Two-col: Customer + Shipping */}
+              <div className="odm-two-col">
+                {/* Customer */}
+                <div className="odm-card">
+                  <div className="odm-card_title">Customer</div>
+                  <div className="odm-card_body">
+                    <p className="odm-customer-name">{activeModalOrder.customerName}</p>
+                    <div className="odm-field-row">
+                      <span className="odm-field-label">Phone</span>
+                      <a href={`tel:${activeModalOrder.phone}`} className="odm-field-val odm-link">
+                        {activeModalOrder.phone}
+                      </a>
                     </div>
-                    <div>
-                      <dt>Phone</dt>
-                      <dd>
-                        <a
-                          className="admin-link"
-                          href={`tel:${activeModalOrder.phone}`}
-                        >
-                          {activeModalOrder.phone}
+                    {activeModalOrder.email ? (
+                      <div className="odm-field-row">
+                        <span className="odm-field-label">Email</span>
+                        <a href={`mailto:${activeModalOrder.email}`} className="odm-field-val odm-link">
+                          {activeModalOrder.email}
                         </a>
-                      </dd>
-                    </div>
-                    <div>
-                      <dt>Email</dt>
-                      <dd>{activeModalOrder.email ?? "—"}</dd>
-                    </div>
-                  </dl>
-                </div>
-
-                <div className="admin-invoice_card">
-                  <h4 className="admin-invoice_card-title">Delivery & Notes</h4>
-                  <dl className="admin-details">
-                    <div>
-                      <dt>Address</dt>
-                      <dd>{activeModalOrder.address ?? "—"}</dd>
-                    </div>
-                    <div>
-                      <dt>Notes</dt>
-                      <dd>{activeModalOrder.notes ?? "—"}</dd>
-                    </div>
-                    {activeModalOrder.razorpayOrderId ? (
-                      <div>
-                        <dt>Razorpay Order</dt>
-                        <dd className="admin-mono">
-                          {activeModalOrder.razorpayOrderId}
-                        </dd>
                       </div>
                     ) : null}
-                  </dl>
+                  </div>
+                </div>
+
+                {/* Shipping Address */}
+                <div className="odm-card">
+                  <div className="odm-card_title">Shipping Address</div>
+                  <div className="odm-card_body">
+                    {activeModalOrder.address ? (
+                      <p className="odm-address">{activeModalOrder.address}</p>
+                    ) : (
+                      <p className="odm-address odm-address--empty">No address provided</p>
+                    )}
+                    {activeModalOrder.notes ? (
+                      <div className="odm-notes">
+                        <span className="odm-notes-label">Notes:</span>
+                        <span className="odm-notes-val">{activeModalOrder.notes}</span>
+                      </div>
+                    ) : null}
+                  </div>
                 </div>
               </div>
 
-              {/* Items Table */}
-              <div className="admin-invoice_items-card">
-                <h4 className="admin-invoice_card-title">Order Items</h4>
-                <div className="admin-table-wrap">
-                  <table className="admin-table admin-invoice_table">
-                    <thead>
-                      <tr>
-                        <th style={{ width: "32px" }}>#</th>
-                        <th>Item</th>
-                        <th>Pack Size</th>
-                        <th style={{ textAlign: "right" }}>Unit Price</th>
-                        <th style={{ textAlign: "center" }}>Qty</th>
-                        <th style={{ textAlign: "right" }}>Total</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {activeModalOrder.items.map((item, i) => (
-                        <tr key={item.id}>
-                          <td>{i + 1}</td>
-                          <td>
-                            <strong>{item.nameSnapshot}</strong>
-                          </td>
-                          <td>{item.sizeLabel ?? "—"}</td>
-                          <td style={{ textAlign: "right" }}>
-                            {formatINR(item.unitPricePaise)}
-                          </td>
-                          <td style={{ textAlign: "center" }}>{item.quantity}</td>
-                          <td style={{ textAlign: "right" }}>
-                            {formatINR(item.lineTotalPaise)}
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
+              {/* Items */}
+              <div className="odm-card">
+                <div className="odm-card_title">
+                  Items
+                  <span className="odm-items-count">{activeModalOrder.itemsCount} item{activeModalOrder.itemsCount === 1 ? "" : "s"}</span>
                 </div>
+                <div className="odm-items-list">
+                  {activeModalOrder.items.map((item, idx) => (
+                    <div key={item.id} className="odm-item-row">
+                      <span className="odm-item-idx">{idx + 1}</span>
+                      <div className="odm-item-info">
+                        <span className="odm-item-name">{item.nameSnapshot}</span>
+                        {item.sizeLabel ? (
+                          <span className="odm-item-size">{item.sizeLabel}</span>
+                        ) : null}
+                      </div>
+                      <span className="odm-item-unit">{formatINR(item.unitPricePaise)}</span>
+                      <span className="odm-item-qty">× {item.quantity}</span>
+                      <span className="odm-item-total">{formatINR(item.lineTotalPaise)}</span>
+                    </div>
+                  ))}
 
-                <dl className="admin-totals admin-invoice_totals">
-                  <div>
-                    <dt>Subtotal</dt>
-                    <dd>{formatINR(activeModalOrder.subtotalPaise)}</dd>
+                  {/* Total row */}
+                  <div className="odm-total-row">
+                    <span className="odm-total-label">Total</span>
+                    <span className="odm-total-val">{formatINR(activeModalOrder.totalPaise)}</span>
                   </div>
-                  <div>
-                    <dt>Shipping</dt>
-                    <dd>Free</dd>
-                  </div>
-                  <div className="admin-invoice_grand-total">
-                    <dt>Grand Total</dt>
-                    <dd>{formatINR(activeModalOrder.totalPaise)}</dd>
-                  </div>
-                </dl>
+                </div>
               </div>
 
-              {/* Update Status Section inside Modal (hidden when printing) */}
-              <div className="admin-invoice_update-section no-print">
-                <h4 className="admin-invoice_card-title">Update Status</h4>
-                <form
-                  action={updateOrderStatusAction}
-                  className="admin-orders_modal-status-form"
-                >
-                  <input type="hidden" name="id" value={activeModalOrder.id} />
-                  <input type="hidden" name="returnTo" value="/admin/orders" />
-                  <div className="admin-orders_modal-status-row">
+              {/* Status Update */}
+              <div className="odm-card">
+                <div className="odm-card_title">Update Status</div>
+                <div className="odm-card_body">
+                  <form action={updateOrderStatusAction} className="odm-status-form">
+                    <input type="hidden" name="id" value={activeModalOrder.id} />
+                    <input type="hidden" name="returnTo" value="/admin/orders" />
                     <select
                       name="status"
                       defaultValue={activeModalOrder.status}
-                      className="admin-field select"
-                      style={{ padding: "0.55rem 0.8rem", width: "auto" }}
+                      className={`admin-status-select admin-status-select--${activeModalOrder.status.toLowerCase()}`}
                     >
                       {STATUSES.map((st) => (
-                        <option key={st} value={st}>
-                          {st}
-                        </option>
+                        <option key={st} value={st}>{st}</option>
                       ))}
                     </select>
-                    <button
-                      type="submit"
-                      className="admin-btn admin-btn--primary admin-btn--small"
-                    >
-                      Update Status
+                    <button type="submit" className="admin-btn admin-btn--primary admin-btn--small">
+                      Save
                     </button>
-                    <Link
-                      href={`/admin/orders?id=${activeModalOrder.id}`}
-                      className="admin-btn admin-btn--small admin-btn--ghost"
-                    >
-                      Full Page View &rarr;
-                    </Link>
-                  </div>
-                </form>
+                  </form>
+                </div>
+              </div>
+
+            </div>
+          </div>
+        </div>
+
+      ) : null}
+
+      {/* Hidden print-only invoice — rendered outside modal, shown only via @media print */}
+      {printOrder ? (
+        <div className="inv-print-only" aria-hidden="true">
+          <div className="admin-invoice-sheet">
+            {/* Watermark */}
+            <div className="inv-watermark">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src="/assets/logo-bg.png" alt="" />
+            </div>
+
+            <div className="inv-header">
+              <div className="inv-brand-box">
+                <h1 className="inv-brand-title">NILGIRIBYTES</h1>
+                <p className="inv-brand-tagline">Authentic Ooty Varkey &amp; Hill Confections</p>
+                <p className="inv-company-details">
+                  Commercial Road, Ooty, The Nilgiris, Tamil Nadu - 643001<br />
+                  FSSAI Lic. No: <strong>12423018000451</strong><br />
+                  Support: +91 94897 45317 | support@nilgiribytes.com<br />
+                  Website: www.nilgiribytes.com
+                </p>
+              </div>
+              <div className="inv-meta-box">
+                <div className="inv-tax-badge">TAX INVOICE</div>
+                <table className="inv-meta-table">
+                  <tbody>
+                    <tr>
+                      <th>Invoice / Order:</th>
+                      <td className="inv-order-no">{printOrder.orderNumber}</td>
+                    </tr>
+                    <tr>
+                      <th>Invoice Date:</th>
+                      <td>{formatOrderDateTime(printOrder.createdAt)}</td>
+                    </tr>
+                    <tr>
+                      <th>Payment Mode:</th>
+                      <td>
+                        <strong>
+                          {printOrder.channel === "ONLINE"
+                            ? "PAID (Online Razorpay)"
+                            : "WHATSAPP ORDER"}
+                        </strong>
+                      </td>
+                    </tr>
+                    {printOrder.paymentId ? (
+                      <tr>
+                        <th>Payment ID:</th>
+                        <td className="admin-mono" style={{ fontSize: "0.74rem" }}>
+                          {printOrder.paymentId}
+                        </td>
+                      </tr>
+                    ) : null}
+                    <tr>
+                      <th>Status:</th>
+                      <td>
+                        <span className={`admin-badge admin-badge--${printOrder.status.toLowerCase()}`}>
+                          {printOrder.status}
+                        </span>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <div className="inv-parties-grid">
+              <div className="inv-party-card">
+                <div className="inv-party-card_head">BILLED TO / SHIP TO</div>
+                <div className="inv-party-card_body">
+                  <p className="inv-customer-name">{printOrder.customerName}</p>
+                  <p className="inv-customer-line"><strong>Phone:</strong> {printOrder.phone}</p>
+                  {printOrder.email ? (
+                    <p className="inv-customer-line"><strong>Email:</strong> {printOrder.email}</p>
+                  ) : null}
+                  <p className="inv-customer-address">
+                    <strong>Shipping Address:</strong><br />
+                    {printOrder.address || "Standard delivery address on file"}
+                  </p>
+                </div>
+              </div>
+              <div className="inv-party-card">
+                <div className="inv-party-card_head">DISPATCH &amp; FULFILLMENT</div>
+                <div className="inv-party-card_body">
+                  <p className="inv-customer-line"><strong>Channel:</strong> {printOrder.channel}</p>
+                  <p className="inv-customer-line"><strong>State / Supply Code:</strong> Tamil Nadu (33)</p>
+                  <p className="inv-customer-line"><strong>Dispatch Facility:</strong> Ooty Bakery Hub</p>
+                  {printOrder.notes ? (
+                    <p className="inv-customer-notes">
+                      <strong>Delivery Instructions:</strong><br />
+                      {printOrder.notes}
+                    </p>
+                  ) : null}
+                </div>
+              </div>
+            </div>
+
+            <div className="inv-table-wrap">
+              <table className="inv-items-table">
+                <thead>
+                  <tr>
+                    <th style={{ width: "36px", textAlign: "center" }}>#</th>
+                    <th style={{ textAlign: "left" }}>Item Description</th>
+                    <th style={{ width: "110px", textAlign: "center" }}>Pack Size</th>
+                    <th style={{ width: "105px", textAlign: "right" }}>Unit Price</th>
+                    <th style={{ width: "55px", textAlign: "center" }}>Qty</th>
+                    <th style={{ width: "115px", textAlign: "right" }}>Total</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {printOrder.items.map((item, idx) => (
+                    <tr key={item.id}>
+                      <td style={{ textAlign: "center" }}>{idx + 1}</td>
+                      <td><strong>{item.nameSnapshot}</strong></td>
+                      <td style={{ textAlign: "center" }}>{item.sizeLabel ?? "—"}</td>
+                      <td style={{ textAlign: "right" }}>{formatINR(item.unitPricePaise)}</td>
+                      <td style={{ textAlign: "center", fontWeight: 700 }}>{item.quantity}</td>
+                      <td style={{ textAlign: "right", fontWeight: 700 }}>{formatINR(item.lineTotalPaise)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            <div className="inv-calculation-grid">
+              <div className="inv-terms-box">
+                <p className="inv-amount-words">
+                  <strong>Amount in Words:</strong><br />
+                  <em>{numberToWordsINR(printOrder.totalPaise)}</em>
+                </p>
+                <div className="inv-notes-block">
+                  <p className="inv-notes-title">Terms &amp; Conditions:</p>
+                  <ol className="inv-terms-list">
+                    <li>Freshness guaranteed. Store in an airtight container upon receipt.</li>
+                    <li>All applicable taxes &amp; packaging fees are included in the price.</li>
+                    <li>For queries or reorders, WhatsApp or call us at +91 94897 45317.</li>
+                  </ol>
+                </div>
+              </div>
+              <div className="inv-totals-box">
+                <table className="inv-totals-table">
+                  <tbody>
+                    <tr>
+                      <th>Items Subtotal:</th>
+                      <td>{formatINR(printOrder.subtotalPaise)}</td>
+                    </tr>
+                    <tr>
+                      <th>Shipping / Courier:</th>
+                      <td style={{ color: "#2e7d32", fontWeight: 700 }}>FREE</td>
+                    </tr>
+                    <tr>
+                      <th>Taxes &amp; Packaging:</th>
+                      <td>Included</td>
+                    </tr>
+                    <tr className="inv-grand-total-row">
+                      <th>Grand Total:</th>
+                      <td>{formatINR(printOrder.totalPaise)}</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <div className="inv-footer">
+              <div className="inv-stamp-box">
+                <span className="inv-check-mark">&#10003;</span>
+                <div>
+                  <p className="inv-stamp-title">AUTHENTIC NILGIRIBYTES INVOICE</p>
+                  <p className="inv-stamp-sub">Computer Generated — No Physical Signature Required</p>
+                </div>
+              </div>
+              <div className="inv-thanks-box">
+                <p className="inv-thanks-title">Thank you for ordering with Nilgiribytes!</p>
+                <p className="inv-thanks-sub">Bringing Ooty&apos;s authentic bakery heritage to your home.</p>
               </div>
             </div>
           </div>
