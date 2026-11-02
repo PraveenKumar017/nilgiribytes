@@ -20,10 +20,10 @@ import { formatINR } from "@/lib/format";
 
 // Typed wrappers so <form action={...}> gets (formData: FormData) => Promise<void>
 async function updateStatus(formData: FormData): Promise<void> {
-  await updateOrderStatusAction(formData);
+  await updateOrderStatusAction(null, formData);
 }
 async function deleteOrder(formData: FormData): Promise<void> {
-  await deleteOrderAction(formData);
+  await deleteOrderAction(null, formData);
 }
 
 const STATUSES = [
