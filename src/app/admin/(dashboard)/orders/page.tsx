@@ -2,14 +2,22 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ActionForm } from "@/components/admin/admin-ui";
 import { updateOrderStatusAction } from "@/app/admin/actions";
+import { OrdersTable } from "@/components/admin/orders-table";
+import { WhatsAppIcon } from "@/components/admin/icons";
 import { getOrder, listOrders } from "@/lib/admin";
 import { formatINR } from "@/lib/format";
 
 type PageProps = {
-  searchParams: Promise<{ id?: string; saved?: string }>;
+  searchParams: Promise<{ id?: string; saved?: string; deleted?: string }>;
 };
 
 const STATUSES = ["NEW", "CONFIRMED", "PACKED", "DELIVERED", "CANCELLED"] as const;
+
+function sanitizePhoneForWhatsApp(phone: string): string {
+  const digits = phone.replace(/\D/g, "");
+  if (digits.length === 10) return `91${digits}`;
+  return digits;
+}
 
 export default async function AdminOrdersPage({ searchParams }: PageProps) {
   const params = await searchParams;
@@ -17,22 +25,65 @@ export default async function AdminOrdersPage({ searchParams }: PageProps) {
 
   if (params.id && !id) notFound();
 
+  // Single Order Details View
   if (params.id) {
     const order = await getOrder(id);
     if (!order) notFound();
+
+    const waNumber = sanitizePhoneForWhatsApp(order.phone);
+    const waUrl = `https://wa.me/${waNumber}?text=${encodeURIComponent(
+      `Hello ${order.customerName}, regarding your Nilgiribytes order ${order.orderNumber}:`
+    )}`;
 
     return (
       <>
         <header className="admin-page-head">
           <div>
-            <p className="admin-breadcrumb">
-              <Link href="/admin/orders">Orders</Link> / {order.orderNumber}
-            </p>
-            <h1 className="admin-page-title">{order.orderNumber}</h1>
+            <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", marginBottom: "0.45rem", flexWrap: "wrap" }}>
+              <Link
+                href="/admin/orders"
+                className="admin-btn admin-btn--small admin-btn--ghost"
+                style={{ padding: "0.22rem 0.55rem", fontSize: "0.74rem", display: "inline-flex", alignItems: "center", gap: "0.3rem" }}
+                title="Return to orders table view"
+              >
+                &larr; Back
+              </Link>
+              <p className="admin-breadcrumb" style={{ margin: 0 }}>
+                <Link href="/admin/orders">Orders</Link> / <span>{order.orderNumber}</span>
+              </p>
+            </div>
+            <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", flexWrap: "wrap" }}>
+              <h1 className="admin-page-title" style={{ margin: 0 }}>
+                {order.orderNumber}
+              </h1>
+              <span className={`admin-badge admin-badge--${order.status.toLowerCase()}`}>
+                {order.status}
+              </span>
+              <span className={`admin-orders_channel-badge admin-orders_channel-badge--${order.channel.toLowerCase()}`}>
+                {order.channel}
+              </span>
+            </div>
             <p className="admin-page-text">
-              Placed {new Date(order.createdAt).toLocaleString("en-IN")} via{" "}
-              {order.channel.toLowerCase()}.
+              Placed on {new Date(order.createdAt).toLocaleString("en-IN", {
+                dateStyle: "medium",
+                timeStyle: "short",
+              })} via {order.channel.toLowerCase()}.
             </p>
+          </div>
+          <div className="admin-page-actions">
+            <Link className="admin-btn" href="/admin/orders">
+              &larr; Back to all orders
+            </Link>
+            <a
+              href={waUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="admin-btn admin-orders_wa-link"
+              style={{ padding: "0.5rem 0.85rem", fontSize: "0.78rem" }}
+            >
+              <WhatsAppIcon className="admin-orders_inline-icon admin-orders_inline-icon--wa" />
+              <span>WhatsApp Customer</span>
+            </a>
           </div>
         </header>
 
@@ -41,27 +92,32 @@ export default async function AdminOrdersPage({ searchParams }: PageProps) {
         ) : null}
 
         <div className="admin-detail-grid">
+          {/* Order Items */}
           <section className="admin-panel">
-            <h2 className="admin-panel_title">Items</h2>
+            <div className="admin-panel_head">
+              <h2 className="admin-panel_title">Purchased Items ({order.itemsCount})</h2>
+            </div>
             <div className="admin-table-wrap">
               <table className="admin-table">
                 <thead>
                   <tr>
                     <th>Item</th>
-                    <th>Size</th>
-                    <th>Unit</th>
-                    <th>Qty</th>
-                    <th>Total</th>
+                    <th>Size / Pack</th>
+                    <th style={{ textAlign: "right" }}>Unit Price</th>
+                    <th style={{ textAlign: "center" }}>Qty</th>
+                    <th style={{ textAlign: "right" }}>Total</th>
                   </tr>
                 </thead>
                 <tbody>
                   {order.items.map((item) => (
                     <tr key={item.id}>
-                      <td>{item.nameSnapshot}</td>
+                      <td>
+                        <strong>{item.nameSnapshot}</strong>
+                      </td>
                       <td>{item.sizeLabel ?? "—"}</td>
-                      <td>{formatINR(item.unitPricePaise)}</td>
-                      <td>{item.quantity}</td>
-                      <td>{formatINR(item.lineTotalPaise)}</td>
+                      <td style={{ textAlign: "right" }}>{formatINR(item.unitPricePaise)}</td>
+                      <td style={{ textAlign: "center" }}>{item.quantity}</td>
+                      <td style={{ textAlign: "right" }}>{formatINR(item.lineTotalPaise)}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -74,18 +130,25 @@ export default async function AdminOrdersPage({ searchParams }: PageProps) {
                 <dd>{formatINR(order.subtotalPaise)}</dd>
               </div>
               <div>
-                <dt>Total</dt>
+                <dt>Shipping</dt>
+                <dd>Free</dd>
+              </div>
+              <div style={{ fontSize: "1.1rem", fontWeight: 700, color: "var(--color-chocolate)" }}>
+                <dt>Grand Total</dt>
                 <dd>{formatINR(order.totalPaise)}</dd>
               </div>
             </dl>
           </section>
 
+          {/* Customer & Delivery Details */}
           <section className="admin-panel">
-            <h2 className="admin-panel_title">Customer</h2>
+            <h2 className="admin-panel_title">Customer & Payment</h2>
             <dl className="admin-details">
               <div>
-                <dt>Name</dt>
-                <dd>{order.customerName}</dd>
+                <dt>Customer</dt>
+                <dd>
+                  <strong>{order.customerName}</strong>
+                </dd>
               </div>
               <div>
                 <dt>Phone</dt>
@@ -97,16 +160,36 @@ export default async function AdminOrdersPage({ searchParams }: PageProps) {
               </div>
               <div>
                 <dt>Email</dt>
-                <dd>{order.email ?? "—"}</dd>
+                <dd>
+                  {order.email ? (
+                    <a className="admin-link" href={`mailto:${order.email}`}>
+                      {order.email}
+                    </a>
+                  ) : (
+                    "—"
+                  )}
+                </dd>
               </div>
               <div>
                 <dt>Address</dt>
-                <dd>{order.address ?? "—"}</dd>
+                <dd style={{ whiteSpace: "pre-line" }}>{order.address ?? "—"}</dd>
               </div>
               <div>
                 <dt>Notes</dt>
                 <dd>{order.notes ?? "—"}</dd>
               </div>
+              {order.paymentId ? (
+                <div>
+                  <dt>Payment ID</dt>
+                  <dd className="admin-mono">{order.paymentId}</dd>
+                </div>
+              ) : null}
+              {order.razorpayOrderId ? (
+                <div>
+                  <dt>Razorpay Order</dt>
+                  <dd className="admin-mono">{order.razorpayOrderId}</dd>
+                </div>
+              ) : null}
             </dl>
 
             <div className="admin-form_section">
@@ -131,6 +214,7 @@ export default async function AdminOrdersPage({ searchParams }: PageProps) {
     );
   }
 
+  // Orders Table View
   const orders = await listOrders();
 
   return (
@@ -139,58 +223,20 @@ export default async function AdminOrdersPage({ searchParams }: PageProps) {
         <div>
           <h1 className="admin-page-title">Orders</h1>
           <p className="admin-page-text">
-            Orders created from the storefront will appear here.
+            All customer orders from storefront checkout and direct WhatsApp inquiry.
           </p>
         </div>
       </header>
 
-      <section className="admin-panel">
-        {orders.length ? (
-          <div className="admin-table-wrap">
-            <table className="admin-table">
-              <thead>
-                <tr>
-                  <th>Order</th>
-                  <th>Customer</th>
-                  <th>Phone</th>
-                  <th>Channel</th>
-                  <th>Total</th>
-                  <th>Status</th>
-                  <th>Date</th>
-                  <th />
-                </tr>
-              </thead>
-              <tbody>
-                {orders.map((order) => (
-                  <tr key={order.id}>
-                    <td className="admin-mono">{order.orderNumber}</td>
-                    <td>{order.customerName}</td>
-                    <td>{order.phone}</td>
-                    <td>{order.channel.toLowerCase()}</td>
-                    <td>{formatINR(order.totalPaise)}</td>
-                    <td>
-                      <span className={`admin-badge admin-badge--${order.status.toLowerCase()}`}>
-                        {order.status}
-                      </span>
-                    </td>
-                    <td>{new Date(order.createdAt).toLocaleString("en-IN")}</td>
-                    <td>
-                      <Link
-                        className="admin-btn admin-btn--small"
-                        href={`/admin/orders?id=${order.id}`}
-                      >
-                        View
-                      </Link>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        ) : (
-          <p className="admin-empty">No orders yet.</p>
-        )}
-      </section>
+      {params.saved ? (
+        <p className="admin-alert admin-alert--success">Order status updated successfully.</p>
+      ) : null}
+
+      {params.deleted ? (
+        <p className="admin-alert admin-alert--success">Order deleted successfully.</p>
+      ) : null}
+
+      <OrdersTable orders={orders} />
     </>
   );
 }

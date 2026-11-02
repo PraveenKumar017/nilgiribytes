@@ -1324,3 +1324,686 @@
     padding: 1rem;
   }
 }
+
+/* ==========================================================================
+   Admin Orders — Table View, Filters, Badges & Invoice Slip
+   ========================================================================== */
+
+.admin-orders_stats {
+  margin-bottom: 1.25rem;
+}
+
+.admin-stat_value--highlight {
+  color: var(--color-cinnamon);
+}
+
+.admin-orders_panel {
+  padding: 0;
+  overflow: hidden;
+}
+
+/* Tabs */
+.admin-orders_tabs {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.85rem 1.15rem 0;
+  border-bottom: 1px solid var(--color-border);
+  background: rgba(246, 241, 230, 0.45);
+  overflow-x: auto;
+  scrollbar-width: thin;
+}
+
+.admin-orders_tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.6rem 0.95rem;
+  border: none;
+  border-bottom: 2px solid transparent;
+  background: transparent;
+  color: var(--color-muted);
+  font-family: var(--font-body);
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all var(--transition);
+}
+
+.admin-orders_tab:hover {
+  color: var(--color-chocolate);
+  background: rgba(242, 228, 197, 0.35);
+  border-radius: var(--radius-sm) var(--radius-sm) 0 0;
+}
+
+.admin-orders_tab.is-active {
+  color: var(--color-chocolate);
+  border-bottom-color: var(--color-cinnamon);
+  background: var(--color-surface);
+  border-radius: var(--radius-sm) var(--radius-sm) 0 0;
+}
+
+.admin-orders_tab-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1.25rem;
+  height: 1.25rem;
+  padding: 0 0.35rem;
+  border-radius: 999px;
+  background: rgba(117, 67, 45, 0.1);
+  color: var(--color-chocolate);
+  font-size: 0.68rem;
+  font-weight: 700;
+}
+
+.admin-orders_tab.is-active .admin-orders_tab-badge {
+  background: var(--color-cinnamon);
+  color: var(--color-ivory);
+}
+
+/* Toolbar */
+.admin-orders_toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 1rem 1.15rem 0.75rem;
+  background: var(--color-surface);
+}
+
+.admin-orders_search {
+  position: relative;
+  flex: 1 1 280px;
+  max-width: 460px;
+  display: flex;
+  align-items: center;
+}
+
+.admin-orders_search-icon {
+  position: absolute;
+  left: 0.75rem;
+  width: 1rem;
+  height: 1rem;
+  color: var(--color-muted);
+  pointer-events: none;
+}
+
+.admin-orders_search-input {
+  width: 100%;
+  padding: 0.55rem 2rem 0.55rem 2.25rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-cream);
+  font-family: var(--font-body);
+  font-size: 0.84rem;
+  color: var(--color-ink);
+  transition: border-color var(--transition), box-shadow var(--transition);
+}
+
+.admin-orders_search-input:focus {
+  outline: none;
+  border-color: var(--color-cinnamon);
+  box-shadow: 0 0 0 2px rgba(117, 67, 45, 0.12);
+}
+
+.admin-orders_search-clear {
+  position: absolute;
+  right: 0.65rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.25rem;
+  height: 1.25rem;
+  border: none;
+  background: rgba(0, 0, 0, 0.08);
+  border-radius: 50%;
+  color: var(--color-muted);
+  font-size: 0.95rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.admin-orders_search-clear:hover {
+  background: rgba(0, 0, 0, 0.15);
+  color: var(--color-ink);
+}
+
+.admin-orders_filters {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.admin-orders_filter-select {
+  padding: 0.52rem 0.75rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-cream);
+  font-family: var(--font-body);
+  font-size: 0.82rem;
+  color: var(--color-ink);
+  cursor: pointer;
+}
+
+.admin-orders_filter-select:focus {
+  outline: none;
+  border-color: var(--color-cinnamon);
+}
+
+.admin-orders_export-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-weight: 600;
+}
+
+.admin-orders_btn-icon {
+  width: 0.95rem;
+  height: 0.95rem;
+}
+
+/* Summary Bar */
+.admin-orders_summary-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.4rem 1.15rem 0.65rem;
+  font-size: 0.76rem;
+  color: var(--color-muted);
+  border-bottom: 1px solid rgba(228, 215, 193, 0.45);
+}
+
+.admin-orders_reset-link {
+  font-size: 0.76rem;
+  cursor: pointer;
+}
+
+/* Table Specifics */
+.admin-orders_table {
+  min-width: 980px;
+}
+
+.admin-orders_table th {
+  padding: 0.75rem 0.85rem;
+  background: rgba(246, 241, 230, 0.5);
+}
+
+.admin-orders_table td {
+  padding: 0.85rem;
+}
+
+.admin-orders_sno {
+  font-size: 0.75rem;
+  color: var(--color-muted);
+  text-align: center;
+}
+
+.admin-orders_num-btn {
+  display: block;
+  padding: 0;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  text-align: left;
+}
+
+.admin-orders_num {
+  display: inline-block;
+  padding: 0.2rem 0.45rem;
+  border-radius: var(--radius-xs);
+  background: rgba(117, 67, 45, 0.08);
+  color: var(--color-chocolate);
+  font-weight: 700;
+  font-size: 0.82rem;
+  letter-spacing: 0.04em;
+  transition: background var(--transition), color var(--transition);
+}
+
+.admin-orders_num-btn:hover .admin-orders_num {
+  background: var(--color-chocolate);
+  color: var(--color-ivory);
+}
+
+.admin-orders_time-ago {
+  display: block;
+  margin-top: 0.25rem;
+  font-size: 0.7rem;
+  color: var(--color-muted);
+}
+
+.admin-orders_date {
+  display: block;
+  font-weight: 600;
+  font-size: 0.82rem;
+  color: var(--color-chocolate);
+}
+
+.admin-orders_time {
+  display: block;
+  margin-top: 0.15rem;
+  font-size: 0.7rem;
+  color: var(--color-muted);
+}
+
+.admin-orders_contact-row {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin-top: 0.25rem;
+  font-size: 0.76rem;
+}
+
+.admin-orders_contact-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  color: var(--color-ink);
+  font-size: 0.76rem;
+  text-decoration: none;
+}
+
+.admin-orders_contact-link:hover {
+  color: var(--color-cinnamon);
+  text-decoration: underline;
+}
+
+.admin-orders_wa-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.2rem;
+  padding: 0.15rem 0.45rem;
+  border-radius: 999px;
+  background: rgba(37, 211, 102, 0.12);
+  color: #128c7e;
+  font-size: 0.68rem;
+  font-weight: 700;
+  text-decoration: none;
+  transition: background var(--transition);
+}
+
+.admin-orders_wa-link:hover {
+  background: rgba(37, 211, 102, 0.24);
+  text-decoration: none;
+}
+
+.admin-orders_inline-icon {
+  width: 0.85rem;
+  height: 0.85rem;
+  flex-shrink: 0;
+}
+
+.admin-orders_inline-icon--wa {
+  color: #25d366;
+}
+
+.admin-orders_email-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  margin-top: 0.2rem;
+  color: var(--color-muted);
+  font-size: 0.72rem;
+  text-decoration: none;
+}
+
+.admin-orders_email-link:hover {
+  color: var(--color-cinnamon);
+  text-decoration: underline;
+}
+
+.admin-orders_address-preview {
+  margin: 0.25rem 0 0;
+  max-width: 220px;
+  font-size: 0.72rem;
+  color: var(--color-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.admin-orders_items-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  max-width: 250px;
+}
+
+.admin-orders_items-badge {
+  display: inline-block;
+  align-self: flex-start;
+  padding: 0.12rem 0.45rem;
+  border-radius: 999px;
+  background: rgba(199, 154, 66, 0.18);
+  color: var(--color-chocolate);
+  font-size: 0.68rem;
+  font-weight: 700;
+}
+
+.admin-orders_items-summary {
+  font-size: 0.76rem;
+  line-height: 1.35;
+  color: var(--color-ink);
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.admin-orders_channel-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.admin-orders_channel-badge {
+  display: inline-flex;
+  align-items: center;
+  align-self: flex-start;
+  padding: 0.15rem 0.5rem;
+  border-radius: 999px;
+  font-size: 0.66rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.admin-orders_channel-badge--online {
+  background: rgba(33, 150, 243, 0.14);
+  color: #0d47a1;
+}
+
+.admin-orders_channel-badge--whatsapp {
+  background: rgba(37, 211, 102, 0.14);
+  color: #128c7e;
+}
+
+.admin-orders_payment-pill {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.18rem 0.45rem;
+  border: 1px dashed rgba(117, 67, 45, 0.25);
+  border-radius: var(--radius-xs);
+  background: transparent;
+  font-size: 0.7rem;
+  color: var(--color-muted);
+  cursor: pointer;
+  transition: all var(--transition);
+}
+
+.admin-orders_payment-pill:hover {
+  background: rgba(242, 228, 197, 0.4);
+  border-color: var(--color-cinnamon);
+  color: var(--color-chocolate);
+}
+
+.admin-orders_copy-icon {
+  width: 0.75rem;
+  height: 0.75rem;
+}
+
+.admin-orders_copied-tooltip {
+  position: absolute;
+  top: -1.5rem;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 0.15rem 0.4rem;
+  background: var(--color-chocolate);
+  color: var(--color-ivory);
+  font-size: 0.64rem;
+  font-weight: 600;
+  border-radius: var(--radius-xs);
+  white-space: nowrap;
+  pointer-events: none;
+  animation: fadeIn 0.15s ease-out;
+}
+
+.admin-orders_total {
+  font-family: var(--font-heading);
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--color-chocolate);
+  white-space: nowrap;
+}
+
+.admin-orders_status-form select {
+  font-size: 0.72rem;
+  padding: 0.32rem 1.6rem 0.32rem 0.6rem;
+  font-weight: 700;
+  border-radius: 999px;
+  cursor: pointer;
+  border: 1px solid transparent;
+}
+
+.admin-orders_empty-state {
+  padding: 2.5rem 1rem;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+/* Modal / Invoice Slip */
+.admin-orders_modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.25rem;
+  background: rgba(28, 20, 16, 0.65);
+  backdrop-filter: blur(4px);
+  overflow-y: auto;
+}
+
+.admin-orders_modal-dialog {
+  width: min(780px, 100%);
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  border-radius: var(--radius-lg);
+  background: var(--color-surface);
+  box-shadow: 0 20px 45px rgba(0, 0, 0, 0.25);
+  overflow: hidden;
+}
+
+.admin-orders_modal-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1.15rem 1.5rem;
+  background: var(--gradient-dark);
+  color: var(--color-cream);
+}
+
+.admin-orders_modal-sub {
+  margin: 0;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--color-gold);
+}
+
+.admin-orders_modal-title {
+  margin: 0.15rem 0 0;
+  font-family: var(--font-heading);
+  font-size: 1.45rem;
+  color: var(--color-ivory);
+}
+
+.admin-orders_modal-head-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.admin-orders_modal-head-actions .admin-btn {
+  background: rgba(255, 255, 255, 0.12);
+  color: var(--color-ivory);
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+.admin-orders_modal-head-actions .admin-btn:hover {
+  background: var(--color-gold);
+  color: var(--color-chocolate);
+}
+
+.admin-orders_modal-body {
+  padding: 1.5rem;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.admin-invoice_brand {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  padding-bottom: 1rem;
+  border-bottom: 2px solid var(--color-chocolate);
+}
+
+.admin-invoice_brand-name {
+  margin: 0;
+  font-family: var(--font-heading);
+  font-size: 1.5rem;
+  letter-spacing: 0.05em;
+  color: var(--color-chocolate);
+}
+
+.admin-invoice_brand-sub {
+  margin: 0.15rem 0 0;
+  font-size: 0.76rem;
+  color: var(--color-muted);
+}
+
+.admin-invoice_meta-head {
+  text-align: right;
+  font-size: 0.78rem;
+  color: var(--color-ink);
+}
+
+.admin-invoice_meta-head p {
+  margin: 0.1rem 0;
+}
+
+.admin-invoice_chips {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.admin-invoice_grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1rem;
+}
+
+.admin-invoice_card {
+  padding: 1rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-cream);
+}
+
+.admin-invoice_card-title {
+  margin: 0 0 0.75rem;
+  font-family: var(--font-heading);
+  font-size: 0.95rem;
+  color: var(--color-chocolate);
+  border-bottom: 1px solid rgba(216, 199, 164, 0.4);
+  padding-bottom: 0.35rem;
+}
+
+.admin-invoice_items-card {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  padding: 1rem;
+  background: var(--color-surface);
+}
+
+.admin-invoice_table {
+  width: 100%;
+}
+
+.admin-invoice_totals {
+  margin-top: 1rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--color-border);
+}
+
+.admin-invoice_grand-total {
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: var(--color-chocolate);
+}
+
+.admin-invoice_update-section {
+  padding: 1rem;
+  border: 1px dashed var(--color-border);
+  border-radius: var(--radius-sm);
+  background: rgba(246, 241, 230, 0.6);
+}
+
+.admin-orders_modal-status-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.65rem;
+  margin-top: 0.5rem;
+}
+
+/* Print Styles */
+@media print {
+  body * {
+    visibility: hidden;
+  }
+
+  .admin-orders_modal-dialog,
+  .admin-orders_modal-dialog * {
+    visibility: visible;
+  }
+
+  .admin-orders_modal-backdrop {
+    position: static;
+    background: transparent;
+    padding: 0;
+    overflow: visible;
+  }
+
+  .admin-orders_modal-dialog {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    max-width: 100%;
+    border: none;
+    box-shadow: none;
+  }
+
+  .admin-orders_modal-head,
+  .no-print {
+    display: none !important;
+  }
+
+  .admin-orders_modal-body {
+    padding: 0;
+  }
+
+  .admin-sidebar,
+  .admin-mobile-bar {
+    display: none !important;
+  }
+}
+

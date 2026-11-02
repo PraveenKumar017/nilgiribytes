@@ -759,5 +759,34 @@ export async function updateOrderStatusAction(
     [parsed.data, id]
   );
 
+  revalidatePath("/admin/orders");
+  revalidatePath("/admin");
+
+  const returnTo = formText(formData, "returnTo");
+  if (returnTo && returnTo.startsWith("/admin/orders")) {
+    redirect(`${returnTo}${returnTo.includes("?") ? "&" : "?"}saved=1`);
+  }
+
   redirect(`/admin/orders?id=${id}&saved=1`);
 }
+
+export async function deleteOrderAction(
+  _previous: ActionState,
+  formData: FormData
+): Promise<ActionState> {
+  await requireAdmin();
+
+  const id = formInt(formData, "id");
+  if (!id) return { error: "Order not found." };
+
+  const pool = getPool();
+  if (!pool) return { error: "Database is not configured." };
+
+  await pool.execute("DELETE FROM `Order` WHERE id = ?", [id]);
+
+  revalidatePath("/admin/orders");
+  revalidatePath("/admin");
+
+  redirect("/admin/orders?deleted=1");
+}
+

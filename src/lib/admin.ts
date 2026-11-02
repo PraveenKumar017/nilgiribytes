@@ -454,32 +454,37 @@ export type AdminPostRow = {
   updatedAt: Date;
 };
 
+export type AdminOrderItem = {
+  id: number;
+  nameSnapshot: string;
+  sizeLabel: string | null;
+  unitPricePaise: number;
+  quantity: number;
+  lineTotalPaise: number;
+};
+
 export type AdminOrderRow = {
   id: number;
   orderNumber: string;
   customerName: string;
   phone: string;
-  totalPaise: number;
-  channel: "WHATSAPP" | "ONLINE";
-  status: "NEW" | "CONFIRMED" | "PACKED" | "DELIVERED" | "CANCELLED";
-  createdAt: Date;
-};
-
-export type AdminOrder = AdminOrderRow & {
   email: string | null;
   address: string | null;
   notes: string | null;
   subtotalPaise: number;
+  totalPaise: number;
+  channel: "WHATSAPP" | "ONLINE";
+  status: "NEW" | "CONFIRMED" | "PACKED" | "DELIVERED" | "CANCELLED";
+  razorpayOrderId: string | null;
+  paymentId: string | null;
+  createdAt: Date;
   updatedAt: Date;
-  items: {
-    id: number;
-    nameSnapshot: string;
-    sizeLabel: string | null;
-    unitPricePaise: number;
-    quantity: number;
-    lineTotalPaise: number;
-  }[];
+  itemsCount: number;
+  itemsSummary: string;
+  items: AdminOrderItem[];
 };
+
+export type AdminOrder = AdminOrderRow;
 
 export type AdminDashboard = {
   products: number;
@@ -753,23 +758,75 @@ export async function getPost(id: number): Promise<AdminPost | null> {
 
 export async function listOrders(limit?: number): Promise<AdminOrderRow[]> {
   const [rows] = await pool().query<RowDataPacket[]>(
-    `SELECT id, orderNumber, customerName, phone, totalPaise, channel, status, createdAt
+    `SELECT id, orderNumber, customerName, phone, email, address, notes,
+            subtotalPaise, totalPaise, channel, status, razorpayOrderId, paymentId,
+            createdAt, updatedAt
        FROM \`Order\`
       ORDER BY createdAt DESC, id DESC
       ${limit ? "LIMIT ?" : ""}`,
     limit ? [limit] : []
   );
 
-  return rows.map((row) => ({
-    id: Number(row.id),
-    orderNumber: String(row.orderNumber),
-    customerName: String(row.customerName),
-    phone: String(row.phone),
-    totalPaise: Number(row.totalPaise),
-    channel: row.channel,
-    status: row.status,
-    createdAt: row.createdAt as Date,
-  }));
+  if (!rows.length) return [];
+
+  const orderIds = rows.map((r) => Number(r.id));
+  const [itemRows] = await pool().query<RowDataPacket[]>(
+    `SELECT id, orderId, nameSnapshot, sizeLabel, unitPricePaise, quantity, lineTotalPaise
+       FROM OrderItem
+      WHERE orderId IN (${orderIds.map(() => "?").join(",")})
+      ORDER BY id ASC`,
+    orderIds
+  );
+
+  const itemsByOrder = new Map<number, AdminOrderItem[]>();
+  for (const item of itemRows) {
+    const orderId = Number(item.orderId);
+    const list = itemsByOrder.get(orderId) ?? [];
+    list.push({
+      id: Number(item.id),
+      nameSnapshot: String(item.nameSnapshot),
+      sizeLabel: item.sizeLabel ? String(item.sizeLabel) : null,
+      unitPricePaise: Number(item.unitPricePaise),
+      quantity: Number(item.quantity),
+      lineTotalPaise: Number(item.lineTotalPaise),
+    });
+    itemsByOrder.set(orderId, list);
+  }
+
+  return rows.map((row) => {
+    const id = Number(row.id);
+    const items = itemsByOrder.get(id) ?? [];
+    const itemsCount = items.reduce((acc, it) => acc + it.quantity, 0);
+    const itemsSummary = items
+      .map(
+        (it) =>
+          `${it.nameSnapshot}${it.sizeLabel ? ` (${it.sizeLabel})` : ""}${
+            it.quantity > 1 ? ` × ${it.quantity}` : ""
+          }`
+      )
+      .join(", ");
+
+    return {
+      id,
+      orderNumber: String(row.orderNumber),
+      customerName: String(row.customerName),
+      phone: String(row.phone),
+      email: row.email ? String(row.email) : null,
+      address: row.address ? String(row.address) : null,
+      notes: row.notes ? String(row.notes) : null,
+      subtotalPaise: Number(row.subtotalPaise),
+      totalPaise: Number(row.totalPaise),
+      channel: row.channel,
+      status: row.status,
+      razorpayOrderId: row.razorpayOrderId ? String(row.razorpayOrderId) : null,
+      paymentId: row.paymentId ? String(row.paymentId) : null,
+      createdAt: row.createdAt as Date,
+      updatedAt: (row.updatedAt ?? row.createdAt) as Date,
+      itemsCount,
+      itemsSummary,
+      items,
+    };
+  });
 }
 
 export async function getOrder(id: number): Promise<AdminOrder | null> {
@@ -789,6 +846,25 @@ export async function getOrder(id: number): Promise<AdminOrder | null> {
     [id]
   );
 
+  const items = itemRows.map((item) => ({
+    id: Number(item.id),
+    nameSnapshot: String(item.nameSnapshot),
+    sizeLabel: item.sizeLabel ? String(item.sizeLabel) : null,
+    unitPricePaise: Number(item.unitPricePaise),
+    quantity: Number(item.quantity),
+    lineTotalPaise: Number(item.lineTotalPaise),
+  }));
+
+  const itemsCount = items.reduce((acc, it) => acc + it.quantity, 0);
+  const itemsSummary = items
+    .map(
+      (it) =>
+        `${it.nameSnapshot}${it.sizeLabel ? ` (${it.sizeLabel})` : ""}${
+          it.quantity > 1 ? ` × ${it.quantity}` : ""
+        }`
+    )
+    .join(", ");
+
   return {
     id: Number(row.id),
     orderNumber: String(row.orderNumber),
@@ -801,15 +877,12 @@ export async function getOrder(id: number): Promise<AdminOrder | null> {
     totalPaise: Number(row.totalPaise),
     channel: row.channel,
     status: row.status,
+    razorpayOrderId: row.razorpayOrderId ? String(row.razorpayOrderId) : null,
+    paymentId: row.paymentId ? String(row.paymentId) : null,
     createdAt: row.createdAt as Date,
-    updatedAt: row.updatedAt as Date,
-    items: itemRows.map((item) => ({
-      id: Number(item.id),
-      nameSnapshot: String(item.nameSnapshot),
-      sizeLabel: item.sizeLabel ? String(item.sizeLabel) : null,
-      unitPricePaise: Number(item.unitPricePaise),
-      quantity: Number(item.quantity),
-      lineTotalPaise: Number(item.lineTotalPaise),
-    })),
+    updatedAt: (row.updatedAt ?? row.createdAt) as Date,
+    itemsCount,
+    itemsSummary,
+    items,
   };
 }
