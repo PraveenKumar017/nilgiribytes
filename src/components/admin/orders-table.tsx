@@ -18,6 +18,14 @@ import {
 import type { AdminOrderRow } from "@/lib/admin";
 import { formatINR } from "@/lib/format";
 
+// Typed wrappers so <form action={...}> gets (formData: FormData) => Promise<void>
+async function updateStatus(formData: FormData): Promise<void> {
+  await updateOrderStatusAction(formData);
+}
+async function deleteOrder(formData: FormData): Promise<void> {
+  await deleteOrderAction(formData);
+}
+
 const STATUSES = [
   "NEW",
   "CONFIRMED",
@@ -487,7 +495,7 @@ export function OrdersTable({ orders }: { orders: AdminOrderRow[] }) {
                       {/* Status */}
                       <td>
                         <form
-                          action={updateOrderStatusAction}
+                          action={updateStatus}
                           className="admin-orders_status-form"
                         >
                           <input type="hidden" name="id" value={order.id} />
@@ -531,7 +539,7 @@ export function OrdersTable({ orders }: { orders: AdminOrderRow[] }) {
                             <PrintIcon />
                           </button>
 
-                          <form action={deleteOrderAction}>
+                          <form action={deleteOrder}>
                             <input type="hidden" name="id" value={order.id} />
                             <ConfirmSubmit
                               className="admin-btn admin-btn--small admin-btn--danger admin-btn--icon"
@@ -718,7 +726,7 @@ export function OrdersTable({ orders }: { orders: AdminOrderRow[] }) {
               <div className="odm-card">
                 <div className="odm-card_title">Update Status</div>
                 <div className="odm-card_body">
-                  <form action={updateOrderStatusAction} className="odm-status-form">
+                  <form action={updateStatus} className="odm-status-form">
                     <input type="hidden" name="id" value={activeModalOrder.id} />
                     <input type="hidden" name="returnTo" value="/admin/orders" />
                     <select
