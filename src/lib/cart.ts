@@ -36,14 +36,19 @@ export function itemImage(item: StoreItem, sizeIndex = 0): string {
   return size?.imageUrl || item.image;
 }
 
-export function cartLineKey(itemId: string, sizeLabel: string): string {
-  return `${itemId}::${sizeLabel}`;
+export function cartLineKey(
+  item: { kind: string; name: string },
+  sizeLabel: string
+): string {
+  const name = item.name.trim().toLowerCase().replace(/\s+/g, " ");
+  const size = sizeLabel.trim().toLowerCase().replace(/\s+/g, " ");
+  return `${item.kind}::${name}::${size}`;
 }
 
 export function toCartLine(item: StoreItem, sizeIndex = 0, qty = 1): CartLine {
   const sizeLabel = itemSizeLabel(item, sizeIndex);
   return {
-    key: cartLineKey(item.id, sizeLabel),
+    key: cartLineKey(item, sizeLabel),
     id: item.id,
     kind: item.kind,
     slug: item.slug,
@@ -70,7 +75,32 @@ export function readCart(): CartLine[] {
     const raw = window.localStorage.getItem(CART_STORAGE_KEY);
     if (!raw) return [];
     const parsed = JSON.parse(raw);
-    return Array.isArray(parsed) ? (parsed as CartLine[]) : [];
+    if (!Array.isArray(parsed)) return [];
+
+    const merged = new Map<string, CartLine>();
+    for (const value of parsed as CartLine[]) {
+      if (
+        !value ||
+        typeof value.name !== "string" ||
+        typeof value.sizeLabel !== "string" ||
+        typeof value.qty !== "number"
+      ) {
+        continue;
+      }
+
+      const qty = Math.max(0, Math.round(value.qty));
+      if (!qty) continue;
+
+      const key = cartLineKey(value, value.sizeLabel);
+      const existing = merged.get(key);
+      if (existing) {
+        existing.qty += qty;
+      } else {
+        merged.set(key, { ...value, key, qty });
+      }
+    }
+
+    return Array.from(merged.values());
   } catch {
     return [];
   }

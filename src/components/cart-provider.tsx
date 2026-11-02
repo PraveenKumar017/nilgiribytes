@@ -35,7 +35,6 @@ type CartContextValue = {
 };
 
 const CartContext = createContext<CartContextValue | null>(null);
-const MAX_QTY = 20;
 
 export function CartProvider({ children }: { children: ReactNode }) {
   const [lines, setLines] = useState<CartLine[]>([]);
@@ -69,14 +68,25 @@ export function CartProvider({ children }: { children: ReactNode }) {
     (item: StoreItem, sizeIndex = 0, qty = 1) => {
       const line = toCartLine(item, sizeIndex, qty);
       const current = readCart();
-      const existing = current.find((entry) => entry.key === line.key);
+      const existing = current.find(
+        (entry) =>
+          entry.key === line.key ||
+          (!!line.slug &&
+            entry.slug === line.slug &&
+            entry.sizeLabel === line.sizeLabel)
+      );
       const next = existing
         ? current.map((entry) =>
-            entry.key === line.key
-              ? { ...entry, qty: Math.min(MAX_QTY, entry.qty + qty) }
+            entry.key === existing.key
+              ? {
+                  ...entry,
+                  ...line,
+                  key: line.key,
+                  qty: entry.qty + qty,
+                }
               : entry
           )
-        : [...current, { ...line, qty: Math.min(MAX_QTY, qty) }];
+        : [...current, { ...line, qty }];
       commit(next);
       setAnnouncement(`${item.name} (${itemSizeLabel(item, sizeIndex)}) added to cart.`);
     },
@@ -91,7 +101,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
           ? current.filter((entry) => entry.key !== key)
           : current.map((entry) =>
               entry.key === key
-                ? { ...entry, qty: Math.min(MAX_QTY, Math.round(qty)) }
+                ? { ...entry, qty: Math.round(qty) }
                 : entry
             );
       commit(next);

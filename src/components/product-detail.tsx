@@ -24,7 +24,7 @@ export function ProductDetail({ item }: ProductDetailProps) {
   const [sizeIndex, setSizeIndex] = useState(0);
   const [imageIndex, setImageIndex] = useState(0);
 
-  const lineKey = cartLineKey(item.id, itemSizeLabel(item, sizeIndex));
+  const lineKey = cartLineKey(item, itemSizeLabel(item, sizeIndex));
   const qty = quantityOf(lineKey);
   const price = itemPrice(item, sizeIndex);
   const mrp = itemMrp(item, sizeIndex);

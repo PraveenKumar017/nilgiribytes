@@ -29,7 +29,7 @@ export function ProductCard({
   const { add, changeQty, quantityOf } = useCart();
   const [sizeIndex, setSizeIndex] = useState(0);
 
-  const lineKey = cartLineKey(item.id, itemSizeLabel(item, sizeIndex));
+  const lineKey = cartLineKey(item, itemSizeLabel(item, sizeIndex));
   const qty = quantityOf(lineKey);
   const image = itemImage(item, sizeIndex);
   const price = itemPrice(item, sizeIndex);

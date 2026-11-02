@@ -43,7 +43,6 @@ type SizeJson = {
   pricePaise?: number;
 };
 
-const MAX_LINE_QUANTITY = 20;
 const MAX_LINES = 50;
 
 function parseJsonArray<T>(value: unknown): T[] {
@@ -98,9 +97,6 @@ export async function priceOrderItems(
     }
 
     const quantity = toPositiveInteger(item.quantity, "quantity");
-    if (quantity > MAX_LINE_QUANTITY) {
-      throw new Error(`Maximum ${MAX_LINE_QUANTITY} units per item.`);
-    }
 
     const sizeLabel =
       typeof item.sizeLabel === "string" && item.sizeLabel.trim()
