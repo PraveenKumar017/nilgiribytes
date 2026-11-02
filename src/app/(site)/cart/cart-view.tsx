@@ -1,12 +1,16 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { formatINR } from "@/lib/format";
 import { buildOrderMessage, whatsappLink } from "@/lib/whatsapp";
 import { useCart } from "@/components/cart-provider";
 import { SafeImage } from "@/components/safe-image";
-import { PaymentCheckout } from "@/components/payment-checkout";
+import {
+  PaymentCheckout,
+  type PaymentSuccessData,
+} from "@/components/payment-checkout";
 import type { StoreProduct, Catalog } from "@/lib/types";
 import { ProductCollection } from "@/components/product-collection";
 
@@ -22,7 +26,8 @@ interface CustomerDetails {
 const STORAGE_KEY = "nilgiribytes_customer_details";
 
 export function CartView() {
-  const { lines, ready, count, subtotal, changeQty } = useCart();
+  const router = useRouter();
+  const { lines, ready, count, subtotal, changeQty, clear } = useCart();
   const [showCustomerModal, setShowCustomerModal] = useState(false);
   const [hasShownModalOnce, setHasShownModalOnce] = useState(false);
   const [showPaymentForm, setShowPaymentForm] = useState(false);
@@ -180,13 +185,14 @@ export function CartView() {
     }
   };
 
-  const handlePaymentSuccess = (data: any) => {
+  const handlePaymentSuccess = (data: PaymentSuccessData) => {
     setShowPaymentForm(false);
-    alert(`Payment successful! Order ID: ${data.orderId}`);
-    // Clear cart by resetting to initial state
-    // The cart provider should handle this through its own logic
-    // For now, we'll navigate to order confirmation page
-    window.location.href = `/order-confirmation?orderId=${data.orderId}`;
+    clear();
+    router.push(
+      `/order-confirmation?order=${encodeURIComponent(
+        data.orderNumber
+      )}&payment=${encodeURIComponent(data.paymentId)}`
+    );
   };
 
   const handlePaymentError = (error: string) => {
@@ -198,29 +204,6 @@ export function CartView() {
   };
 
   const handlePayOnlineClick = () => {
-    console.log("Pay online clicked");
-    
-    // Store cart data in window object for PaymentCheckout to access
-    const cartItems = lines.map((line) => ({
-      name: line.name,
-      sizeLabel: line.sizeLabel,
-      quantity: line.qty,
-      unitPricePaise: line.pricePaise,
-      lineTotalPaise: line.pricePaise * line.qty,
-      // productId and comboId would need to be tracked in cart state
-    }));
-
-    (window as any).__cartData = {
-      address: customerDetails.address,
-      pincode: customerDetails.pincode,
-      state: customerDetails.state,
-      district: customerDetails.district,
-      items: cartItems,
-      subtotalPaise: subtotal,
-      totalPaise: subtotal, // Add delivery charges if needed
-    };
-
-    console.log("Showing payment form with cart data:", (window as any).__cartData);
     setShowPaymentForm(true);
     setPaymentError("");
   };
@@ -279,6 +262,12 @@ export function CartView() {
   }
 
   const orderHref = whatsappLink(buildOrderMessage(lines));
+  const paymentItems = lines.map((line) => ({
+    kind: line.kind,
+    slug: line.slug,
+    sizeLabel: line.sizeLabel,
+    quantity: line.qty,
+  }));
 
   return (
     <>
@@ -528,6 +517,11 @@ export function CartView() {
                     customerName={customerDetails.name}
                     customerEmail={`${customerDetails.mobile}@order.nilgiribytes`}
                     customerPhone={customerDetails.mobile}
+                    address={customerDetails.address}
+                    pincode={customerDetails.pincode}
+                    state={customerDetails.state}
+                    district={customerDetails.district}
+                    items={paymentItems}
                     onSuccess={handlePaymentSuccess}
                     onError={handlePaymentError}
                     onValidationError={handleValidationError}

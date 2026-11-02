@@ -1,61 +1,38 @@
-import { createHmac } from "crypto";
 import type { NextRequest } from "next/server";
+import { priceOrderItems, type OrderItemInput } from "@/lib/order-pricing";
 
 const RAZORPAY_KEY_ID = process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID;
 const RAZORPAY_KEY_SECRET = process.env.RAZORPAY_KEY_SECRET;
 
 interface CreateOrderRequest {
-  amount: number; // in rupees (will be converted to paise)
-  description: string;
-  customerName: string;
-  customerEmail: string;
-  customerPhone: string;
+  description?: string;
+  customerName?: string;
+  customerEmail?: string;
+  customerPhone?: string;
+  items?: OrderItemInput[];
 }
 
 interface RazorpayOrderResponse {
   id: string;
-  entity: string;
   amount: number;
-  amount_paid: number;
-  amount_due: number;
   currency: string;
   receipt: string;
-  offer_id: string | null;
   status: string;
-  attempts: number;
-  notes: Record<string, string>;
-  created_at: number;
 }
 
 export async function POST(request: NextRequest) {
   try {
-    const body = await request.json();
-
-    console.log("Create order request body:", body);
-
-    // Validate input - relaxed for testing
-    if (!body.amount || body.amount <= 0) {
-      return Response.json(
-        { error: "Invalid amount: " + body.amount },
-        { status: 400 }
-      );
-    }
-
-    // Log environment variables to debug
     if (!RAZORPAY_KEY_ID || !RAZORPAY_KEY_SECRET) {
       console.error("Missing Razorpay credentials");
       return Response.json(
-        { error: "Server configuration error" },
+        { error: "Payment gateway is not configured." },
         { status: 500 }
       );
     }
 
-    // Convert rupees to paise (multiply by 100)
-    const amountInPaise = Math.round(body.amount * 100);
+    const body = (await request.json()) as CreateOrderRequest;
+    const { subtotalPaise } = await priceOrderItems(body.items ?? []);
 
-    console.log("Creating Razorpay order with amount:", amountInPaise, "paise");
-
-    // Create order via Razorpay API
     const orderResponse = await fetch("https://api.razorpay.com/v1/orders", {
       method: "POST",
       headers: {
@@ -65,41 +42,38 @@ export async function POST(request: NextRequest) {
         ).toString("base64")}`,
       },
       body: JSON.stringify({
-        amount: amountInPaise,
+        amount: subtotalPaise,
         currency: "INR",
-        receipt: `order_${Date.now()}`,
-        description: body.description || "Nilgiribytes Order",
+        receipt: `nb_${Date.now()}`,
         notes: {
-          customer_name: body.customerName || "Customer",
-          customer_email: body.customerEmail || "not_provided",
+          customer_name: body.customerName?.trim() || "Customer",
+          customer_email: body.customerEmail?.trim() || "not_provided",
+          customer_phone: body.customerPhone?.trim() || "not_provided",
         },
       }),
     });
 
     if (!orderResponse.ok) {
-      const error = await orderResponse.json();
-      console.error("Razorpay API error:", error);
+      const error = await orderResponse.json().catch(() => null);
+      console.error("Razorpay order creation failed:", error);
       return Response.json(
-        { error: "Failed to create order: " + JSON.stringify(error) },
-        { status: 500 }
+        { error: "Unable to start payment. Please try again." },
+        { status: 502 }
       );
     }
 
-    const order: RazorpayOrderResponse = await orderResponse.json();
-
-    console.log("Order created successfully:", order.id);
+    const order = (await orderResponse.json()) as RazorpayOrderResponse;
 
     return Response.json({
       success: true,
       orderId: order.id,
-      amount: body.amount,
-      amountInPaise: amountInPaise,
+      amount: subtotalPaise / 100,
+      amountInPaise: subtotalPaise,
     });
   } catch (error) {
+    const message =
+      error instanceof Error ? error.message : "Unable to create order.";
     console.error("Order creation error:", error);
-    return Response.json(
-      { error: "Internal server error: " + String(error) },
-      { status: 500 }
-    );
+    return Response.json({ error: message }, { status: 400 });
   }
 }

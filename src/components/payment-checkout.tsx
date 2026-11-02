@@ -1,23 +1,31 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import type { OrderItemInput } from "@/lib/order-pricing";
 
 interface PaymentCheckoutProps {
-  amount: number; // in rupees
+  amount: number; // in rupees, for display only
   description: string;
   customerName: string;
   customerEmail: string;
   customerPhone: string;
+  address: string;
+  pincode: string;
+  state: string;
+  district: string;
+  items: OrderItemInput[];
   onSuccess: (paymentData: PaymentSuccessData) => void;
   onError: (error: string) => void;
   onClose?: () => void;
   onValidationError?: (errors: Record<string, string>) => void;
 }
 
-interface PaymentSuccessData {
+export interface PaymentSuccessData {
   orderId: string;
   paymentId: string;
   signature: string;
+  orderNumber: string;
+  databaseOrderId: number;
 }
 
 declare global {
@@ -66,6 +74,11 @@ export function PaymentCheckout({
   customerName,
   customerEmail,
   customerPhone,
+  address,
+  pincode,
+  state,
+  district,
+  items,
   onSuccess,
   onError,
   onClose,
@@ -146,11 +159,11 @@ export function PaymentCheckout({
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          amount,
           description,
           customerName,
           customerEmail,
           customerPhone,
+          items,
         }),
       });
 
@@ -196,17 +209,14 @@ export function PaymentCheckout({
                 razorpay_order_id: response.razorpay_order_id,
                 razorpay_payment_id: response.razorpay_payment_id,
                 razorpay_signature: response.razorpay_signature,
-                customerName: customerName,
-                customerPhone: customerPhone,
-                customerEmail: customerEmail,
-                // These will be passed from cart view
-                address: (window as any).__cartData?.address || "",
-                pincode: (window as any).__cartData?.pincode || "",
-                state: (window as any).__cartData?.state || "",
-                district: (window as any).__cartData?.district || "",
-                items: (window as any).__cartData?.items || [],
-                subtotalPaise: (window as any).__cartData?.subtotalPaise || 0,
-                totalPaise: (window as any).__cartData?.totalPaise || 0,
+                customerName,
+                customerPhone,
+                customerEmail,
+                address,
+                pincode,
+                state,
+                district,
+                items,
               }),
             });
 
@@ -224,7 +234,13 @@ export function PaymentCheckout({
             }
 
             setStatus("Payment successful!");
-            onSuccess(response);
+            onSuccess({
+              orderId: response.razorpay_order_id,
+              paymentId: response.razorpay_payment_id,
+              signature: response.razorpay_signature,
+              orderNumber: verifyData.orderNumber,
+              databaseOrderId: verifyData.databaseOrderId,
+            });
           } catch (error) {
             const errorMessage =
               error instanceof Error ? error.message : "Verification error";

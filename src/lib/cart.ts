@@ -46,6 +46,7 @@ export function toCartLine(item: StoreItem, sizeIndex = 0, qty = 1): CartLine {
     key: cartLineKey(item.id, sizeLabel),
     id: item.id,
     kind: item.kind,
+    slug: item.slug,
     name: item.name,
     category: item.category,
     sizeLabel,

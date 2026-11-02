@@ -101,10 +101,14 @@ CREATE TABLE IF NOT EXISTS `Order` (
     `totalPaise` INTEGER NOT NULL,
     `channel` ENUM('WHATSAPP', 'ONLINE') NOT NULL DEFAULT 'WHATSAPP',
     `status` ENUM('NEW', 'CONFIRMED', 'PACKED', 'DELIVERED', 'CANCELLED') NOT NULL DEFAULT 'NEW',
+    `razorpayOrderId` VARCHAR(64) NULL,
+    `paymentId` VARCHAR(64) NULL,
     `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
     `updatedAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3) ON UPDATE CURRENT_TIMESTAMP(3),
 
     UNIQUE INDEX `Order_orderNumber_key`(`orderNumber`),
+    UNIQUE INDEX `Order_paymentId_key`(`paymentId`),
+    INDEX `Order_razorpayOrderId_idx`(`razorpayOrderId`),
     INDEX `Order_status_createdAt_idx`(`status`, `createdAt`),
     PRIMARY KEY (`id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;

@@ -84,6 +84,7 @@ export type CartLine = {
   key: string;
   id: string;
   kind: "product" | "combo";
+  slug: string;
   name: string;
   category: string;
   sizeLabel: string;

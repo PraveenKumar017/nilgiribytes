@@ -1,7 +1,10 @@
-import { createHmac } from "crypto";
+import { createHmac, timingSafeEqual } from "crypto";
 import type { NextRequest } from "next/server";
-import { db } from "@/lib/db";
+import type { ResultSetHeader, RowDataPacket } from "mysql2";
+import { getPool } from "@/lib/db";
+import { priceOrderItems, type OrderItemInput } from "@/lib/order-pricing";
 
+const RAZORPAY_KEY_ID = process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID;
 const RAZORPAY_KEY_SECRET = process.env.RAZORPAY_KEY_SECRET;
 
 interface VerifyPaymentRequest {
@@ -15,98 +18,261 @@ interface VerifyPaymentRequest {
   pincode: string;
   state: string;
   district: string;
-  items: Array<{
-    name: string;
-    sizeLabel?: string;
-    quantity: number;
-    unitPricePaise: number;
-    lineTotalPaise: number;
-    productId?: number;
-    comboId?: number;
-  }>;
-  subtotalPaise: number;
-  totalPaise: number;
+  items?: OrderItemInput[];
+}
+
+interface RazorpayPayment {
+  id: string;
+  order_id: string;
+  status: string;
+  amount: number;
+  currency: string;
+  captured: boolean;
+}
+
+interface ExistingOrderRow extends RowDataPacket {
+  id: number;
+  orderNumber: string;
+}
+
+function razorpayAuthHeader(): string {
+  return `Basic ${Buffer.from(
+    `${RAZORPAY_KEY_ID}:${RAZORPAY_KEY_SECRET}`
+  ).toString("base64")}`;
+}
+
+function isValidSignature(
+  orderId: string,
+  paymentId: string,
+  signature: string
+): boolean {
+  const expected = createHmac("sha256", RAZORPAY_KEY_SECRET as string)
+    .update(`${orderId}|${paymentId}`)
+    .digest();
+  const received = Buffer.from(signature, "hex");
+
+  return (
+    expected.length === received.length && timingSafeEqual(expected, received)
+  );
+}
+
+async function findExistingOrder(
+  paymentId: string,
+  razorpayOrderId: string
+): Promise<ExistingOrderRow | null> {
+  const pool = getPool();
+  if (!pool) return null;
+
+  const [rows] = await pool.query<ExistingOrderRow[]>(
+    `SELECT id, orderNumber
+       FROM \`Order\`
+      WHERE paymentId = ? OR razorpayOrderId = ?
+      ORDER BY id ASC
+      LIMIT 1`,
+    [paymentId, razorpayOrderId]
+  );
+
+  return rows[0] ?? null;
 }
 
 export async function POST(request: NextRequest) {
+  if (!RAZORPAY_KEY_ID || !RAZORPAY_KEY_SECRET) {
+    console.error("Missing Razorpay credentials");
+    return Response.json(
+      { error: "Payment gateway is not configured." },
+      { status: 500 }
+    );
+  }
+
+  const pool = getPool();
+  if (!pool) {
+    return Response.json(
+      { error: "Order service is temporarily unavailable." },
+      { status: 500 }
+    );
+  }
+
   try {
-    const body: VerifyPaymentRequest = await request.json();
+    const body = (await request.json()) as VerifyPaymentRequest;
 
-    console.log("Verify payment request:", body);
-
-    // Validate inputs
-    if (!body.razorpay_order_id || !body.razorpay_payment_id || !body.razorpay_signature) {
+    if (
+      !body.razorpay_order_id ||
+      !body.razorpay_payment_id ||
+      !body.razorpay_signature
+    ) {
       return Response.json(
-        { error: "Missing payment verification data" },
+        { error: "Missing payment verification data." },
         { status: 400 }
       );
     }
 
-    // Construct the signature verification string
-    // Format: order_id|payment_id
-    const shasum = createHmac("sha256", RAZORPAY_KEY_SECRET!);
-    shasum.update(`${body.razorpay_order_id}|${body.razorpay_payment_id}`);
-    const digest = shasum.digest("hex");
-
-    // Compare signatures (use timing-safe comparison)
-    const isSignatureValid = digest === body.razorpay_signature;
-
-    if (!isSignatureValid) {
-      console.warn("Invalid signature:", {
-        expected: digest,
-        received: body.razorpay_signature,
+    if (!isValidSignature(
+      body.razorpay_order_id,
+      body.razorpay_payment_id,
+      body.razorpay_signature
+    )) {
+      console.warn("Invalid Razorpay signature", {
+        orderId: body.razorpay_order_id,
+        paymentId: body.razorpay_payment_id,
       });
       return Response.json(
-        { error: "Payment verification failed" },
+        { error: "Payment verification failed." },
         { status: 400 }
       );
     }
 
-    console.log("Signature verified successfully");
-
-    // Generate order number with format NB10001, NB10002, etc.
-    const lastOrder = await db.query(
-      "SELECT COALESCE(MAX(CAST(SUBSTRING(orderNumber, 3) AS UNSIGNED)), 10000) as maxNum FROM `Order`"
+    const existing = await findExistingOrder(
+      body.razorpay_payment_id,
+      body.razorpay_order_id
     );
 
-    const nextNum = (lastOrder[0]?.maxNum || 10000) + 1;
-    const orderNumber = `NB${nextNum}`;
+    if (existing) {
+      return Response.json({
+        success: true,
+        message: "Payment already verified",
+        orderId: body.razorpay_order_id,
+        paymentId: body.razorpay_payment_id,
+        orderNumber: existing.orderNumber,
+        databaseOrderId: existing.id,
+      });
+    }
 
-    console.log("Generated order number:", orderNumber);
+    const { lines, subtotalPaise } = await priceOrderItems(body.items ?? []);
 
-    // Create order in database
-    const fullAddress = `${body.address}, ${body.pincode}, ${body.district}, ${body.state}`;
-
-    const orderResult = await db.query(
-      `INSERT INTO \`Order\` (
-        orderNumber,
-        customerName,
-        phone,
-        email,
-        address,
-        subtotalPaise,
-        totalPaise,
-        channel,
-        status
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, 'ONLINE', 'NEW')`,
-      [
-        orderNumber,
-        body.customerName,
-        body.customerPhone,
-        body.customerEmail,
-        fullAddress,
-        body.subtotalPaise,
-        body.totalPaise,
-      ]
+    const paymentResponse = await fetch(
+      `https://api.razorpay.com/v1/payments/${encodeURIComponent(
+        body.razorpay_payment_id
+      )}`,
+      {
+        headers: {
+          Authorization: razorpayAuthHeader(),
+        },
+      }
     );
 
-    const orderId = orderResult.insertId;
-    console.log("Order created with ID:", orderId);
+    if (!paymentResponse.ok) {
+      console.error("Unable to fetch Razorpay payment", paymentResponse.status);
+      return Response.json(
+        { error: "Unable to confirm payment with Razorpay." },
+        { status: 502 }
+      );
+    }
 
-    // Create order items
-    if (body.items && body.items.length > 0) {
-      for (const item of body.items) {
-        await db.query(
+    const payment = (await paymentResponse.json()) as RazorpayPayment;
+
+    if (payment.order_id !== body.razorpay_order_id) {
+      return Response.json(
+        { error: "Payment does not match this order." },
+        { status: 400 }
+      );
+    }
+
+    if (Number(payment.amount) !== subtotalPaise) {
+      console.error("Payment amount mismatch", {
+        expected: subtotalPaise,
+        received: Number(payment.amount),
+      });
+      return Response.json(
+        { error: "Payment amount does not match the order total." },
+        { status: 400 }
+      );
+    }
+
+    if (payment.status === "authorized") {
+      const captureResponse = await fetch(
+        `https://api.razorpay.com/v1/payments/${encodeURIComponent(
+          body.razorpay_payment_id
+        )}/capture`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: razorpayAuthHeader(),
+          },
+          body: JSON.stringify({
+            amount: subtotalPaise,
+            currency: "INR",
+          }),
+        }
+      );
+
+      if (!captureResponse.ok) {
+        console.error("Unable to capture Razorpay payment", captureResponse.status);
+        return Response.json(
+          { error: "Payment could not be captured. Please contact support." },
+          { status: 502 }
+        );
+      }
+    } else if (payment.status !== "captured") {
+      return Response.json(
+        { error: "Payment was not completed." },
+        { status: 400 }
+      );
+    }
+
+    const customerName = body.customerName?.trim();
+    const customerPhone = body.customerPhone?.trim();
+
+    if (!customerName || !customerPhone) {
+      return Response.json(
+        { error: "Customer name and phone are required." },
+        { status: 400 }
+      );
+    }
+
+    const fullAddress = [body.address, body.district, body.state, body.pincode]
+      .map((part) => (typeof part === "string" ? part.trim() : ""))
+      .filter(Boolean)
+      .join(", ");
+
+    const connection = await pool.getConnection();
+    let orderNumber = "";
+    let orderId = 0;
+
+    try {
+      await connection.beginTransaction();
+
+      const temporaryNumber = `TMP${Date.now()}${Math.floor(
+        Math.random() * 1000
+      )}`;
+
+      const [orderResult] = await connection.execute<ResultSetHeader>(
+        `INSERT INTO \`Order\` (
+          orderNumber,
+          customerName,
+          phone,
+          email,
+          address,
+          subtotalPaise,
+          totalPaise,
+          channel,
+          status,
+          razorpayOrderId,
+          paymentId
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, 'ONLINE', 'NEW', ?, ?)`,
+        [
+          temporaryNumber,
+          customerName,
+          customerPhone,
+          body.customerEmail?.trim() || null,
+          fullAddress || null,
+          subtotalPaise,
+          subtotalPaise,
+          body.razorpay_order_id,
+          body.razorpay_payment_id,
+        ]
+      );
+
+      orderId = orderResult.insertId;
+      orderNumber = `NB${10000 + orderId}`;
+
+      await connection.execute(
+        "UPDATE `Order` SET orderNumber = ? WHERE id = ?",
+        [orderNumber, orderId]
+      );
+
+      for (const line of lines) {
+        await connection.execute(
           `INSERT INTO \`OrderItem\` (
             orderId,
             productId,
@@ -119,33 +285,57 @@ export async function POST(request: NextRequest) {
           ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
           [
             orderId,
-            item.productId || null,
-            item.comboId || null,
-            item.name,
-            item.sizeLabel || null,
-            item.unitPricePaise,
-            item.quantity,
-            item.lineTotalPaise,
+            line.productId,
+            line.comboId,
+            line.name,
+            line.sizeLabel,
+            line.unitPricePaise,
+            line.quantity,
+            line.lineTotalPaise,
           ]
         );
       }
-      console.log(`Created ${body.items.length} order items`);
+
+      await connection.commit();
+    } catch (error) {
+      await connection.rollback();
+
+      const code = (error as { code?: string }).code;
+      if (code === "ER_DUP_ENTRY") {
+        const duplicate = await findExistingOrder(
+          body.razorpay_payment_id,
+          body.razorpay_order_id
+        );
+
+        if (duplicate) {
+          return Response.json({
+            success: true,
+            message: "Payment already verified",
+            orderId: body.razorpay_order_id,
+            paymentId: body.razorpay_payment_id,
+            orderNumber: duplicate.orderNumber,
+            databaseOrderId: duplicate.id,
+          });
+        }
+      }
+
+      throw error;
+    } finally {
+      connection.release();
     }
 
-    // Signature is valid and order saved
     return Response.json({
       success: true,
       message: "Payment verified and order created",
       orderId: body.razorpay_order_id,
       paymentId: body.razorpay_payment_id,
-      orderNumber: orderNumber,
+      orderNumber,
       databaseOrderId: orderId,
     });
   } catch (error) {
+    const message =
+      error instanceof Error ? error.message : "Payment verification failed.";
     console.error("Payment verification error:", error);
-    return Response.json(
-      { error: "Internal server error: " + String(error) },
-      { status: 500 }
-    );
+    return Response.json({ error: message }, { status: 400 });
   }
 }
