@@ -169,6 +169,19 @@
 }
 
 @media (max-width: 768px) {
+  .hero-story {
+    background-image:
+      linear-gradient(
+        180deg,
+        rgba(8, 4, 2, 0.82) 0%,
+        rgba(8, 4, 2, 0.62) 45%,
+        rgba(8, 4, 2, 0.15) 75%,
+        transparent 100%
+      ),
+      url("/assets/hero_image_mobile.png");
+    background-position: center top;
+  }
+
   .hero-stage {
     flex-direction: column;
     justify-content: center;
