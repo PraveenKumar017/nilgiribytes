@@ -30,6 +30,7 @@ export function CartView() {
   const { lines, ready, count, subtotal, changeQty, clear } = useCart();
   const [showCustomerModal, setShowCustomerModal] = useState(false);
   const [hasShownModalOnce, setHasShownModalOnce] = useState(false);
+  const [customerDetailsReady, setCustomerDetailsReady] = useState(false);
   const [showPaymentForm, setShowPaymentForm] = useState(false);
   const [paymentError, setPaymentError] = useState("");
   const [previousCount, setPreviousCount] = useState(0);
@@ -47,13 +48,15 @@ export function CartView() {
 
   // Load customer details from localStorage on mount
   useEffect(() => {
-    const stored = localStorage.getItem(STORAGE_KEY);
-    if (stored) {
-      try {
+    try {
+      const stored = localStorage.getItem(STORAGE_KEY);
+      if (stored) {
         setCustomerDetails(JSON.parse(stored));
-      } catch (error) {
-        console.error("Failed to load customer details from storage:", error);
       }
+    } catch (error) {
+      console.error("Failed to load customer details from storage:", error);
+    } finally {
+      setCustomerDetailsReady(true);
     }
   }, []);
 
@@ -111,9 +114,10 @@ export function CartView() {
 
   // Show modal only on FIRST cart item add if no customer details are saved yet
   useEffect(() => {
-    if (ready && count > 0 && previousCount === 0 && !customerDetails.name && !hasShownModalOnce) {
+    if (!ready || !customerDetailsReady) return;
+
+    if (count > 0 && previousCount === 0 && !customerDetails.name && !hasShownModalOnce) {
       // First item added, no saved details, and haven't shown modal before
-      console.log("First item added and no saved details, showing customer modal");
       setShowCustomerModal(true);
       setHasShownModalOnce(true); // Mark that we've shown the modal once
     }
@@ -121,7 +125,14 @@ export function CartView() {
     if (count !== previousCount) {
       setPreviousCount(count);
     }
-  }, [count, ready, previousCount, customerDetails.name, hasShownModalOnce]);
+  }, [
+    count,
+    ready,
+    customerDetailsReady,
+    previousCount,
+    customerDetails.name,
+    hasShownModalOnce,
+  ]);
 
   const handleInputChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
@@ -272,7 +283,7 @@ export function CartView() {
   return (
     <>
       {/* Customer Details Modal - Show on first item add (no saved details) or when user clicks Edit Details */}
-      {showCustomerModal && !customerDetails.name && (
+      {customerDetailsReady && showCustomerModal && (
         <>
           <div
             className="modal-overlay"
