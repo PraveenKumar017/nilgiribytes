@@ -740,13 +740,10 @@ export async function updateSettingsAction(
 /* -------------------------------------------------------------------------- */
 
 export async function updateOrderStatusAction(
-  arg1: ActionState | FormData,
-  arg2?: FormData
-): Promise<ActionState | void> {
+  _previous: ActionState,
+  formData: FormData
+): Promise<ActionState> {
   await requireAdmin();
-
-  const formData = (arg1 instanceof FormData ? arg1 : arg2) as FormData;
-  if (!formData) return { error: "Form data missing." };
 
   const id = formInt(formData, "id");
   if (!id) return { error: "Order not found." };
@@ -774,13 +771,10 @@ export async function updateOrderStatusAction(
 }
 
 export async function deleteOrderAction(
-  arg1: ActionState | FormData,
-  arg2?: FormData
-): Promise<ActionState | void> {
+  _previous: ActionState,
+  formData: FormData
+): Promise<ActionState> {
   await requireAdmin();
-
-  const formData = (arg1 instanceof FormData ? arg1 : arg2) as FormData;
-  if (!formData) return { error: "Form data missing." };
 
   const id = formInt(formData, "id");
   if (!id) return { error: "Order not found." };
