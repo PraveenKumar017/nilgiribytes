@@ -294,6 +294,14 @@ export function CartView() {
           <div className="modal modal-customer" role="dialog" aria-modal="true">
             <div className="modal-header">
               <h2 className="modal-title">Delivery Details</h2>
+              <button
+                type="button"
+                className="modal-close"
+                aria-label="Close delivery details"
+                onClick={() => setShowCustomerModal(false)}
+              >
+                &times;
+              </button>
             </div>
             <div className="modal-body">
               <p className="modal-description">

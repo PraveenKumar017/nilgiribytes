@@ -5058,8 +5058,35 @@ body.is-locked {
 }
 
 .modal-header {
+  position: relative;
   padding: 1.5rem;
+  padding-right: 3.5rem;
   border-bottom: 1px solid var(--color-border);
+}
+
+.modal-close {
+  position: absolute;
+  top: 0.75rem;
+  right: 0.75rem;
+  width: 2rem;
+  height: 2rem;
+  display: grid;
+  place-items: center;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--color-muted);
+  font-size: 1.4rem;
+  line-height: 1;
+  cursor: pointer;
+  transition: background var(--transition), color var(--transition);
+}
+
+.modal-close:hover,
+.modal-close:focus-visible {
+  background: var(--color-cream);
+  color: var(--color-heading);
+  outline: none;
 }
 
 .modal-title {
@@ -5091,6 +5118,35 @@ body.is-locked {
 .modal-footer .btn {
   flex: 1;
   min-width: 150px;
+}
+
+.modal-customer {
+  max-height: 84vh;
+}
+
+.modal-customer .modal-header {
+  padding: 1.1rem 1.5rem;
+  padding-right: 3.5rem;
+}
+
+.modal-customer .modal-body {
+  padding: 1.15rem 1.5rem;
+}
+
+.modal-customer .modal-description {
+  margin-bottom: 1rem;
+}
+
+.modal-customer .form-group {
+  margin-bottom: 0.8rem;
+}
+
+.modal-customer .form-textarea {
+  min-height: 80px;
+}
+
+.modal-customer .modal-footer {
+  padding: 0.85rem 1.5rem;
 }
 
 /* Payment Verification Section */
@@ -5147,6 +5203,10 @@ body.is-locked {
     width: 95vw;
     max-height: 85vh;
     max-width: 100%;
+  }
+
+  .modal-customer {
+    max-height: 80vh;
   }
 
   .detail-row {
