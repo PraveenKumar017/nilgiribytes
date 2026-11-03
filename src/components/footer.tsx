@@ -43,21 +43,6 @@ export function Footer() {
           </div>
 
           <div className="footer-col">
-            <p className="footer-col_title">Visit us</p>
-            <ul>
-              <li>Kotagiri, Tamil Nadu 643217</li>
-              <li>
-                <a href={MAPS_URL} target="_blank" rel="noopener">
-                  Open in Google Maps
-                </a>
-              </li>
-              <li>
-                <a href={`tel:${PHONE_TEL}`}>{PHONE_DISPLAY}</a>
-              </li>
-            </ul>
-          </div>
-
-          <div className="footer-col">
             <p className="footer-col_title">Quick links</p>
             <ul>
               <li>
@@ -71,6 +56,21 @@ export function Footer() {
               </li>
               <li>
                 <Link href="/policies/store">Store policy</Link>
+              </li>
+            </ul>
+          </div>
+
+          <div className="footer-col">
+            <p className="footer-col_title">Visit us</p>
+            <ul>
+              <li>Kotagiri, Tamil Nadu 643217</li>
+              <li>
+                <a href={MAPS_URL} target="_blank" rel="noopener">
+                  Open in Google Maps
+                </a>
+              </li>
+              <li>
+                <a href={`tel:${PHONE_TEL}`}>{PHONE_DISPLAY}</a>
               </li>
             </ul>
           </div>
