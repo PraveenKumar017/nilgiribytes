@@ -167,13 +167,21 @@ export default async function OrderConfirmationPage({ searchParams }: PageProps)
               <hr className="cart-page_summary-rule" />
               <div className="cart-summary">
                 <span>Status</span>
-                <span>{order.status.toLowerCase()}</span>
+                <span>Ordered</span>
               </div>
               <p className="cart-page_delivery-note">
                 Payment reference: {order.paymentId ?? paymentId}
               </p>
               <Link className="btn btn--primary" href="/shop">
                 Continue shopping
+              </Link>
+              <Link
+                className="btn btn--outline"
+                href={`/track-order?order=${encodeURIComponent(
+                  order.orderNumber
+                )}`}
+              >
+                Track this order
               </Link>
             </aside>
           </div>

@@ -17,6 +17,11 @@ import {
 } from "@/components/admin/icons";
 import type { AdminOrderRow } from "@/lib/admin";
 import { formatINR } from "@/lib/format";
+import {
+  ORDER_STATUS_OPTIONS,
+  normalizeOrderStatus,
+  orderStatusLabel,
+} from "@/lib/order-status";
 
 // Typed wrappers so <form action={...}> gets (formData: FormData) => Promise<void>
 async function updateStatus(formData: FormData): Promise<void> {
@@ -26,15 +31,12 @@ async function deleteOrder(formData: FormData): Promise<void> {
   await deleteOrderAction(null, formData);
 }
 
-const STATUSES = [
-  "NEW",
-  "CONFIRMED",
-  "PACKED",
-  "DELIVERED",
-  "CANCELLED",
-] as const;
+const STATUS_OPTIONS = ORDER_STATUS_OPTIONS;
 
-type StatusType = (typeof STATUSES)[number];
+const STATUS_TABS = [
+  { value: "ALL", label: "All Orders" },
+  ...ORDER_STATUS_OPTIONS,
+] as const;
 
 function formatOrderDateTime(date: Date | string): string {
   const d = new Date(date);
@@ -106,40 +108,37 @@ export function OrdersTable({ orders }: { orders: AdminOrderRow[] }) {
   // Statistics
   const stats = useMemo(() => {
     const totalOrders = orders.length;
-    const newOrders = orders.filter((o) => o.status === "NEW").length;
-    const inProgress = orders.filter(
-      (o) => o.status === "CONFIRMED" || o.status === "PACKED"
+    const ordered = orders.filter(
+      (o) => normalizeOrderStatus(o.status) === "NEW"
     ).length;
-    const delivered = orders.filter((o) => o.status === "DELIVERED").length;
-    const cancelled = orders.filter((o) => o.status === "CANCELLED").length;
+    const packed = orders.filter(
+      (o) => normalizeOrderStatus(o.status) === "PACKED"
+    ).length;
+    const dispatched = orders.filter(
+      (o) => normalizeOrderStatus(o.status) === "DELIVERED"
+    ).length;
     const totalRevenuePaise = orders
       .filter((o) => o.status !== "CANCELLED")
       .reduce((sum, o) => sum + o.totalPaise, 0);
 
     return {
       totalOrders,
-      newOrders,
-      inProgress,
-      delivered,
-      cancelled,
+      ordered,
+      packed,
+      dispatched,
       totalRevenuePaise,
     };
   }, [orders]);
 
   // Status counts for tabs
   const countsByStatus = useMemo(() => {
-    const map: Record<string, number> = {
-      ALL: orders.length,
-      NEW: 0,
-      CONFIRMED: 0,
-      PACKED: 0,
-      DELIVERED: 0,
-      CANCELLED: 0,
-    };
+    const map: Record<string, number> = { ALL: orders.length };
+    for (const option of STATUS_OPTIONS) {
+      map[option.value] = 0;
+    }
     for (const o of orders) {
-      if (map[o.status] !== undefined) {
-        map[o.status]++;
-      }
+      const value = normalizeOrderStatus(o.status);
+      map[value] = (map[value] ?? 0) + 1;
     }
     return map;
   }, [orders]);
@@ -151,7 +150,10 @@ export function OrdersTable({ orders }: { orders: AdminOrderRow[] }) {
     return orders
       .filter((order) => {
         // Status filter
-        if (statusFilter !== "ALL" && order.status !== statusFilter) {
+        if (
+          statusFilter !== "ALL" &&
+          normalizeOrderStatus(order.status) !== statusFilter
+        ) {
           return false;
         }
 
@@ -235,7 +237,7 @@ export function OrdersTable({ orders }: { orders: AdminOrderRow[] }) {
       `"${(o.email ?? "").replace(/"/g, '""')}"`,
       `"${(o.address ?? "").replace(/"/g, '""')}"`,
       `"${o.channel}"`,
-      `"${o.status}"`,
+      `"${orderStatusLabel(o.status)}"`,
       `"${(o.totalPaise / 100).toFixed(2)}"`,
       `"${o.paymentId ?? ""}"`,
       `"${o.itemsCount}"`,
@@ -284,21 +286,21 @@ export function OrdersTable({ orders }: { orders: AdminOrderRow[] }) {
           <span className="admin-stat_hint">Excl. cancelled</span>
         </div>
         <div className="admin-stat">
-          <span className="admin-stat_label">New Orders</span>
+          <span className="admin-stat_label">Ordered</span>
           <span className="admin-stat_value admin-stat_value--highlight">
-            {stats.newOrders}
+            {stats.ordered}
           </span>
-          <span className="admin-stat_hint">Action required</span>
+          <span className="admin-stat_hint">Awaiting packing</span>
         </div>
         <div className="admin-stat">
-          <span className="admin-stat_label">In Progress</span>
-          <span className="admin-stat_value">{stats.inProgress}</span>
-          <span className="admin-stat_hint">Confirmed & Packed</span>
+          <span className="admin-stat_label">Packed</span>
+          <span className="admin-stat_value">{stats.packed}</span>
+          <span className="admin-stat_hint">Ready to dispatch</span>
         </div>
         <div className="admin-stat">
-          <span className="admin-stat_label">Delivered</span>
-          <span className="admin-stat_value">{stats.delivered}</span>
-          <span className="admin-stat_hint">Fulfilled</span>
+          <span className="admin-stat_label">Dispatched</span>
+          <span className="admin-stat_value">{stats.dispatched}</span>
+          <span className="admin-stat_hint">On the way</span>
         </div>
       </div>
 
@@ -306,20 +308,20 @@ export function OrdersTable({ orders }: { orders: AdminOrderRow[] }) {
       <section className="admin-panel admin-orders_panel">
         {/* Status Filter Tabs */}
         <div className="admin-orders_tabs" role="tablist" aria-label="Order status tabs">
-          {(["ALL", ...STATUSES] as const).map((tab) => {
-            const count = countsByStatus[tab] ?? 0;
-            const active = statusFilter === tab;
+          {STATUS_TABS.map((tab) => {
+            const count = countsByStatus[tab.value] ?? 0;
+            const active = statusFilter === tab.value;
 
             return (
               <button
-                key={tab}
+                key={tab.value}
                 type="button"
                 role="tab"
                 aria-selected={active}
                 className={`admin-orders_tab${active ? " is-active" : ""}`}
-                onClick={() => setStatusFilter(tab)}
+                onClick={() => setStatusFilter(tab.value)}
               >
-                <span>{tab === "ALL" ? "All Orders" : tab}</span>
+                <span>{tab.label}</span>
                 <span className="admin-orders_tab-badge">{count}</span>
               </button>
             );
@@ -502,14 +504,14 @@ export function OrdersTable({ orders }: { orders: AdminOrderRow[] }) {
                           <input type="hidden" name="returnTo" value="/admin/orders" />
                           <select
                             name="status"
-                            defaultValue={order.status}
+                            defaultValue={normalizeOrderStatus(order.status)}
                             aria-label={`Update status for order ${order.orderNumber}`}
-                            className={`admin-status-select admin-status-select--${order.status.toLowerCase()}`}
+                            className={`admin-status-select admin-status-select--${normalizeOrderStatus(order.status).toLowerCase()}`}
                             onChange={(e) => e.currentTarget.form?.requestSubmit()}
                           >
-                            {STATUSES.map((st) => (
-                              <option key={st} value={st}>
-                                {st}
+                            {STATUS_OPTIONS.map((st) => (
+                              <option key={st.value} value={st.value}>
+                                {st.label}
                               </option>
                             ))}
                           </select>
@@ -593,8 +595,8 @@ export function OrdersTable({ orders }: { orders: AdminOrderRow[] }) {
             {/* Modal Header */}
             <div className="odm-head">
               <div className="odm-head_info">
-                <span className={`admin-badge admin-badge--${activeModalOrder.status.toLowerCase()} odm-status-badge`}>
-                  {activeModalOrder.status}
+                <span className={`admin-badge admin-badge--${normalizeOrderStatus(activeModalOrder.status).toLowerCase()} odm-status-badge`}>
+                  {orderStatusLabel(activeModalOrder.status)}
                 </span>
                 <h2 id="modal-order-title" className="odm-order-num">
                   {activeModalOrder.orderNumber}
@@ -731,11 +733,11 @@ export function OrdersTable({ orders }: { orders: AdminOrderRow[] }) {
                     <input type="hidden" name="returnTo" value="/admin/orders" />
                     <select
                       name="status"
-                      defaultValue={activeModalOrder.status}
-                      className={`admin-status-select admin-status-select--${activeModalOrder.status.toLowerCase()}`}
+                      defaultValue={normalizeOrderStatus(activeModalOrder.status)}
+                      className={`admin-status-select admin-status-select--${normalizeOrderStatus(activeModalOrder.status).toLowerCase()}`}
                     >
-                      {STATUSES.map((st) => (
-                        <option key={st} value={st}>{st}</option>
+                      {STATUS_OPTIONS.map((st) => (
+                        <option key={st.value} value={st.value}>{st.label}</option>
                       ))}
                     </select>
                     <button type="submit" className="admin-btn admin-btn--primary admin-btn--small">
@@ -805,8 +807,8 @@ export function OrdersTable({ orders }: { orders: AdminOrderRow[] }) {
                     <tr>
                       <th>Status:</th>
                       <td>
-                        <span className={`admin-badge admin-badge--${printOrder.status.toLowerCase()}`}>
-                          {printOrder.status}
+                        <span className={`admin-badge admin-badge--${normalizeOrderStatus(printOrder.status).toLowerCase()}`}>
+                          {orderStatusLabel(printOrder.status)}
                         </span>
                       </td>
                     </tr>

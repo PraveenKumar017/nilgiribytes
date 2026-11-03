@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { getDashboard } from "@/lib/admin";
 import { formatINR } from "@/lib/format";
+import { normalizeOrderStatus, orderStatusLabel } from "@/lib/order-status";
 
 export default async function AdminDashboardPage() {
   const data = await getDashboard();
@@ -15,7 +16,7 @@ export default async function AdminDashboardPage() {
       href: "/admin/blog",
       hint: `${data.drafts} draft${data.drafts === 1 ? "" : "s"}`,
     },
-    { label: "New orders", value: data.newOrders, href: "/admin/orders" },
+    { label: "Ordered", value: data.newOrders, href: "/admin/orders" },
   ];
 
   return (
@@ -78,8 +79,8 @@ export default async function AdminDashboardPage() {
                     <td>{order.customerName}</td>
                     <td>{formatINR(order.totalPaise)}</td>
                     <td>
-                      <span className={`admin-badge admin-badge--${order.status.toLowerCase()}`}>
-                        {order.status}
+                      <span className={`admin-badge admin-badge--${normalizeOrderStatus(order.status).toLowerCase()}`}>
+                        {orderStatusLabel(order.status)}
                       </span>
                     </td>
                     <td>{new Date(order.createdAt).toLocaleDateString("en-IN")}</td>

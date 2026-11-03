@@ -6,12 +6,17 @@ import { OrdersTable } from "@/components/admin/orders-table";
 import { WhatsAppIcon } from "@/components/admin/icons";
 import { getOrder, listOrders } from "@/lib/admin";
 import { formatINR } from "@/lib/format";
+import {
+  ORDER_STATUS_OPTIONS,
+  normalizeOrderStatus,
+  orderStatusLabel,
+} from "@/lib/order-status";
 
 type PageProps = {
   searchParams: Promise<{ id?: string; saved?: string; deleted?: string }>;
 };
 
-const STATUSES = ["NEW", "CONFIRMED", "PACKED", "DELIVERED", "CANCELLED"] as const;
+const STATUSES = ORDER_STATUS_OPTIONS;
 
 function sanitizePhoneForWhatsApp(phone: string): string {
   const digits = phone.replace(/\D/g, "");
@@ -56,8 +61,8 @@ export default async function AdminOrdersPage({ searchParams }: PageProps) {
               <h1 className="admin-page-title" style={{ margin: 0 }}>
                 {order.orderNumber}
               </h1>
-              <span className={`admin-badge admin-badge--${order.status.toLowerCase()}`}>
-                {order.status}
+              <span className={`admin-badge admin-badge--${normalizeOrderStatus(order.status).toLowerCase()}`}>
+                {orderStatusLabel(order.status)}
               </span>
               <span className={`admin-orders_channel-badge admin-orders_channel-badge--${order.channel.toLowerCase()}`}>
                 {order.channel}
@@ -198,10 +203,10 @@ export default async function AdminOrdersPage({ searchParams }: PageProps) {
                 <input type="hidden" name="id" value={order.id} />
                 <label className="admin-field">
                   <span>Status</span>
-                  <select name="status" defaultValue={order.status}>
+                  <select name="status" defaultValue={normalizeOrderStatus(order.status)}>
                     {STATUSES.map((status) => (
-                      <option key={status} value={status}>
-                        {status}
+                      <option key={status.value} value={status.value}>
+                        {status.label}
                       </option>
                     ))}
                   </select>

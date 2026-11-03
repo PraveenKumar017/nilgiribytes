@@ -51,7 +51,11 @@ function formatDateTime(date: Date): string {
   }).format(date);
 }
 
-function buildHtml(data: OrderConfirmationEmail, orderUrl: string): string {
+function buildHtml(
+  data: OrderConfirmationEmail,
+  orderUrl: string,
+  trackUrl: string
+): string {
   const paidAt = data.paidAt ?? new Date();
   const itemRows = data.lines
     .map((line) => {
@@ -143,6 +147,9 @@ function buildHtml(data: OrderConfirmationEmail, orderUrl: string): string {
         <a href="${escapeHtml(
           orderUrl
         )}" style="display:inline-block;padding:11px 22px;background:#6b4423;color:#fbf7ef;text-decoration:none;border-radius:8px;font-size:14px;font-weight:600;">View order details</a>
+        <a href="${escapeHtml(
+          trackUrl
+        )}" style="display:inline-block;margin-left:10px;padding:10px 20px;background:#ffffff;color:#6b4423;text-decoration:none;border:1px solid #6b4423;border-radius:8px;font-size:14px;font-weight:600;">Track your order</a>
       </div>
       <div style="padding:16px 26px;background:#fbf7ef;color:#6e6258;font-size:12px;line-height:1.7;">
         Need help with your order? Reply to this email or WhatsApp us at ${escapeHtml(
@@ -154,7 +161,11 @@ function buildHtml(data: OrderConfirmationEmail, orderUrl: string): string {
   </div>`;
 }
 
-function buildText(data: OrderConfirmationEmail, orderUrl: string): string {
+function buildText(
+  data: OrderConfirmationEmail,
+  orderUrl: string,
+  trackUrl: string
+): string {
   const paidAt = data.paidAt ?? new Date();
   const items = data.lines.map(
     (line) =>
@@ -183,6 +194,7 @@ function buildText(data: OrderConfirmationEmail, orderUrl: string): string {
     `Total paid: ${formatINR(data.subtotalPaise)}`,
     "",
     `View order details: ${orderUrl}`,
+    `Track your order: ${trackUrl}`,
     "",
     `Need help? WhatsApp us at ${PHONE_DISPLAY}.`,
     "Nilgiribytes, Kotagiri, Tamil Nadu 643217",
@@ -216,6 +228,9 @@ export async function sendOrderConfirmationEmail(
       data.orderNumber
     )}&payment=${encodeURIComponent(data.paymentId)}`
   );
+  const trackUrl = absoluteUrl(
+    `/track-order?order=${encodeURIComponent(data.orderNumber)}`
+  );
 
   try {
     const response = await fetch("https://api.resend.com/emails", {
@@ -229,8 +244,8 @@ export async function sendOrderConfirmationEmail(
         to: recipients,
         bcc,
         subject: `Order ${data.orderNumber} confirmed - Nilgiribytes`,
-        html: buildHtml(data, orderUrl),
-        text: buildText(data, orderUrl),
+        html: buildHtml(data, orderUrl, trackUrl),
+        text: buildText(data, orderUrl, trackUrl),
       }),
     });
 

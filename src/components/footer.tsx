@@ -39,9 +39,6 @@ export function Footer() {
               <li>
                 <Link href="/blog">Blog</Link>
               </li>
-              <li>
-                <Link href="/admin">Admin</Link>
-              </li>
             </ul>
           </div>
 
@@ -61,16 +58,19 @@ export function Footer() {
           </div>
 
           <div className="footer-col">
-            <p className="footer-col_title">Policies</p>
+            <p className="footer-col_title">Quick links</p>
             <ul>
+              <li>
+                <Link href="/track-order">Track order</Link>
+              </li>
+              <li>
+                <Link href="/admin">Admin</Link>
+              </li>
               <li>
                 <Link href="/policies/privacy">Privacy policy</Link>
               </li>
               <li>
                 <Link href="/policies/store">Store policy</Link>
-              </li>
-              <li>
-                <Link href="/about#visit-us">Contact</Link>
               </li>
             </ul>
           </div>

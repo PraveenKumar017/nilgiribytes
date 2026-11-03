@@ -511,7 +511,7 @@ export async function getDashboard(): Promise<AdminDashboard> {
        (SELECT COUNT(*) FROM Category) AS categories,
        (SELECT COUNT(*) FROM BlogPost) AS posts,
        (SELECT COUNT(*) FROM BlogPost WHERE status = 'DRAFT') AS drafts,
-       (SELECT COUNT(*) FROM \`Order\` WHERE status = 'NEW') AS newOrders`
+       (SELECT COUNT(*) FROM \`Order\` WHERE status IN ('NEW', 'CONFIRMED')) AS newOrders`
   );
 
   const counts = countRows[0] ?? {};

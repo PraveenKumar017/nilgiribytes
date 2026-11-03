@@ -1,15 +1,21 @@
 "use client";
 
+import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { DEFAULT_WHATSAPP_MESSAGE, whatsappLink } from "@/lib/whatsapp";
 
 export function FloatingWhatsApp() {
+  const pathname = usePathname();
   const [pulse, setPulse] = useState(false);
 
   useEffect(() => {
     const timer = window.setTimeout(() => setPulse(true), 1300);
     return () => window.clearTimeout(timer);
   }, []);
+
+  if (pathname?.startsWith("/order-confirmation")) {
+    return null;
+  }
 
   return (
     <a
