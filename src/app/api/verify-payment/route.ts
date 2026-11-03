@@ -2,6 +2,7 @@ import { createHmac, timingSafeEqual } from "crypto";
 import type { NextRequest } from "next/server";
 import type { ResultSetHeader, RowDataPacket } from "mysql2";
 import { getPool } from "@/lib/db";
+import { sendOrderConfirmationEmail } from "@/lib/order-email";
 import { priceOrderItems, type OrderItemInput } from "@/lib/order-pricing";
 
 const RAZORPAY_KEY_ID = process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID;
@@ -322,6 +323,22 @@ export async function POST(request: NextRequest) {
       throw error;
     } finally {
       connection.release();
+    }
+
+    try {
+      await sendOrderConfirmationEmail({
+        customerName,
+        customerEmail: body.customerEmail,
+        customerPhone,
+        address: fullAddress || null,
+        orderNumber,
+        paymentId: body.razorpay_payment_id,
+        razorpayOrderId: body.razorpay_order_id,
+        lines,
+        subtotalPaise,
+      });
+    } catch (error) {
+      console.error("Order confirmation email failed:", error);
     }
 
     return Response.json({

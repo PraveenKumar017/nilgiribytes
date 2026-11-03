@@ -2553,6 +2553,37 @@ body[data-page="cart"] .section {
     var(--color-background);
 }
 
+.product-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin-bottom: 1rem;
+  font-size: 0.82rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: var(--color-chocolate);
+  transition: color var(--transition);
+}
+
+.product-back svg {
+  width: 1.05rem;
+  height: 1.05rem;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  transition: transform var(--transition);
+}
+
+.product-back:hover {
+  color: var(--color-gold);
+}
+
+.product-back:hover svg {
+  transform: translateX(-2px);
+}
+
 .product-breadcrumb {
   margin-bottom: clamp(1.25rem, 3vw, 2rem);
   font-size: 0.8rem;
@@ -4938,6 +4969,7 @@ body.is-locked {
   display: flex;
   flex-direction: column;
   gap: 0.35rem;
+  min-width: 0;
 }
 
 .form-group label {
@@ -4949,6 +4981,8 @@ body.is-locked {
 
 .form-input,
 .form-textarea {
+  width: 100%;
+  min-width: 0;
   padding: 0.7rem 0.9rem;
   border: 1px solid var(--color-border);
   border-radius: var(--radius-sm);
@@ -4985,7 +5019,7 @@ body.is-locked {
 
 .form-group-row {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 1rem;
 }
 
@@ -5207,6 +5241,15 @@ body.is-locked {
 
   .modal-customer {
     max-height: 80vh;
+  }
+
+  .modal-customer .modal-footer {
+    flex-direction: column;
+  }
+
+  .modal-customer .modal-footer .btn {
+    width: 100%;
+    min-width: 0;
   }
 
   .detail-row {

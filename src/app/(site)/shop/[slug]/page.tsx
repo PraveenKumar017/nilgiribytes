@@ -156,6 +156,12 @@ export default async function ProductPage({ params }: ProductPageProps) {
     <main id="main-content">
       <section className="product-page">
         <div className="container">
+          <Link className="product-back" href="/shop">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M19 12H5m0 0 6-6m-6 6 6 6" />
+            </svg>
+            Back to shop
+          </Link>
           <nav className="product-breadcrumb" aria-label="Breadcrumb">
             <ol>
               <li>

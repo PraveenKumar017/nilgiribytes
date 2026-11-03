@@ -16,6 +16,7 @@ import { ProductCollection } from "@/components/product-collection";
 
 interface CustomerDetails {
   name: string;
+  email: string;
   mobile: string;
   address: string;
   pincode: string;
@@ -24,6 +25,16 @@ interface CustomerDetails {
 }
 
 const STORAGE_KEY = "nilgiribytes_customer_details";
+
+const EMPTY_CUSTOMER_DETAILS: CustomerDetails = {
+  name: "",
+  email: "",
+  mobile: "",
+  address: "",
+  pincode: "",
+  state: "",
+  district: "",
+};
 
 export function CartView() {
   const router = useRouter();
@@ -36,14 +47,9 @@ export function CartView() {
   const [previousCount, setPreviousCount] = useState(0);
   const [catalog, setCatalog] = useState<Catalog | null>(null);
   const [relatedProducts, setRelatedProducts] = useState<StoreProduct[]>([]);
-  const [customerDetails, setCustomerDetails] = useState<CustomerDetails>({
-    name: "",
-    mobile: "",
-    address: "",
-    pincode: "",
-    state: "",
-    district: "",
-  });
+  const [customerDetails, setCustomerDetails] = useState<CustomerDetails>(
+    EMPTY_CUSTOMER_DETAILS
+  );
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
 
   // Load customer details from localStorage on mount
@@ -51,7 +57,7 @@ export function CartView() {
     try {
       const stored = localStorage.getItem(STORAGE_KEY);
       if (stored) {
-        setCustomerDetails(JSON.parse(stored));
+        setCustomerDetails({ ...EMPTY_CUSTOMER_DETAILS, ...JSON.parse(stored) });
       }
     } catch (error) {
       console.error("Failed to load customer details from storage:", error);
@@ -116,8 +122,13 @@ export function CartView() {
   useEffect(() => {
     if (!ready || !customerDetailsReady) return;
 
-    if (count > 0 && previousCount === 0 && !customerDetails.name && !hasShownModalOnce) {
-      // First item added, no saved details, and haven't shown modal before
+    if (
+      count > 0 &&
+      previousCount === 0 &&
+      (!customerDetails.name || !customerDetails.email) &&
+      !hasShownModalOnce
+    ) {
+      // First item added, details incomplete, and haven't shown modal before
       setShowCustomerModal(true);
       setHasShownModalOnce(true); // Mark that we've shown the modal once
     }
@@ -131,6 +142,7 @@ export function CartView() {
     customerDetailsReady,
     previousCount,
     customerDetails.name,
+    customerDetails.email,
     hasShownModalOnce,
   ]);
 
@@ -164,6 +176,12 @@ export function CartView() {
       errors.mobile = "Enter a valid 10-digit mobile number";
     }
 
+    if (!customerDetails.email.trim()) {
+      errors.email = "Email ID is required";
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(customerDetails.email.trim())) {
+      errors.email = "Enter a valid email address";
+    }
+
     if (!customerDetails.address.trim()) {
       errors.address = "Address is required";
     }
@@ -186,14 +204,32 @@ export function CartView() {
     return Object.keys(errors).length === 0;
   };
 
+  const persistCustomerDetails = () => {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(customerDetails));
+    console.log("Customer details saved:", customerDetails);
+  };
+
   const handleSaveCustomerDetails = () => {
     if (validateForm()) {
-      // Save to localStorage
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(customerDetails));
-      console.log("Customer details saved:", customerDetails);
+      persistCustomerDetails();
       setShowCustomerModal(false);
       // Don't show modal again even if cart count changes
     }
+  };
+
+  const handleContinueToPayment = () => {
+    if (!validateForm()) return;
+
+    persistCustomerDetails();
+    setShowCustomerModal(false);
+    setShowPaymentForm(true);
+    setPaymentError("");
+
+    requestAnimationFrame(() => {
+      document
+        .querySelector(".cart-page_summary")
+        ?.scrollIntoView({ behavior: "smooth", block: "start" });
+    });
   };
 
   const handlePaymentSuccess = (data: PaymentSuccessData) => {
@@ -215,6 +251,11 @@ export function CartView() {
   };
 
   const handlePayOnlineClick = () => {
+    if (!validateForm()) {
+      setShowPaymentForm(false);
+      setShowCustomerModal(true);
+      return;
+    }
     setShowPaymentForm(true);
     setPaymentError("");
   };
@@ -304,9 +345,6 @@ export function CartView() {
               </button>
             </div>
             <div className="modal-body">
-              <p className="modal-description">
-                Please provide your delivery details. This will be saved for future orders.
-              </p>
 
               <div className="form-group">
                 <label htmlFor="modal-name">Name *</label>
@@ -334,6 +372,21 @@ export function CartView() {
                   className={`form-input ${formErrors.mobile ? "is-error" : ""}`}
                 />
                 {formErrors.mobile && <span className="form-error">{formErrors.mobile}</span>}
+              </div>
+
+              <div className="form-group">
+                <label htmlFor="modal-email">Email ID *</label>
+                <input
+                  type="email"
+                  id="modal-email"
+                  name="email"
+                  value={customerDetails.email}
+                  onChange={handleInputChange}
+                  placeholder="you@example.com"
+                  autoComplete="email"
+                  className={`form-input ${formErrors.email ? "is-error" : ""}`}
+                />
+                {formErrors.email && <span className="form-error">{formErrors.email}</span>}
               </div>
 
               <div className="form-group">
@@ -399,10 +452,17 @@ export function CartView() {
             <div className="modal-footer">
               <button
                 type="button"
-                className="btn btn--primary"
+                className="btn btn--outline"
                 onClick={handleSaveCustomerDetails}
               >
                 Save Details
+              </button>
+              <button
+                type="button"
+                className="btn btn--primary"
+                onClick={handleContinueToPayment}
+              >
+                Continue to Payment
               </button>
             </div>
           </div>
@@ -502,6 +562,10 @@ export function CartView() {
                     <span className="detail-value">{customerDetails.mobile}</span>
                   </div>
                   <div className="detail-row">
+                    <span className="detail-label">Email:</span>
+                    <span className="detail-value">{customerDetails.email}</span>
+                  </div>
+                  <div className="detail-row">
                     <span className="detail-label">Address:</span>
                     <span className="detail-value">{customerDetails.address}</span>
                   </div>
@@ -534,7 +598,7 @@ export function CartView() {
                     amount={Math.ceil(subtotal / 100)}
                     description="Nilgiribytes Bakery Order"
                     customerName={customerDetails.name}
-                    customerEmail={`${customerDetails.mobile}@order.nilgiribytes`}
+                    customerEmail={customerDetails.email}
                     customerPhone={customerDetails.mobile}
                     address={customerDetails.address}
                     pincode={customerDetails.pincode}

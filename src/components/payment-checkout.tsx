@@ -54,6 +54,13 @@ interface RazorpayOptions {
     contact: string;
   };
   handler: (response: RazorpayPaymentResponse) => void;
+  method?: {
+    netbanking?: boolean;
+    card?: boolean;
+    upi?: boolean;
+    wallet?: boolean;
+    paylater?: boolean;
+  };
   modal?: {
     ondismiss: () => void;
   };
@@ -136,6 +143,12 @@ export function PaymentCheckout({
       errors.mobile = "Enter a valid 10-digit mobile number";
     }
 
+    if (!customerEmail.trim()) {
+      errors.email = "Email ID is required";
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(customerEmail.trim())) {
+      errors.email = "Enter a valid email address";
+    }
+
     if (Object.keys(errors).length > 0) {
       console.error("Validation errors:", errors);
       onValidationError?.(errors);
@@ -195,6 +208,10 @@ export function PaymentCheckout({
           name: customerName,
           email: customerEmail,
           contact: customerPhone,
+        },
+        method: {
+          netbanking: false,
+          wallet: false,
         },
         handler: async (response: RazorpayPaymentResponse) => {
           console.log("Payment response:", response);
