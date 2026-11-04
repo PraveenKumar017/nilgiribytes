@@ -2751,7 +2751,7 @@ body[data-page="cart"] .section {
   margin-bottom: 0;
 }
 
-.product-share {
+.share-icon-btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -2768,13 +2768,13 @@ body[data-page="cart"] .section {
     transform var(--transition);
 }
 
-.product-share:hover {
+.share-icon-btn:hover {
   background: var(--color-gold);
   border-color: var(--color-gold);
   transform: scale(1.05);
 }
 
-.product-share svg {
+.share-icon-btn svg {
   width: 20px;
   height: 20px;
   fill: none;
@@ -3834,6 +3834,7 @@ a.map-placeholder:hover {
 .article_share {
   display: flex;
   flex-wrap: wrap;
+  align-items: center;
   gap: 0.6rem;
   margin-top: 2.5rem;
   padding-top: 1.5rem;

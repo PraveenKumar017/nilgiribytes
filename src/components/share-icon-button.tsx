@@ -1,21 +1,26 @@
 "use client";
 
 import { useState } from "react";
-import { absoluteUrl } from "@/lib/site";
 
-type ProductShareButtonProps = {
-  slug: string;
+type ShareIconButtonProps = {
+  url: string;
   title: string;
+  text?: string;
+  label?: string;
 };
 
-export function ProductShareButton({ slug, title }: ProductShareButtonProps) {
+export function ShareIconButton({
+  url,
+  title,
+  text,
+  label = "Share",
+}: ShareIconButtonProps) {
   const [copied, setCopied] = useState(false);
 
-  async function shareProduct() {
-    const url = absoluteUrl(`/shop/${slug}`);
+  async function share() {
     const shareData = {
       title,
-      text: `Check out ${title} from Nilgiribytes`,
+      text: text ?? title,
       url,
     };
 
@@ -42,10 +47,10 @@ export function ProductShareButton({ slug, title }: ProductShareButtonProps) {
   return (
     <button
       type="button"
-      className="product-share"
-      aria-label={copied ? "Link copied" : "Share product"}
-      title={copied ? "Link copied" : "Share product"}
-      onClick={shareProduct}
+      className="share-icon-btn"
+      aria-label={copied ? "Link copied" : label}
+      title={copied ? "Link copied" : label}
+      onClick={share}
     >
       {copied ? (
         <svg viewBox="0 0 24 24" aria-hidden="true">

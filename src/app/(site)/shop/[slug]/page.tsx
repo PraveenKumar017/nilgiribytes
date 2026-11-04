@@ -5,7 +5,7 @@ import { cache } from "react";
 import { JsonLd } from "@/components/json-ld";
 import { ProductCollection } from "@/components/product-collection";
 import { ProductDetail } from "@/components/product-detail";
-import { ProductShareButton } from "@/components/product-share-button";
+import { ShareIconButton } from "@/components/share-icon-button";
 import {
   itemImage,
   itemMrp,
@@ -164,7 +164,12 @@ export default async function ProductPage({ params }: ProductPageProps) {
               </svg>
               Back to shop
             </Link>
-            <ProductShareButton slug={item.slug} title={item.name} />
+            <ShareIconButton
+              url={absoluteUrl(`/shop/${item.slug}`)}
+              title={item.name}
+              text={`Check out ${item.name} from Nilgiribytes`}
+              label="Share product"
+            />
           </div>
           <nav className="product-breadcrumb" aria-label="Breadcrumb">
             <ol>

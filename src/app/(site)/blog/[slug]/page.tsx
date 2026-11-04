@@ -5,6 +5,7 @@ import { BlogVideo } from "@/components/blog-video";
 import { JsonLd } from "@/components/json-ld";
 import { PostCard } from "@/components/post-card";
 import { ShareButtons } from "@/components/share-buttons";
+import { ShareIconButton } from "@/components/share-icon-button";
 import { formatDate } from "@/lib/format";
 import { pageMetadata } from "@/lib/seo";
 import { absoluteUrl, SITE_KEYWORDS, SITE_NAME } from "@/lib/site";
@@ -127,11 +128,17 @@ export default async function BlogPostPage({ params }: PostPageProps) {
       <section className="section">
         <div className="container">
           <article className="article">
-            <p>
+            <div className="product-toolbar">
               <Link className="link-arrow" href="/blog">
                 &larr; Back to all articles
               </Link>
-            </p>
+              <ShareIconButton
+                url={url}
+                title={post.title}
+                text={`Read ${post.title} on Nilgiribytes`}
+                label="Share article"
+              />
+            </div>
             <h1 className="page-hero_title">{post.title}</h1>
             <p className="article_meta">
               <span>By {post.author || "Nilgiribytes"}</span>
