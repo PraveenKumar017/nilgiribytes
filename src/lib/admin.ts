@@ -155,7 +155,7 @@ export const blockSchema = z.union([
   z.object({
     type: z.literal("video"),
     src: z.string().trim().min(1, "Video URL is required.").max(1000),
-    caption: optionalString(200),
+    caption: optionalString(200).optional(),
   }),
 ]);
 
