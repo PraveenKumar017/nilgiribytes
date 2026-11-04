@@ -1,4 +1,4 @@
-import { randomBytes } from "node:crypto";
+import { createHash, randomBytes } from "node:crypto";
 import { mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { NextResponse } from "next/server";
@@ -59,12 +59,15 @@ export async function POST(request: Request) {
     );
   }
 
-  const filename = `${Date.now()}-${randomBytes(8).toString("hex")}.${extension}`;
+  const buffer = Buffer.from(await file.arrayBuffer());
+  const filename = isVideo
+    ? `${createHash("sha256").update(buffer).digest("hex").slice(0, 32)}.${extension}`
+    : `${Date.now()}-${randomBytes(8).toString("hex")}.${extension}`;
   const folder = isVideo ? "videos" : "products";
   const directory = path.join(process.cwd(), "public", "uploads", folder);
 
   await mkdir(directory, { recursive: true });
-  await writeFile(path.join(directory, filename), Buffer.from(await file.arrayBuffer()));
+  await writeFile(path.join(directory, filename), buffer);
 
   return NextResponse.json({ url: `/uploads/${folder}/${filename}` });
 }

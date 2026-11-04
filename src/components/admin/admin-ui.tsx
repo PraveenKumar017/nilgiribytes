@@ -1429,6 +1429,7 @@ export function BlocksEditor({ defaultBlocks }: { defaultBlocks: BlogBlock[] }) 
     defaultBlocks.map((block, index) => blockToRow(block, index))
   );
   const [videoUploadKey, setVideoUploadKey] = useState<string | null>(null);
+  const videoUploadRef = useRef<string | null>(null);
   const [videoError, setVideoError] = useState<{
     key: string;
     message: string;
@@ -1482,6 +1483,8 @@ export function BlocksEditor({ defaultBlocks }: { defaultBlocks: BlogBlock[] }) 
       return;
     }
 
+    if (videoUploadRef.current) return;
+    videoUploadRef.current = key;
     setVideoUploadKey(key);
     setVideoError(null);
 
@@ -1512,6 +1515,7 @@ export function BlocksEditor({ defaultBlocks }: { defaultBlocks: BlogBlock[] }) 
     } catch {
       setVideoError({ key, message: "Could not upload the video." });
     } finally {
+      videoUploadRef.current = null;
       setVideoUploadKey(null);
     }
   }
