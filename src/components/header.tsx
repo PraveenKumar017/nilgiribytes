@@ -119,6 +119,21 @@ export function Header() {
                   </li>
                 );
               })}
+              <li className="site-nav_mobile-only">
+                <Link
+                  className="site-nav_link"
+                  href="/track-order"
+                  aria-current={
+                    pathname === "/track-order" ||
+                    pathname.startsWith("/track-order/")
+                      ? "page"
+                      : undefined
+                  }
+                  onClick={() => setNavOpen(false)}
+                >
+                  Track order
+                </Link>
+              </li>
             </ul>
           </nav>
 

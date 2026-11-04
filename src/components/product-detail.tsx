@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   cartLineKey,
   itemDiscountPercent,
@@ -23,6 +23,7 @@ export function ProductDetail({ item }: ProductDetailProps) {
   const { add, changeQty, quantityOf } = useCart();
   const [sizeIndex, setSizeIndex] = useState(0);
   const [imageIndex, setImageIndex] = useState(0);
+  const [lightboxOpen, setLightboxOpen] = useState(false);
 
   const lineKey = cartLineKey(item, itemSizeLabel(item, sizeIndex));
   const qty = quantityOf(lineKey);
@@ -44,6 +45,23 @@ export function ProductDetail({ item }: ProductDetailProps) {
   const activeIndex = Math.min(imageIndex, images.length - 1);
   const activeImage = images[activeIndex] ?? images[0];
 
+  useEffect(() => {
+    if (!lightboxOpen) return;
+
+    function handleKeyDown(event: KeyboardEvent) {
+      if (event.key === "Escape") setLightboxOpen(false);
+    }
+
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    document.addEventListener("keydown", handleKeyDown);
+
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [lightboxOpen]);
+
   function moveImage(delta: number) {
     setImageIndex((current) => {
       const next = current + delta;
@@ -55,13 +73,20 @@ export function ProductDetail({ item }: ProductDetailProps) {
     <article className="product-detail">
       <div className="product-detail_media">
         <div className="product-detail_stage">
-          <SafeImage
-            src={activeImage}
-            alt={`${item.name} — ${item.category}`}
-            width={900}
-            height={900}
-            loading="eager"
-          />
+          <button
+            type="button"
+            className="product-detail_zoom"
+            aria-label={`View ${item.name} full size`}
+            onClick={() => setLightboxOpen(true)}
+          >
+            <SafeImage
+              src={activeImage}
+              alt={`${item.name} — ${item.category}`}
+              width={900}
+              height={900}
+              loading="eager"
+            />
+          </button>
           {hasDiscount ? (
             <span className="product-detail_badge">{discount}% OFF</span>
           ) : null}
@@ -250,6 +275,33 @@ export function ProductDetail({ item }: ProductDetailProps) {
           checkout.
         </p>
       </div>
+
+      {lightboxOpen ? (
+        <div
+          className="product-lightbox"
+          role="dialog"
+          aria-modal="true"
+          aria-label={`${item.name} full size image`}
+          onClick={() => setLightboxOpen(false)}
+        >
+          <button
+            type="button"
+            className="product-lightbox_close"
+            aria-label="Close full size image"
+            onClick={() => setLightboxOpen(false)}
+          >
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M6 6l12 12M18 6 6 18" />
+            </svg>
+          </button>
+          <SafeImage
+            className="product-lightbox_image"
+            src={activeImage}
+            alt={`${item.name} — ${item.category}`}
+            onClick={(event) => event.stopPropagation()}
+          />
+        </div>
+      ) : null}
     </article>
   );
 }

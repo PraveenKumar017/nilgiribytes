@@ -5,6 +5,7 @@ import { cache } from "react";
 import { JsonLd } from "@/components/json-ld";
 import { ProductCollection } from "@/components/product-collection";
 import { ProductDetail } from "@/components/product-detail";
+import { ProductShareButton } from "@/components/product-share-button";
 import {
   itemImage,
   itemMrp,
@@ -156,12 +157,15 @@ export default async function ProductPage({ params }: ProductPageProps) {
     <main id="main-content">
       <section className="product-page">
         <div className="container">
-          <Link className="product-back" href="/shop">
-            <svg viewBox="0 0 24 24" aria-hidden="true">
-              <path d="M19 12H5m0 0 6-6m-6 6 6 6" />
-            </svg>
-            Back to shop
-          </Link>
+          <div className="product-toolbar">
+            <Link className="product-back" href="/shop">
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M19 12H5m0 0 6-6m-6 6 6 6" />
+              </svg>
+              Back to shop
+            </Link>
+            <ProductShareButton slug={item.slug} title={item.name} />
+          </div>
           <nav className="product-breadcrumb" aria-label="Breadcrumb">
             <ol>
               <li>
@@ -180,7 +184,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
 
       {related.length ? (
         <section
-          className={`section section--alt${
+          className={`section section--alt product-related${
             item.kind === "combo" ? " section--combo-related" : ""
           }`}
           aria-labelledby="related-title"
