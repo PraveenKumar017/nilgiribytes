@@ -1475,10 +1475,10 @@ export function BlocksEditor({ defaultBlocks }: { defaultBlocks: BlogBlock[] }) 
       return;
     }
 
-    if (file.size > 100 * 1024 * 1024) {
+    if (file.size > 20 * 1024 * 1024) {
       setVideoError({
         key,
-        message: "Each video must be 100 MB or smaller.",
+        message: "Each video must be 20 MB or smaller.",
       });
       return;
     }
@@ -1635,7 +1635,7 @@ export function BlocksEditor({ defaultBlocks }: { defaultBlocks: BlogBlock[] }) 
                 </p>
               ) : null}
               <p className="admin-block_hint">
-                Upload an MP4 video (100 MB max) or paste a YouTube, Vimeo or
+                Upload an MP4 video (20 MB max) or paste a YouTube, Vimeo or
                 MP4 link.
               </p>
             </div>

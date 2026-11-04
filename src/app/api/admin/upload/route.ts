@@ -7,7 +7,7 @@ import { getAdminSession } from "@/lib/admin";
 export const runtime = "nodejs";
 
 const IMAGE_MAX_BYTES = 2 * 1024 * 1024;
-const VIDEO_MAX_BYTES = 100 * 1024 * 1024;
+const VIDEO_MAX_BYTES = 20 * 1024 * 1024;
 const IMAGE_EXTENSIONS: Record<string, string> = {
   "image/jpeg": "jpg",
   "image/png": "png",
@@ -52,7 +52,7 @@ export async function POST(request: Request) {
     return NextResponse.json(
       {
         error: isVideo
-          ? "Each video must be 100 MB or smaller."
+          ? "Each video must be 20 MB or smaller."
           : "Each image must be 2 MB or smaller.",
       },
       { status: 400 }
