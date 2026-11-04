@@ -109,7 +109,7 @@ function PostForm({ post }: { post?: AdminPost }) {
       <div className="admin-form_section">
         <div className="admin-form_section-head">
           <h2>Content</h2>
-          <p>Build the article with paragraphs, headings and lists.</p>
+          <p>Build the article with paragraphs, headings, lists and videos.</p>
         </div>
         <BlocksEditor defaultBlocks={blocks} />
       </div>

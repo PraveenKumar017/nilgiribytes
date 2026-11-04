@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { BlogVideo } from "@/components/blog-video";
 import { JsonLd } from "@/components/json-ld";
 import { PostCard } from "@/components/post-card";
 import { ShareButtons } from "@/components/share-buttons";
@@ -48,6 +49,15 @@ function ArticleBlocks({ blocks }: { blocks: BlogBlock[] }) {
         if (block.type === "p") return <p key={index}>{block.text}</p>;
         if (block.type === "h2") return <h2 key={index}>{block.text}</h2>;
         if (block.type === "h3") return <h3 key={index}>{block.text}</h3>;
+        if (block.type === "video") {
+          return (
+            <BlogVideo
+              key={index}
+              src={block.src}
+              caption={block.caption}
+            />
+          );
+        }
         if (block.type === "ol") {
           return (
             <ol key={index}>

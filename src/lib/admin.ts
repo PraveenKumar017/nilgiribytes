@@ -152,6 +152,11 @@ export const blockSchema = z.union([
   z.object({ type: z.literal("h2"), text: z.string().trim().min(1) }),
   z.object({ type: z.literal("h3"), text: z.string().trim().min(1) }),
   listBlock,
+  z.object({
+    type: z.literal("video"),
+    src: z.string().trim().min(1, "Video URL is required.").max(1000),
+    caption: optionalString(200),
+  }),
 ]);
 
 export const settingsSchema = z.object({

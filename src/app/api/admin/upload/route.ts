@@ -6,12 +6,16 @@ import { getAdminSession } from "@/lib/admin";
 
 export const runtime = "nodejs";
 
-const MAX_BYTES = 2 * 1024 * 1024;
-const EXTENSIONS: Record<string, string> = {
+const IMAGE_MAX_BYTES = 2 * 1024 * 1024;
+const VIDEO_MAX_BYTES = 100 * 1024 * 1024;
+const IMAGE_EXTENSIONS: Record<string, string> = {
   "image/jpeg": "jpg",
   "image/png": "png",
   "image/webp": "webp",
   "image/avif": "avif",
+};
+const VIDEO_EXTENSIONS: Record<string, string> = {
+  "video/mp4": "mp4",
 };
 
 export async function POST(request: Request) {
@@ -24,29 +28,43 @@ export async function POST(request: Request) {
   const file = formData.get("file");
 
   if (!(file instanceof File)) {
-    return NextResponse.json({ error: "Choose an image to upload." }, { status: 400 });
-  }
-
-  const extension = EXTENSIONS[file.type];
-  if (!extension) {
     return NextResponse.json(
-      { error: "Use a JPG, PNG, WebP or AVIF image." },
+      { error: "Choose an image or video to upload." },
       { status: 400 }
     );
   }
 
-  if (file.size > MAX_BYTES) {
+  const imageExtension = IMAGE_EXTENSIONS[file.type];
+  const videoExtension = VIDEO_EXTENSIONS[file.type];
+  const extension = imageExtension ?? videoExtension;
+
+  if (!extension) {
     return NextResponse.json(
-      { error: "Each image must be 2 MB or smaller." },
+      { error: "Use a JPG, PNG, WebP, AVIF or MP4 file." },
+      { status: 400 }
+    );
+  }
+
+  const isVideo = Boolean(videoExtension);
+  const maxBytes = isVideo ? VIDEO_MAX_BYTES : IMAGE_MAX_BYTES;
+
+  if (file.size > maxBytes) {
+    return NextResponse.json(
+      {
+        error: isVideo
+          ? "Each video must be 100 MB or smaller."
+          : "Each image must be 2 MB or smaller.",
+      },
       { status: 400 }
     );
   }
 
   const filename = `${Date.now()}-${randomBytes(8).toString("hex")}.${extension}`;
-  const directory = path.join(process.cwd(), "public", "uploads", "products");
+  const folder = isVideo ? "videos" : "products";
+  const directory = path.join(process.cwd(), "public", "uploads", folder);
 
   await mkdir(directory, { recursive: true });
   await writeFile(path.join(directory, filename), Buffer.from(await file.arrayBuffer()));
 
-  return NextResponse.json({ url: `/uploads/products/${filename}` });
+  return NextResponse.json({ url: `/uploads/${folder}/${filename}` });
 }

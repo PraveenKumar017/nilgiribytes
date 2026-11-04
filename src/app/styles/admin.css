@@ -932,6 +932,28 @@
   resize: vertical;
 }
 
+.admin-block_video {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.admin-block_input {
+  width: 100%;
+  padding: 0.6rem 0.65rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+  font-family: var(--font-body);
+  font-size: 0.86rem;
+}
+
+.admin-block_hint {
+  margin: 0;
+  color: var(--color-muted);
+  font-size: 0.75rem;
+}
+
 /* ---------- Detail layout ---------- */
 
 .admin-detail-grid {

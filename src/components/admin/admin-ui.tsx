@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { useActionState, useEffect, useMemo, useRef, useState } from "react";
 import { useFormStatus } from "react-dom";
 import { loginAction, logoutAction } from "@/app/admin/actions";
+import { BlogVideo } from "@/components/blog-video";
 import { formatDate } from "@/lib/format";
 import type { ActionState, LoginState } from "@/lib/admin";
 import type { BlogBlock } from "@/lib/types";
@@ -390,6 +391,15 @@ export function PostPreviewButton() {
                   }
                   if (block.type === "h3") {
                     return <h3 key={index}>{block.text}</h3>;
+                  }
+                  if (block.type === "video") {
+                    return (
+                      <BlogVideo
+                        key={index}
+                        src={block.src}
+                        caption={block.caption}
+                      />
+                    );
                   }
                   if (block.type === "ol") {
                     return (
@@ -1388,14 +1398,29 @@ export function ItemsEditor({
 /* Blog blocks                                                                */
 /* -------------------------------------------------------------------------- */
 
-type BlockType = "p" | "h2" | "h3" | "list" | "ul" | "ol";
-type BlockRow = { key: string; type: BlockType; text: string };
+type BlockType = "p" | "h2" | "h3" | "list" | "ul" | "ol" | "video";
+type BlockRow = {
+  key: string;
+  type: BlockType;
+  text: string;
+  caption: string;
+};
 
 function blockToRow(block: BlogBlock, index: number): BlockRow {
+  if (block.type === "video") {
+    return {
+      key: `block-${index}`,
+      type: block.type,
+      text: block.src,
+      caption: block.caption ?? "",
+    };
+  }
+
   return {
     key: `block-${index}`,
     type: block.type,
     text: "items" in block ? block.items.join("\n") : block.text,
+    caption: "",
   };
 }
 
@@ -1403,6 +1428,11 @@ export function BlocksEditor({ defaultBlocks }: { defaultBlocks: BlogBlock[] }) 
   const [rows, setRows] = useState<BlockRow[]>(() =>
     defaultBlocks.map((block, index) => blockToRow(block, index))
   );
+  const [videoUploadKey, setVideoUploadKey] = useState<string | null>(null);
+  const [videoError, setVideoError] = useState<{
+    key: string;
+    message: string;
+  } | null>(null);
 
   const payload = useMemo(
     () =>
@@ -1417,6 +1447,15 @@ export function BlocksEditor({ defaultBlocks }: { defaultBlocks: BlogBlock[] }) 
                 .filter(Boolean),
             };
           }
+          if (row.type === "video") {
+            return {
+              type: row.type,
+              src: row.text.trim(),
+              ...(row.caption.trim()
+                ? { caption: row.caption.trim() }
+                : {}),
+            };
+          }
           return { type: row.type, text: row.text.trim() };
         })
       ),
@@ -1427,6 +1466,54 @@ export function BlocksEditor({ defaultBlocks }: { defaultBlocks: BlogBlock[] }) 
     setRows((current) =>
       current.map((row) => (row.key === key ? { ...row, ...patch } : row))
     );
+  }
+
+  async function uploadVideo(key: string, file: File) {
+    if (file.type !== "video/mp4") {
+      setVideoError({ key, message: "Upload an MP4 video." });
+      return;
+    }
+
+    if (file.size > 100 * 1024 * 1024) {
+      setVideoError({
+        key,
+        message: "Each video must be 100 MB or smaller.",
+      });
+      return;
+    }
+
+    setVideoUploadKey(key);
+    setVideoError(null);
+
+    try {
+      const body = new FormData();
+      body.append("file", file);
+
+      const response = await fetch("/api/admin/upload", {
+        method: "POST",
+        body,
+      });
+      const result = (await response.json().catch(() => null)) as
+        | { url?: unknown; error?: unknown }
+        | null;
+
+      if (!response.ok || typeof result?.url !== "string") {
+        setVideoError({
+          key,
+          message:
+            typeof result?.error === "string"
+              ? result.error
+              : "Could not upload the video.",
+        });
+        return;
+      }
+
+      update(key, { text: result.url });
+    } catch {
+      setVideoError({ key, message: "Could not upload the video." });
+    } finally {
+      setVideoUploadKey(null);
+    }
   }
 
   function move(key: string, direction: -1 | 1) {
@@ -1459,6 +1546,7 @@ export function BlocksEditor({ defaultBlocks }: { defaultBlocks: BlogBlock[] }) 
               <option value="h3">Heading 3</option>
               <option value="ul">Bullet list</option>
               <option value="ol">Numbered list</option>
+              <option value="video">Video</option>
             </select>
 
             <div className="admin-block_actions">
@@ -1493,18 +1581,78 @@ export function BlocksEditor({ defaultBlocks }: { defaultBlocks: BlogBlock[] }) 
             </div>
           </div>
 
-          <textarea
-            aria-label="Block content"
-            rows={row.type === "p" ? 5 : 3}
-            value={row.text}
-            onChange={(event) => update(row.key, { text: event.target.value })}
-            placeholder={
-              row.type === "list" || row.type === "ul" || row.type === "ol"
-                ? "One list item per line"
-                : "Write the content here"
-            }
-            required
-          />
+          {row.type === "video" ? (
+            <div className="admin-block_video">
+              <input
+                className="admin-block_input"
+                type="text"
+                inputMode="url"
+                aria-label="Video URL"
+                value={row.text}
+                onChange={(event) =>
+                  update(row.key, { text: event.target.value })
+                }
+                placeholder="https://www.youtube.com/watch?v=... or /uploads/videos/video.mp4"
+                required
+              />
+              <input
+                className="admin-block_input"
+                type="text"
+                aria-label="Video caption"
+                value={row.caption}
+                onChange={(event) =>
+                  update(row.key, { caption: event.target.value })
+                }
+                placeholder="Caption (optional)"
+              />
+              <div className="admin-image-upload-actions">
+                <label className="admin-btn admin-btn--small">
+                  {videoUploadKey === row.key
+                    ? "Uploading..."
+                    : row.text
+                      ? "Replace video"
+                      : "Upload video"}
+                  <input
+                    className="admin-image-file"
+                    type="file"
+                    accept="video/mp4"
+                    disabled={videoUploadKey !== null}
+                    onChange={(event) => {
+                      const file = event.target.files?.[0];
+                      event.currentTarget.value = "";
+                      if (file) void uploadVideo(row.key, file);
+                    }}
+                  />
+                </label>
+              </div>
+              {videoError?.key === row.key ? (
+                <p className="admin-alert admin-alert--error" role="alert">
+                  {videoError.message}
+                </p>
+              ) : null}
+              <p className="admin-block_hint">
+                Upload an MP4 video (100 MB max) or paste a YouTube, Vimeo or
+                MP4 link.
+              </p>
+            </div>
+          ) : (
+            <textarea
+              aria-label="Block content"
+              rows={row.type === "p" ? 5 : 3}
+              value={row.text}
+              onChange={(event) =>
+                update(row.key, { text: event.target.value })
+              }
+              placeholder={
+                row.type === "list" ||
+                row.type === "ul" ||
+                row.type === "ol"
+                  ? "One list item per line"
+                  : "Write the content here"
+              }
+              required
+            />
+          )}
         </div>
       ))}
 
@@ -1518,6 +1666,7 @@ export function BlocksEditor({ defaultBlocks }: { defaultBlocks: BlogBlock[] }) 
               key: `block-${Date.now()}-${current.length}`,
               type: "p",
               text: "",
+              caption: "",
             },
           ])
         }

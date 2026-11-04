@@ -64,7 +64,8 @@ export type Catalog = {
 
 export type BlogBlock =
   | { type: "p" | "h2" | "h3"; text: string }
-  | { type: "list" | "ul" | "ol"; items: string[] };
+  | { type: "list" | "ul" | "ol"; items: string[] }
+  | { type: "video"; src: string; caption?: string };
 
 export type StorePost = {
   slug: string;

@@ -1,6 +1,9 @@
 "use server";
 
+import { unlink } from "node:fs/promises";
+import path from "node:path";
 import type { RowDataPacket } from "mysql2";
+import type { Pool } from "mysql2/promise";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import {
@@ -26,6 +29,102 @@ import {
   type ProductInput,
 } from "@/lib/admin";
 import { getPool } from "@/lib/db";
+
+function parsePostContent(value: unknown): unknown[] {
+  if (Array.isArray(value)) return value;
+  if (typeof value !== "string") return [];
+
+  try {
+    const parsed: unknown = JSON.parse(value);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
+}
+
+function postUploadPaths(
+  coverImage: string | null,
+  content: unknown
+): string[] {
+  const paths = new Set<string>();
+
+  if (coverImage) paths.add(coverImage);
+
+  for (const block of parsePostContent(content)) {
+    if (!block || typeof block !== "object") continue;
+    const candidate = block as Record<string, unknown>;
+    if (candidate.type === "video" && typeof candidate.src === "string") {
+      paths.add(candidate.src);
+    }
+  }
+
+  return [...paths].filter((url) => url.startsWith("/uploads/"));
+}
+
+function uploadDiskPath(url: string): string | null {
+  const root = path.join(process.cwd(), "public");
+  const uploadsRoot = path.join(root, "uploads");
+  const relative = url.replace(/^\/+/, "").split("?")[0];
+  const target = path.resolve(root, relative);
+
+  if (target !== uploadsRoot && !target.startsWith(`${uploadsRoot}${path.sep}`)) {
+    return null;
+  }
+
+  return target;
+}
+
+async function isUploadReferenced(
+  pool: Pool,
+  url: string,
+  postId: number
+): Promise<boolean> {
+  const like = `%${url}%`;
+
+  const [postRows] = await pool.query<RowDataPacket[]>(
+    `SELECT id FROM BlogPost
+      WHERE id <> ? AND (coverImage = ? OR CAST(content AS CHAR) LIKE ?)
+      LIMIT 1`,
+    [postId, url, like]
+  );
+  if (postRows.length) return true;
+
+  const [productRows] = await pool.query<RowDataPacket[]>(
+    `SELECT id FROM Product
+      WHERE CAST(sizes AS CHAR) LIKE ? OR CAST(imageUrl AS CHAR) LIKE ?
+      LIMIT 1`,
+    [like, like]
+  );
+  if (productRows.length) return true;
+
+  const [comboRows] = await pool.query<RowDataPacket[]>(
+    `SELECT id FROM Combo
+      WHERE CAST(items AS CHAR) LIKE ? OR CAST(imageUrl AS CHAR) LIKE ?
+      LIMIT 1`,
+    [like, like]
+  );
+
+  return comboRows.length > 0;
+}
+
+async function removePostUploads(
+  pool: Pool,
+  postId: number,
+  coverImage: string | null,
+  content: unknown
+) {
+  for (const url of postUploadPaths(coverImage, content)) {
+    const target = uploadDiskPath(url);
+    if (!target) continue;
+    if (await isUploadReferenced(pool, url, postId)) continue;
+
+    try {
+      await unlink(target);
+    } catch (error) {
+      if ((error as NodeJS.ErrnoException).code !== "ENOENT") throw error;
+    }
+  }
+}
 
 /* -------------------------------------------------------------------------- */
 /* Auth                                                                       */
@@ -689,7 +788,26 @@ export async function deletePostAction(formData: FormData): Promise<void> {
     redirect("/admin/blog?error=not-found");
   }
 
+  const [rows] = await pool.query<RowDataPacket[]>(
+    "SELECT coverImage, content FROM BlogPost WHERE id = ? LIMIT 1",
+    [id]
+  );
+  const post = rows[0];
+
   await pool.execute("DELETE FROM BlogPost WHERE id = ?", [id]);
+
+  if (post) {
+    try {
+      await removePostUploads(
+        pool,
+        id,
+        post.coverImage ? String(post.coverImage) : null,
+        post.content
+      );
+    } catch (error) {
+      console.error("Could not remove blog media files.", error);
+    }
+  }
 
   revalidateStorefront();
   redirect("/admin/blog?deleted=1");
