@@ -1,10 +1,11 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useActionState, useEffect, useMemo, useRef, useState } from "react";
 import { useFormStatus } from "react-dom";
 import { loginAction, logoutAction } from "@/app/admin/actions";
+import { ExternalLinkIcon } from "@/components/admin/icons";
 import { BlogVideo } from "@/components/blog-video";
 import { formatDate } from "@/lib/format";
 import type { ActionState, LoginState } from "@/lib/admin";
@@ -80,18 +81,30 @@ export function AdminSidebar() {
         <Link href="/admin" className="admin-mobile-brand">
           Nilgiribytes <span>Admin</span>
         </Link>
-        <button
-          type="button"
-          className="admin-mobile-toggle"
-          aria-label={open ? "Close admin menu" : "Open admin menu"}
-          aria-expanded={open}
-          aria-controls="admin-sidebar"
-          onClick={() => setOpen((current) => !current)}
-        >
-          <span />
-          <span />
-          <span />
-        </button>
+        <div className="admin-mobile-actions">
+          <a
+            href="/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="admin-mobile-site-link"
+            aria-label="View website"
+            title="View website"
+          >
+            <ExternalLinkIcon className="admin-mobile-site-icon" />
+          </a>
+          <button
+            type="button"
+            className="admin-mobile-toggle"
+            aria-label={open ? "Close admin menu" : "Open admin menu"}
+            aria-expanded={open}
+            aria-controls="admin-sidebar"
+            onClick={() => setOpen((current) => !current)}
+          >
+            <span />
+            <span />
+            <span />
+          </button>
+        </div>
       </header>
 
       {open ? (
@@ -128,6 +141,49 @@ export function AdminSidebar() {
         </div>
       </aside>
     </>
+  );
+}
+
+/* -------------------------------------------------------------------------- */
+/* Alerts                                                                     */
+/* -------------------------------------------------------------------------- */
+
+export function AutoDismissAlert({
+  message,
+  param,
+  delay = 4000,
+}: {
+  message: string;
+  param: string;
+  delay?: number;
+}) {
+  const router = useRouter();
+  const pathname = usePathname();
+  const [visible, setVisible] = useState(true);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setVisible(false);
+
+      const params = new URLSearchParams(window.location.search);
+      if (!params.has(param)) return;
+      params.delete(param);
+
+      const query = params.toString();
+      router.replace(query ? `${pathname}?${query}` : pathname, {
+        scroll: false,
+      });
+    }, delay);
+
+    return () => clearTimeout(timer);
+  }, [delay, param, pathname, router]);
+
+  if (!visible) return null;
+
+  return (
+    <p className="admin-alert admin-alert--success" role="status">
+      {message}
+    </p>
   );
 }
 

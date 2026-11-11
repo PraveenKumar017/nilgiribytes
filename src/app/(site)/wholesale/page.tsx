@@ -39,14 +39,14 @@ const CARD_TYPE_TO_FORM_TYPE: Record<string, string> = {
 
 const ENQUIRY_TYPES = [
   {
-    title: "Wholesale supply",
-    text: "Retail-ready varkey and biscuits for shops, supermarkets and stores.",
-    icon: "package",
-  },
-  {
     title: "Distributor partnership",
     text: "Discuss territory, repeat supply and distribution for your market.",
     icon: "distribution",
+  },
+  {
+    title: "Wholesale supply",
+    text: "Retail-ready varkey and biscuits for shops, supermarkets and stores.",
+    icon: "package",
   },
   {
     title: "Cafes & restaurants",
@@ -229,7 +229,7 @@ export default function WholesalePage() {
                       >
                         {String(index + 1).padStart(2, "0")}
                       </span>
-                      {index === 0 && (
+                      {item.title === "Wholesale supply" && (
                         <span className="wholesale-partner_badge">
                           Most requested
                         </span>

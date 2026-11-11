@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ActionForm } from "@/components/admin/admin-ui";
+import { ActionForm, AutoDismissAlert } from "@/components/admin/admin-ui";
 import { updateOrderStatusAction } from "@/app/admin/actions";
 import { OrdersTable } from "@/components/admin/orders-table";
 import { WhatsAppIcon } from "@/components/admin/icons";
@@ -93,7 +93,7 @@ export default async function AdminOrdersPage({ searchParams }: PageProps) {
         </header>
 
         {params.saved ? (
-          <p className="admin-alert admin-alert--success">Order status updated.</p>
+          <AutoDismissAlert message="Order status updated." param="saved" />
         ) : null}
 
         <div className="admin-detail-grid">
@@ -234,11 +234,17 @@ export default async function AdminOrdersPage({ searchParams }: PageProps) {
       </header>
 
       {params.saved ? (
-        <p className="admin-alert admin-alert--success">Order status updated successfully.</p>
+        <AutoDismissAlert
+          message="Order status updated successfully."
+          param="saved"
+        />
       ) : null}
 
       {params.deleted ? (
-        <p className="admin-alert admin-alert--success">Order deleted successfully.</p>
+        <AutoDismissAlert
+          message="Order deleted successfully."
+          param="deleted"
+        />
       ) : null}
 
       <OrdersTable orders={orders} />

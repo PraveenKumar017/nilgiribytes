@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import {
   updateOrderStatusAction,
@@ -11,6 +11,7 @@ import {
   CloseIcon,
   DownloadIcon,
   EyeIcon,
+  FilterIcon,
   PrintIcon,
   SearchIcon,
   TrashIcon,
@@ -104,6 +105,18 @@ export function OrdersTable({ orders }: { orders: AdminOrderRow[] }) {
   );
   const [printOrder, setPrintOrder] = useState<AdminOrderRow | null>(null);
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
+  const [filterModalOpen, setFilterModalOpen] = useState(false);
+
+  useEffect(() => {
+    if (!filterModalOpen) return;
+
+    function onKeyDown(event: KeyboardEvent) {
+      if (event.key === "Escape") setFilterModalOpen(false);
+    }
+
+    document.addEventListener("keydown", onKeyDown);
+    return () => document.removeEventListener("keydown", onKeyDown);
+  }, [filterModalOpen]);
 
   // Statistics
   const stats = useMemo(() => {
@@ -330,6 +343,21 @@ export function OrdersTable({ orders }: { orders: AdminOrderRow[] }) {
 
         {/* Toolbar: Search, Channel Filter, Sort, CSV Export */}
         <div className="admin-orders_toolbar">
+          <button
+            type="button"
+            className="admin-orders_filter-btn"
+            onClick={() => setFilterModalOpen(true)}
+            aria-label="Filter orders by status"
+          >
+            <FilterIcon className="admin-orders_btn-icon" />
+            <span>Filters</span>
+            {statusFilter !== "ALL" ? (
+              <span className="admin-orders_filter-btn-badge">
+                {countsByStatus[statusFilter] ?? 0}
+              </span>
+            ) : null}
+          </button>
+
           <div className="admin-orders_search">
             <SearchIcon className="admin-orders_search-icon" />
             <input
@@ -724,33 +752,67 @@ export function OrdersTable({ orders }: { orders: AdminOrderRow[] }) {
                 </div>
               </div>
 
-              {/* Status Update */}
-              <div className="odm-card">
-                <div className="odm-card_title">Update Status</div>
-                <div className="odm-card_body">
-                  <form action={updateStatus} className="odm-status-form">
-                    <input type="hidden" name="id" value={activeModalOrder.id} />
-                    <input type="hidden" name="returnTo" value="/admin/orders" />
-                    <select
-                      name="status"
-                      defaultValue={normalizeOrderStatus(activeModalOrder.status)}
-                      className={`admin-status-select admin-status-select--${normalizeOrderStatus(activeModalOrder.status).toLowerCase()}`}
-                    >
-                      {STATUS_OPTIONS.map((st) => (
-                        <option key={st.value} value={st.value}>{st.label}</option>
-                      ))}
-                    </select>
-                    <button type="submit" className="admin-btn admin-btn--primary admin-btn--small">
-                      Save
-                    </button>
-                  </form>
-                </div>
-              </div>
-
             </div>
           </div>
         </div>
 
+      ) : null}
+
+      {/* Mobile Status Filter Modal */}
+      {filterModalOpen ? (
+        <div
+          className="admin-orders_modal-backdrop"
+          onClick={() => setFilterModalOpen(false)}
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="orders-filter-title"
+        >
+          <div
+            className="admin-orders_filter-dialog"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="odm-head">
+              <div className="odm-head_info">
+                <h2 id="orders-filter-title" className="odm-order-num">
+                  Filter Orders
+                </h2>
+                <span className="odm-date">Filter by order status</span>
+              </div>
+              <div className="odm-head_actions">
+                <button
+                  type="button"
+                  className="admin-btn admin-btn--small admin-btn--ghost admin-btn--icon"
+                  onClick={() => setFilterModalOpen(false)}
+                  aria-label="Close"
+                >
+                  <CloseIcon />
+                </button>
+              </div>
+            </div>
+
+            <div className="admin-orders_filter-list">
+              {STATUS_TABS.map((tab) => {
+                const count = countsByStatus[tab.value] ?? 0;
+                const active = statusFilter === tab.value;
+
+                return (
+                  <button
+                    key={tab.value}
+                    type="button"
+                    className={`admin-orders_filter-option${active ? " is-active" : ""}`}
+                    onClick={() => {
+                      setStatusFilter(tab.value);
+                      setFilterModalOpen(false);
+                    }}
+                  >
+                    <span>{tab.label}</span>
+                    <span className="admin-orders_tab-badge">{count}</span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        </div>
       ) : null}
 
       {/* Hidden print-only invoice — rendered outside modal, shown only via @media print */}
