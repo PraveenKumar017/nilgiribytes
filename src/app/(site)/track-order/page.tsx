@@ -5,7 +5,6 @@ import { getPool } from "@/lib/db";
 import { formatINR } from "@/lib/format";
 import {
   ORDER_STATUS_OPTIONS,
-  normalizeOrderStatus,
   orderStatusLabel,
   orderStatusStep,
 } from "@/lib/order-status";
@@ -35,6 +34,7 @@ type OrderRow = RowDataPacket & {
   subtotalPaise: number;
   totalPaise: number;
   status: string;
+  trackingId: string | null;
   createdAt: Date | string;
 };
 
@@ -62,7 +62,7 @@ async function loadOrder(orderNumber: string): Promise<OrderDetails | null> {
 
   const [rows] = await pool.query<OrderRow[]>(
     `SELECT id, orderNumber, customerName, phone, address,
-            subtotalPaise, totalPaise, status, createdAt
+            subtotalPaise, totalPaise, status, trackingId, createdAt
        FROM \`Order\`
       WHERE orderNumber = ?
       LIMIT 1`,
@@ -101,7 +101,6 @@ export default async function TrackOrderPage({ searchParams }: PageProps) {
   const details = orderNumber ? await loadOrder(orderNumber) : null;
   const status = details?.order.status ?? "";
   const statusLabel = orderStatusLabel(status);
-  const statusKey = normalizeOrderStatus(status).toLowerCase();
   const currentStep = orderStatusStep(status);
 
   return (
@@ -155,7 +154,6 @@ export default async function TrackOrderPage({ searchParams }: PageProps) {
               <div className="track-order_panel">
                 <div className="track-order_summary">
                   <div>
-                    <p className="order-confirmation_item-meta">Order ID</p>
                     <h2 className="cart-page_summary-title">
                       {details.order.orderNumber}
                     </h2>
@@ -163,26 +161,35 @@ export default async function TrackOrderPage({ searchParams }: PageProps) {
                       Placed {formatOrderDate(details.order.createdAt)}
                     </p>
                   </div>
-                  <span className={`track-order_badge track-order_badge--${statusKey}`}>
-                    {statusLabel}
-                  </span>
                 </div>
 
                 <ol className="track-order_steps" aria-label="Order status">
                   {ORDER_STATUS_OPTIONS.map((step, index) => {
-                    const state =
-                      index < currentStep
-                        ? " is-complete"
-                        : index === currentStep
-                          ? " is-current"
-                          : "";
+                    const classes = [
+                      index <= currentStep ? "is-complete" : "",
+                      index === currentStep ? "is-current" : "",
+                      index < currentStep ? "is-line-complete" : "",
+                    ]
+                      .filter(Boolean)
+                      .join(" ");
                     return (
-                      <li key={step.value} className={state.trim()}>
+                      <li key={step.value} className={classes}>
                         <span>{step.label}</span>
                       </li>
                     );
                   })}
                 </ol>
+
+                {details.order.trackingId ? (
+                  <div className="track-order_tracking">
+                    <span className="order-confirmation_item-meta">
+                      Tracking ID
+                    </span>
+                    <span className="track-order_tracking-id">
+                      {details.order.trackingId}
+                    </span>
+                  </div>
+                ) : null}
               </div>
 
               <div className="cart-page_grid track-order_grid">

@@ -627,9 +627,6 @@ export function OrdersTable({ orders }: { orders: AdminOrderRow[] }) {
             {/* Modal Header */}
             <div className="odm-head">
               <div className="odm-head_info">
-                <span className={`admin-badge admin-badge--${normalizeOrderStatus(activeModalOrder.status).toLowerCase()} odm-status-badge`}>
-                  {orderStatusLabel(activeModalOrder.status)}
-                </span>
                 <h2 id="modal-order-title" className="odm-order-num">
                   {activeModalOrder.orderNumber}
                 </h2>
@@ -659,29 +656,16 @@ export function OrdersTable({ orders }: { orders: AdminOrderRow[] }) {
             {/* Modal Body */}
             <div className="odm-body">
 
-              {/* Top info row: channel + payment */}
-              <div className="odm-meta-row">
-                <div className="odm-meta-item">
-                  <span className="odm-meta-label">Channel</span>
-                  <span className={`admin-orders_channel-badge admin-orders_channel-badge--${activeModalOrder.channel.toLowerCase()}`}>
-                    {activeModalOrder.channel}
-                  </span>
-                </div>
-                <div className="odm-meta-item">
-                  <span className="odm-meta-label">Payment</span>
-                  <span className="odm-meta-value">
-                    {activeModalOrder.channel === "ONLINE" ? "Online (Razorpay)" : "WhatsApp / COD"}
-                  </span>
-                </div>
-                {activeModalOrder.paymentId ? (
-                  <div className="odm-meta-item odm-meta-item--wide">
+              {activeModalOrder.paymentId ? (
+                <div className="odm-meta-row">
+                  <div className="odm-meta-item odm-meta-item--inline">
                     <span className="odm-meta-label">Payment ID</span>
-                    <span className="odm-meta-value admin-mono" style={{ fontSize: "0.78rem" }}>
-                      {activeModalOrder.paymentId}
+                    <span className="odm-meta-value admin-mono">
+                      : {activeModalOrder.paymentId}
                     </span>
                   </div>
-                ) : null}
-              </div>
+                </div>
+              ) : null}
 
               {/* Two-col: Customer + Shipping */}
               <div className="odm-two-col">

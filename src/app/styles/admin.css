@@ -1963,6 +1963,12 @@
   overflow: hidden;
 }
 
+@supports (height: 100dvh) {
+  .admin-orders_modal-dialog {
+    max-height: 90dvh;
+  }
+}
+
 .admin-orders_modal-head {
   display: flex;
   align-items: center;
@@ -2065,6 +2071,8 @@
 .odm-body {
   padding: 1.1rem 1.35rem;
   overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
   display: flex;
   flex-direction: column;
   gap: 0.9rem;
@@ -2091,6 +2099,17 @@
 
 .odm-meta-item--wide {
   flex: 1 1 100%;
+}
+
+.odm-meta-item--inline {
+  flex-direction: row;
+  align-items: baseline;
+  gap: 0.35rem;
+}
+
+.odm-meta-item--inline .odm-meta-label {
+  text-transform: none;
+  letter-spacing: 0;
 }
 
 .odm-meta-label {
