@@ -1,11 +1,21 @@
 import type { MetadataRoute } from "next";
 import { absoluteUrl } from "@/lib/site";
-import { getPublishedPosts } from "@/lib/storefront";
+import type { Catalog } from "@/lib/types";
+import { getCatalog, getPublishedPosts } from "@/lib/storefront";
 
 export const dynamic = "force-dynamic";
 
+function absoluteImage(src: string): string {
+  return /^(https?:)?\/\//.test(src) ? src : absoluteUrl(src);
+}
+
+const emptyCatalog: Catalog = { products: [], combos: [] };
+
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const posts = await getPublishedPosts();
+  const [posts, catalog] = await Promise.all([
+    getPublishedPosts().catch(() => []),
+    getCatalog().catch(() => emptyCatalog),
+  ]);
   const now = new Date();
 
   const staticPages: MetadataRoute.Sitemap = [
@@ -68,5 +78,16 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     ],
   }));
 
-  return [...staticPages, ...postPages];
+  const itemPages: MetadataRoute.Sitemap = [
+    ...catalog.products,
+    ...catalog.combos,
+  ].map((item) => ({
+    url: absoluteUrl(`/shop/${item.slug}`),
+    lastModified: now,
+    changeFrequency: "weekly" as const,
+    priority: item.kind === "product" ? 0.8 : 0.7,
+    images: [absoluteImage(item.image)],
+  }));
+
+  return [...staticPages, ...itemPages, ...postPages];
 }
