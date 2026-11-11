@@ -1,8 +1,10 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import type { RowDataPacket } from "mysql2";
+import { CopyIconButton } from "@/components/share-icon-button";
 import { getPool } from "@/lib/db";
 import { formatINR } from "@/lib/format";
+import { PHONE_DISPLAY, PHONE_TEL } from "@/lib/site";
 import {
   ORDER_STATUS_OPTIONS,
   orderStatusLabel,
@@ -188,6 +190,10 @@ export default async function TrackOrderPage({ searchParams }: PageProps) {
                     <span className="track-order_tracking-id">
                       {details.order.trackingId}
                     </span>
+                    <CopyIconButton
+                      value={details.order.trackingId}
+                      label="Copy tracking ID"
+                    />
                   </div>
                 ) : null}
               </div>
@@ -247,8 +253,9 @@ export default async function TrackOrderPage({ searchParams }: PageProps) {
                   </p>
                 </div>
                 <p className="cart-page_delivery-note">
-                  Need help with this order? Contact us with your Order ID{" "}
-                  {details.order.orderNumber}.
+                  Need help with this order? Contact us at{" "}
+                  <a href={`tel:${PHONE_TEL}`}>{PHONE_DISPLAY}</a> with your
+                  Order ID {details.order.orderNumber}.
                 </p>
               </div>
             </div>
