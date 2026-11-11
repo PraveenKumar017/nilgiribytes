@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import {
   updateOrderStatusAction,
+  updateOrderTrackingAction,
   deleteOrderAction,
 } from "@/app/admin/actions";
 import { ConfirmSubmit } from "@/components/admin/admin-ui";
@@ -27,6 +28,9 @@ import {
 // Typed wrappers so <form action={...}> gets (formData: FormData) => Promise<void>
 async function updateStatus(formData: FormData): Promise<void> {
   await updateOrderStatusAction(null, formData);
+}
+async function updateTracking(formData: FormData): Promise<void> {
+  await updateOrderTrackingAction(null, formData);
 }
 async function deleteOrder(formData: FormData): Promise<void> {
   await deleteOrderAction(null, formData);
@@ -749,6 +753,32 @@ export function OrdersTable({ orders }: { orders: AdminOrderRow[] }) {
                     <span className="odm-total-label">Total</span>
                     <span className="odm-total-val">{formatINR(activeModalOrder.totalPaise)}</span>
                   </div>
+                </div>
+              </div>
+
+              {/* Tracking ID */}
+              <div className="odm-card">
+                <div className="odm-card_title">Tracking ID</div>
+                <div className="odm-card_body">
+                  <form action={updateTracking} className="odm-status-form">
+                    <input type="hidden" name="id" value={activeModalOrder.id} />
+                    <input type="hidden" name="returnTo" value="/admin/orders" />
+                    <input
+                      type="text"
+                      name="trackingId"
+                      defaultValue={activeModalOrder.trackingId ?? ""}
+                      placeholder="Enter courier tracking ID"
+                      maxLength={120}
+                      className="odm-tracking-input"
+                      aria-label="Tracking ID"
+                    />
+                    <button
+                      type="submit"
+                      className="admin-btn admin-btn--primary admin-btn--small"
+                    >
+                      Save
+                    </button>
+                  </form>
                 </div>
               </div>
 

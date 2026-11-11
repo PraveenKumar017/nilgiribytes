@@ -483,6 +483,7 @@ export type AdminOrderRow = {
   status: "NEW" | "CONFIRMED" | "PACKED" | "DELIVERED" | "CANCELLED";
   razorpayOrderId: string | null;
   paymentId: string | null;
+  trackingId: string | null;
   createdAt: Date;
   updatedAt: Date;
   itemsCount: number;
@@ -766,7 +767,7 @@ export async function listOrders(limit?: number): Promise<AdminOrderRow[]> {
   const [rows] = await pool().query<RowDataPacket[]>(
     `SELECT id, orderNumber, customerName, phone, email, address, notes,
             subtotalPaise, totalPaise, channel, status, razorpayOrderId, paymentId,
-            createdAt, updatedAt
+            trackingId, createdAt, updatedAt
        FROM \`Order\`
       ORDER BY createdAt DESC, id DESC
       ${limit ? "LIMIT ?" : ""}`,
@@ -826,6 +827,7 @@ export async function listOrders(limit?: number): Promise<AdminOrderRow[]> {
       status: row.status,
       razorpayOrderId: row.razorpayOrderId ? String(row.razorpayOrderId) : null,
       paymentId: row.paymentId ? String(row.paymentId) : null,
+      trackingId: row.trackingId ? String(row.trackingId) : null,
       createdAt: row.createdAt as Date,
       updatedAt: (row.updatedAt ?? row.createdAt) as Date,
       itemsCount,
@@ -885,6 +887,7 @@ export async function getOrder(id: number): Promise<AdminOrder | null> {
     status: row.status,
     razorpayOrderId: row.razorpayOrderId ? String(row.razorpayOrderId) : null,
     paymentId: row.paymentId ? String(row.paymentId) : null,
+    trackingId: row.trackingId ? String(row.trackingId) : null,
     createdAt: row.createdAt as Date,
     updatedAt: (row.updatedAt ?? row.createdAt) as Date,
     itemsCount,

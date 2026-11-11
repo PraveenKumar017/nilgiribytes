@@ -888,6 +888,39 @@ export async function updateOrderStatusAction(
   redirect(`/admin/orders?id=${id}&saved=1`);
 }
 
+export async function updateOrderTrackingAction(
+  _previous: ActionState,
+  formData: FormData
+): Promise<ActionState> {
+  await requireAdmin();
+
+  const id = formInt(formData, "id");
+  if (!id) return { error: "Order not found." };
+
+  const trackingId = formText(formData, "trackingId");
+  if (trackingId.length > 120) {
+    return { error: "Tracking ID must be 120 characters or fewer." };
+  }
+
+  const pool = getPool();
+  if (!pool) return { error: "Database is not configured." };
+
+  await pool.execute(
+    "UPDATE `Order` SET trackingId = ?, updatedAt = NOW(3) WHERE id = ?",
+    [trackingId || null, id]
+  );
+
+  revalidatePath("/admin/orders");
+  revalidatePath("/admin");
+
+  const returnTo = formText(formData, "returnTo");
+  if (returnTo && returnTo.startsWith("/admin/orders")) {
+    redirect(`${returnTo}${returnTo.includes("?") ? "&" : "?"}saved=1`);
+  }
+
+  redirect(`/admin/orders?id=${id}&saved=1`);
+}
+
 export async function deleteOrderAction(
   _previous: ActionState,
   formData: FormData
