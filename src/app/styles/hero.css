@@ -61,7 +61,7 @@
 .hero-stage .hero-copy {
   position: relative;
   z-index: 15;
-  width: min(45%, 560px);
+  width: min(58%, 720px);
   margin-left: max(8vw, 80px);
   padding: 24px 28px 24px 0;
   border-radius: 16px;
@@ -113,7 +113,7 @@
   color: #ffffff;
   font-weight: 450;
   margin-bottom: 2rem;
-  max-width: 470px;
+  max-width: 640px;
   text-shadow: 0 2px 8px rgba(0, 0, 0, 0.95), 0 1px 4px rgba(0, 0, 0, 1);
 }
 
@@ -156,14 +156,14 @@
 
 @media (max-width: 1200px) {
   .hero-stage .hero-copy {
-    width: min(48%, 500px);
+    width: min(62%, 640px);
     margin-left: max(6vw, 56px);
   }
 }
 
 @media (max-width: 992px) {
   .hero-stage .hero-copy {
-    width: min(52%, 460px);
+    width: min(66%, 560px);
     margin-left: max(5vw, 40px);
   }
 }
@@ -203,7 +203,7 @@
 
   .hero-stage .hero-copy {
     width: 90%;
-    max-width: 500px;
+    max-width: 560px;
     margin: 0 auto;
     text-align: center;
     background: transparent;

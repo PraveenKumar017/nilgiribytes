@@ -2927,6 +2927,7 @@ body[data-page="cart"] .section {
   margin: 0;
   color: var(--color-muted);
   line-height: 1.75;
+  white-space: pre-line;
 }
 
 .product-detail_facts {

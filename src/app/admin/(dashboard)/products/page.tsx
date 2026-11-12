@@ -21,7 +21,7 @@ import {
 } from "@/lib/admin";
 import { formatINR } from "@/lib/format";
 
-const SIZE_COLUMNS = [200, 250, 400, 500] as const;
+const SIZE_COLUMNS = [250, 400, 500] as const;
 
 type PageProps = {
   searchParams: Promise<{
@@ -48,7 +48,7 @@ function ProductForm({
       mrpPaise: size.mrpPaise,
       pricePaise: size.pricePaise,
       images: size.images,
-    })) ?? [200, 250, 400, 500].map((grams) => ({
+    })) ?? [250, 400, 500].map((grams) => ({
       label: `${grams}g`,
       grams,
       mrpPaise: 0,

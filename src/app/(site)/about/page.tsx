@@ -42,15 +42,16 @@ export default function AboutPage() {
         <div className="page-hero_overlay" aria-hidden="true" />
         <div className="container page-hero_content">
           <span className="section-kicker">
-            Shopping &amp; retail &middot; Since 1980
+            Family baking tradition since 1980
           </span>
           <h1 className="page-hero_title" id="about-title">
-            A Tradition Baked into Every Bite.
+            A Tradition That Began in 1980. A Journey That Continues.
           </h1>
           <p className="page-hero_text">
-            <strong>Authentic Ooty Varkey.</strong> Warm greetings from
-            Nilgiribytes, Kotagiri - 45+ years of baking tradition, retail &amp;
-            wholesale, with pre-order cakes also available.
+            <strong>NilgiriBytes &ndash; Crunchy Queen of Hills.</strong> In 1980,
+            our family&apos;s baking journey began in the beautiful hills of the
+            Nilgiris. Through the years, Vasu Ettan Bakery became more than just
+            a bakery &ndash; it became a part of our family&apos;s life.
           </p>
           <ul className="page-hero_pills">
             <li>Since 1980</li>
@@ -61,154 +62,124 @@ export default function AboutPage() {
       </section>
 
       <section className="section" aria-labelledby="story-heading">
-        <div className="container split">
+        <div className="container">
           <div
-            className="split_media reveal"
-            data-reveal="slide-right"
-            data-parallax="0.35"
+            className="reveal"
+            data-reveal="slide-left"
+            style={{ maxWidth: "820px", margin: "0 auto" }}
           >
-            <img
-              src="/assets/our_story.png"
-              alt="Inside Nilgiribytes, with fresh bakes on display"
-              width={1078}
-              height={1042}
-              loading="lazy"
-            />
-          </div>
-          <div className="reveal" data-reveal="slide-left">
             <span className="section-kicker text-left">Our story</span>
             <h2 className="split_title" id="story-heading">
-              Warm Greetings from Kotagiri
+              A Tradition That Began in 1980. A Journey That Continues.
             </h2>
             <p>
-              <strong>Nilgiribytes, Kotagiri</strong> - manufacturers of
-              authentic Ooty Varkey since 1980, with 45+ years of baking
-              tradition behind every batch.
+              In 1980, our family&apos;s baking journey began in the beautiful
+              hills of the Nilgiris. Through the years, Vasu Ettan Bakery became
+              more than just a bakery. It became a part of our family&apos;s
+              life, built on dedication, countless hours of hard work and the
+              trust of generations of customers.
+            </p>
+            <p>More than 45 years later, that passion continues to live on.</p>
+            <p>
+              The world has changed, tastes have evolved and new opportunities
+              have emerged, but our love for traditional baking has remained
+              close to our hearts.
             </p>
             <p>
-              Retail &amp; wholesale varkey and biscuits, made with a commitment
-              to quality. Pre-order cakes also available. Every batch is still
-              made the traditional way, in small quantities through the day, so
-              nothing sits waiting on a shelf.
+              We dreamed of taking a little piece of our home, our heritage and
+              the flavours we grew up with beyond the hills of Ooty. That dream
+              gave birth to NilgiriBytes.
+            </p>
+            <p>
+              Today, NilgiriBytes carries forward the spirit of our
+              family&apos;s baking tradition with its own identity, bringing the
+              beloved taste of Ooty Varkey and traditional bakery favourites to
+              homes across India.
+            </p>
+            <p>
+              For us, this is more than just a business. It is a journey shaped
+              by generations, a tradition we are proud to carry forward and a
+              story that continues to unfold.
+            </p>
+            <p>
+              Our roots are in the Nilgiris. Our journey is taking us further.
+              And every bite carries a little piece of our home.
+            </p>
+            <p>
+              <strong>NilgiriBytes &ndash; Crunchy Queen of Hills.</strong>
+              <br />
+              <strong>Our Bakery</strong> &ndash; Traditional bakery products and
+              Ooty Varkey.
             </p>
           </div>
         </div>
       </section>
 
-      <section className="section section--alt" aria-labelledby="timeline-heading">
+      <section className="section section--alt" aria-labelledby="passion-heading">
         <div className="container">
           <span className="section-kicker reveal" data-reveal="fade-up">
-            Our journey
+            Our bakery
           </span>
           <h2
             className="section-heading reveal"
             data-reveal="fade-up"
-            id="timeline-heading"
+            id="passion-heading"
           >
-            Milestones Along the Way
+            A Family Passion for Quality
           </h2>
           <hr className="divider reveal" data-reveal="fade-in" />
           <p className="section-intro reveal" data-reveal="fade-up">
-            Each entry below is a placeholder - real dates and events will be
-            confirmed by the bakery.
+            At Vasu Ettan Bakery, baking is a family passion built on
+            experience, dedication and customer trust. With family members
+            actively involved, we specialise in manufacturing a variety of Ooty
+            Varkey and traditional biscuits, focusing on quality, consistency and
+            the distinctive taste of the Nilgiris.
           </p>
-
-          <div className="timeline">
-            <div className="timeline_item reveal" data-reveal="slide-right">
-              <p className="timeline_date">Since 1980</p>
-              <h3 className="timeline_title">Where it all began</h3>
-              <p className="timeline_text">
-                Authentic Ooty Varkey, baked the traditional way in Kotagiri for
-                over four decades.
-              </p>
-            </div>
-            <div className="timeline_item reveal" data-reveal="slide-right">
-              <p className="timeline_date">Date - TODO</p>
-              <h3 className="timeline_title">Growing the counter</h3>
-              <p className="timeline_text">
-                TODO: confirm with bakery - when new products such as biscuits
-                and combos were introduced.
-              </p>
-            </div>
-            <div className="timeline_item reveal" data-reveal="slide-right">
-              <p className="timeline_date">Date - TODO</p>
-              <h3 className="timeline_title">A milestone worth noting</h3>
-              <p className="timeline_text">
-                TODO: confirm with bakery - any recognitions, expansions or
-                anniversaries (awards must be verified before publishing).
-              </p>
-            </div>
-            <div className="timeline_item reveal" data-reveal="slide-right">
-              <p className="timeline_date">Today</p>
-              <h3 className="timeline_title">Baking for the community</h3>
-              <p className="timeline_text">
-                TODO: confirm with bakery - where the bakery stands today and
-                what comes next.
-              </p>
-            </div>
-          </div>
+          <p className="section-intro reveal" data-reveal="fade-up">
+            Taking our expertise beyond Ooty, we introduced NilgiriBytes, our
+            premium brand bringing authentic Ooty Varkey and biscuits to homes
+            across India through premium packaging and a convenient online
+            experience.
+          </p>
         </div>
       </section>
 
-      <section className="section" aria-labelledby="craft-heading">
-        <div className="container split">
-          <div className="reveal" data-reveal="slide-left">
-            <span className="section-kicker text-left">Craftsmanship</span>
-            <h2 className="split_title" id="craft-heading">
-              How We Work
-            </h2>
-            <ul className="feature-list">
-              <li>
-                <span className="feature-list_icon" aria-hidden="true">
-                  1
-                </span>
-                <div>
-                  <p className="feature-list_title">Small, frequent batches</p>
-                  <p className="feature-list_text">
-                    We bake through the day so shelves stay fresh.
-                  </p>
-                </div>
-              </li>
-              <li>
-                <span className="feature-list_icon" aria-hidden="true">
-                  2
-                </span>
-                <div>
-                  <p className="feature-list_title">Recipes kept simple</p>
-                  <p className="feature-list_text">
-                    Time-honoured methods, nothing complicated.
-                  </p>
-                </div>
-              </li>
-              <li>
-                <span className="feature-list_icon" aria-hidden="true">
-                  3
-                </span>
-                <div>
-                  <p className="feature-list_title">Checked by hand</p>
-                  <p className="feature-list_text">
-                    Every tray is looked at before it is packed.
-                  </p>
-                </div>
-              </li>
-            </ul>
-            <p className="todo-note">
-              TODO: confirm ingredient and process claims with the bakery.
-            </p>
-          </div>
-          <div
-            className="split_media reveal"
-            data-reveal="slide-right"
-            data-parallax="0.3"
+      <section className="section" aria-labelledby="vision-heading">
+        <div className="container">
+          <span className="section-kicker reveal" data-reveal="fade-up">
+            Our purpose
+          </span>
+          <h2
+            className="section-heading reveal"
+            data-reveal="fade-up"
+            id="vision-heading"
           >
-            <img
-              src="/assets/Craftsmanship.png"
-              alt="Baker checking a tray of freshly baked biscuits"
-              width={1376}
-              height={768}
-              loading="lazy"
-            />
+            Vision &amp; Mission
+          </h2>
+          <hr className="divider reveal" data-reveal="fade-in" />
+
+          <div className="visit-grid">
+            <div className="visit-card reveal" data-reveal="slide-left">
+              <h3 className="visit-card_title">Our Vision</h3>
+              <p>
+                To make the authentic taste of Ooty Varkey and the flavours of
+                the Nilgiris loved and enjoyed by people across India.
+              </p>
+            </div>
+            <div className="visit-card reveal" data-reveal="slide-right">
+              <h3 className="visit-card_title">Our Mission</h3>
+              <p>
+                To bring quality Ooty Varkey and traditional biscuits to every
+                home through our baking expertise, carefully selected products,
+                premium packaging and commitment to customer satisfaction.
+              </p>
+            </div>
           </div>
+
+          <p className="text-center mt-2 reveal" data-reveal="fade-up">
+            Our promise is simple:{" "}
+            <strong>Quality in every pack, trust in every bite.</strong>
+          </p>
         </div>
       </section>
 
@@ -251,7 +222,8 @@ export default function AboutPage() {
                   target="_blank"
                   rel="noopener"
                 >
-                  Open in Google Maps &nearr;
+                  Open in Google Maps{" "}
+                  <span aria-hidden="true">↗</span>
                 </a>
               </div>
             </div>
@@ -276,7 +248,7 @@ export default function AboutPage() {
                   target="_blank"
                   rel="noopener"
                 >
-                  Chat on WhatsApp &nearr;
+                  Chat on WhatsApp <span aria-hidden="true">↗</span>
                 </a>
               </p>
 

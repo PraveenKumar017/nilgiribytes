@@ -87,9 +87,6 @@ export function ProductDetail({ item }: ProductDetailProps) {
               loading="eager"
             />
           </button>
-          {hasDiscount ? (
-            <span className="product-detail_badge">{discount}% OFF</span>
-          ) : null}
           {images.length > 1 ? (
             <>
               <button

@@ -78,17 +78,20 @@ export default async function HomePage() {
           <div className="hero-stage">
             <div className="hero-vignette" aria-hidden="true" />
             <div className="hero-copy">
-              <p className="hero-eyebrow">
-                NILGIRIBYTES &middot; BAKED IN KOTAGIRI
-              </p>
+              <p className="hero-eyebrow">CRUNCHY QUEEN OF HILLS</p>
               <h1 className="hero-heading" id="hero-title">
-                Crafted by Heat.
+                A Little Taste of the Nilgiris,
                 <br />
-                <span className="highlight">Made to Delight.</span>
+                <span className="highlight">Wherever You Are!</span>
               </h1>
               <p className="hero-desc">
-                Authentic Ooty Varkey &middot; Multi-layered, golden, crisp
-                traditional Nilgiri favourites baked fresh daily since 1980.
+                Rooted in a family baking tradition dating back to 1980,
+                NilgiriBytes brings you the delightful taste of authentic Ooty
+                Varkey and traditional biscuits.
+                <br />
+                <br />
+                Every bite brings a crunch and happiness from the hills to your
+                home.
               </p>
               <div className="hero-cta-group">
                 <Link className="btn btn--primary" href="/shop">
@@ -337,16 +340,21 @@ export default async function HomePage() {
               />
             </div>
             <div className="reveal" data-reveal="slide-left">
-              <span className="section-kicker text-left">Our story</span>
+              <span className="section-kicker text-left">
+                Our Story
+              </span>
               <h2 className="split_title" id="story-title">
-                Warm Greetings from Kotagiri
+                A Journey That Continues from 1980.
               </h2>
               <p>
-                Manufacturers of <strong>authentic Ooty Varkey since 1980</strong>{" "}
-                - with a variety of varkey and biscuits made with a commitment to
-                quality. Retail &amp; wholesale, and pre-order cakes also
-                available.
+                In 1980, our family&apos;s baking journey began in the beautiful
+                hills of the Nilgiris. Through the years, Vasu Ettan Bakery
+                became more than just a bakery. It became a part of our
+                family&apos;s life, built on dedication, countless hours of hard
+                work and the trust of generations of customers.
               </p>
+              <p>More than 45 years later, that passion continues to live on.</p>
+              
               <Link className="link-arrow" href="/about">
                 Read our full story &rarr;
               </Link>
