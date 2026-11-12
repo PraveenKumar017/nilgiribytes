@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { JsonLd } from "@/components/json-ld";
 import { ShopBrowser } from "@/components/shop-browser";
 import { pageMetadata } from "@/lib/seo";
@@ -10,7 +11,7 @@ export const dynamic = "force-dynamic";
 export const metadata: Metadata = pageMetadata({
   title: "Shop | Nilgiribytes - Varkey, Biscuits & Combos",
   description:
-    "Shop freshly baked varkey, biscuits and signature combos from Nilgiribytes. Choose your size and order on WhatsApp.",
+    "Shop freshly baked varkey, biscuits and signature combos from Nilgiribytes. Choose your size and order online.",
   keywords: [
     "buy Ooty Varkey online",
     "Ooty Varkey",
@@ -91,13 +92,25 @@ export default async function ShopPage({ searchParams }: ShopPageProps) {
           <ul className="page-hero_pills">
             <li>Baked fresh daily</li>
             <li>Sold by weight</li>
-            <li>WhatsApp ordering</li>
+            <li>Secure online payment</li>
           </ul>
         </div>
       </section>
 
       <section className="section" aria-labelledby="shop-grid-title">
         <div className="container">
+          <div className="shop-combo-cta">
+            <div>
+              <h2 className="shop-combo-cta_title">Can&rsquo;t pick just one?</h2>
+              <p className="shop-combo-cta_text">
+                Build your own combo with 4 to 8 varieties &mdash; each 250g,
+                priced from &#8377;679.
+              </p>
+            </div>
+            <Link className="btn btn--primary" href="/build-your-own-combo">
+              Build your own combo
+            </Link>
+          </div>
           <h2 className="sr-only" id="shop-grid-title">
             Products
           </h2>

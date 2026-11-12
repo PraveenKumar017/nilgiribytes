@@ -49,13 +49,6 @@
   color: var(--color-cocoa);
 }
 
-.cart-page_wa-icon {
-  width: 18px;
-  height: 18px;
-  fill: currentColor;
-  margin-right: 0.45rem;
-}
-
 .article_share_label {
   margin-right: auto;
   font-size: 0.74rem;

@@ -1,4 +1,6 @@
-import type { CartLine, StoreItem, StoreSize } from "./types";
+import type { CartLine, CustomComboPick, StoreItem, StoreSize } from "./types";
+import { CUSTOM_COMBO_SLUG } from "./types";
+import { customComboPricePaise } from "./custom-combo";
 
 export const CART_STORAGE_KEY = "veb_cart";
 
@@ -45,8 +47,38 @@ export function cartLineKey(
   return `${item.kind}::${name}::${size}`;
 }
 
-export function toCartLine(item: StoreItem, sizeIndex = 0, qty = 1): CartLine {
-  const sizeLabel = itemSizeLabel(item, sizeIndex);
+export function customComboKey(picks: { slug: string }[]): string {
+  const signature = picks
+    .map((pick) => pick.slug)
+    .sort()
+    .join("-");
+  return `combo::${CUSTOM_COMBO_SLUG}::${signature}`;
+}
+
+export function buildCustomComboLine(
+  picks: CustomComboPick[],
+  qty = 1
+): CartLine {
+  const pricePaise = customComboPricePaise(picks.length);
+  const labels = new Set(picks.map((pick) => pick.label));
+  const label = labels.size === 1 ? [...labels][0] : "mixed";
+
+  return {
+    key: customComboKey(picks),
+    id: CUSTOM_COMBO_SLUG,
+    kind: "combo",
+    slug: CUSTOM_COMBO_SLUG,
+    name: "Build Your Own Combo",
+    category: "Combos",
+    sizeLabel: `${picks.length} \u00d7 ${label}`,
+    pricePaise,
+    qty,
+    image: picks[0]?.image ?? "",
+    picks: picks.map((pick) => ({ ...pick })),
+  };
+}
+
+export function toCartLine(item: StoreItem, sizeIndex = 0, qty = 1): CartLine {  const sizeLabel = itemSizeLabel(item, sizeIndex);
   return {
     key: cartLineKey(item, sizeLabel),
     id: item.id,
@@ -91,12 +123,16 @@ export function readCart(): CartLine[] {
       const qty = Math.max(0, Math.round(value.qty));
       if (!qty) continue;
 
-      const key = cartLineKey(value, value.sizeLabel);
+      const picks = Array.isArray(value.picks) ? value.picks : undefined;
+      const key =
+        picks && picks.length
+          ? customComboKey(picks)
+          : cartLineKey(value, value.sizeLabel);
       const existing = merged.get(key);
       if (existing) {
         existing.qty += qty;
       } else {
-        merged.set(key, { ...value, key, qty });
+        merged.set(key, { ...value, picks, key, qty });
       }
     }
 

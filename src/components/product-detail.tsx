@@ -268,8 +268,7 @@ export function ProductDetail({ item }: ProductDetailProps) {
         </div>
 
         <p className="product-detail_note">
-          Freshly packed the same day. Complete your order on WhatsApp at
-          checkout.
+          Freshly packed the same day. Complete your order securely at checkout.
         </p>
       </div>
 

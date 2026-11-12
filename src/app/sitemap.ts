@@ -34,6 +34,13 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       images: [absoluteUrl("/assets/Fresh_Pastries.png")],
     },
     {
+      url: absoluteUrl("/build-your-own-combo"),
+      lastModified: now,
+      changeFrequency: "weekly",
+      priority: 0.8,
+      images: [absoluteUrl("/assets/Fresh_Pastries.png")],
+    },
+    {
       url: absoluteUrl("/about"),
       lastModified: now,
       changeFrequency: "monthly",

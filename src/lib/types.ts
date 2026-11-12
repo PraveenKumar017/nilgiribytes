@@ -57,6 +57,20 @@ export type StoreCombo = {
 
 export type StoreItem = StoreProduct | StoreCombo;
 
+export const CUSTOM_COMBO_SLUG = "build-your-own-combo";
+
+export const CUSTOM_COMBO_MIN_PACKS = 4;
+export const CUSTOM_COMBO_MAX_PACKS = 8;
+export const CUSTOM_COMBO_PACK_LABEL = "250g";
+
+export type CustomComboPick = {
+  slug: string;
+  name: string;
+  label: string;
+  pricePaise: number;
+  image: string;
+};
+
 export type Catalog = {
   products: StoreProduct[];
   combos: StoreCombo[];
@@ -92,4 +106,5 @@ export type CartLine = {
   pricePaise: number;
   qty: number;
   image: string;
+  picks?: CustomComboPick[];
 };

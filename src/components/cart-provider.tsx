@@ -11,6 +11,7 @@ import {
 } from "react";
 import {
   CART_STORAGE_KEY,
+  buildCustomComboLine,
   cartCount,
   cartSubtotal,
   itemSizeLabel,
@@ -18,7 +19,7 @@ import {
   toCartLine,
   writeCart,
 } from "@/lib/cart";
-import type { CartLine, StoreItem } from "@/lib/types";
+import type { CartLine, CustomComboPick, StoreItem } from "@/lib/types";
 
 type CartContextValue = {
   lines: CartLine[];
@@ -27,6 +28,7 @@ type CartContextValue = {
   subtotal: number;
   announcement: string;
   add: (item: StoreItem, sizeIndex?: number, qty?: number) => void;
+  addCustomCombo: (picks: CustomComboPick[], qty?: number) => void;
   setQty: (key: string, qty: number) => void;
   changeQty: (key: string, delta: number) => void;
   remove: (key: string) => void;
@@ -93,8 +95,27 @@ export function CartProvider({ children }: { children: ReactNode }) {
     [commit]
   );
 
-  const setQty = useCallback(
-    (key: string, qty: number) => {
+  const addCustomCombo = useCallback(
+    (picks: CustomComboPick[], qty = 1) => {
+      const line = buildCustomComboLine(picks, qty);
+      const current = readCart();
+      const existing = current.find((entry) => entry.key === line.key);
+      const next = existing
+        ? current.map((entry) =>
+            entry.key === existing.key
+              ? { ...entry, ...line, qty: entry.qty + qty }
+              : entry
+          )
+        : [...current, line];
+      commit(next);
+      setAnnouncement(
+        `Build Your Own Combo (${line.sizeLabel}) added to cart.`
+      );
+    },
+    [commit]
+  );
+
+  const setQty = useCallback(    (key: string, qty: number) => {
       const current = readCart();
       const next =
         qty <= 0
@@ -136,13 +157,24 @@ export function CartProvider({ children }: { children: ReactNode }) {
       subtotal: cartSubtotal(lines),
       announcement,
       add,
+      addCustomCombo,
       setQty,
       changeQty,
       remove,
       clear,
       quantityOf: (key) => lines.find((line) => line.key === key)?.qty ?? 0,
     }),
-    [lines, ready, announcement, add, setQty, changeQty, remove, clear]
+    [
+      lines,
+      ready,
+      announcement,
+      add,
+      addCustomCombo,
+      setQty,
+      changeQty,
+      remove,
+      clear,
+    ]
   );
 
   return (

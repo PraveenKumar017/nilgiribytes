@@ -1,11 +1,19 @@
 import type { RowDataPacket } from "mysql2";
 import { getPool } from "./db";
+import { customComboPricePaise } from "./custom-combo";
+import {
+  CUSTOM_COMBO_MAX_PACKS,
+  CUSTOM_COMBO_MIN_PACKS,
+  CUSTOM_COMBO_PACK_LABEL,
+  CUSTOM_COMBO_SLUG,
+} from "./types";
 
 export type OrderItemInput = {
   kind?: string;
   slug?: string;
   sizeLabel?: string | null;
   quantity: number;
+  picks?: { slug?: string }[] | null;
 };
 
 export type PricedOrderLine = {
@@ -26,6 +34,7 @@ export type PricedOrder = {
 
 type ProductPriceRow = RowDataPacket & {
   id: number;
+  slug: string;
   name: string;
   sizes: unknown;
 };
@@ -103,6 +112,73 @@ export async function priceOrderItems(
         ? item.sizeLabel.trim()
         : null;
 
+    if (kind === "combo" && slug === CUSTOM_COMBO_SLUG) {
+      const pickSlugs = (Array.isArray(item.picks) ? item.picks : [])
+        .map((pick) =>
+          typeof pick?.slug === "string" ? pick.slug.trim() : ""
+        )
+        .filter(Boolean);
+
+      if (
+        pickSlugs.length < CUSTOM_COMBO_MIN_PACKS ||
+        pickSlugs.length > CUSTOM_COMBO_MAX_PACKS
+      ) {
+        throw new Error(
+          `Choose ${CUSTOM_COMBO_MIN_PACKS} to ${CUSTOM_COMBO_MAX_PACKS} varieties for your custom combo.`
+        );
+      }
+
+      const uniqueSlugs = [...new Set(pickSlugs)];
+      const [productRows] = await pool.query<ProductPriceRow[]>(
+        `SELECT id, slug, name, sizes
+           FROM Product
+          WHERE slug IN (?)`,
+        [uniqueSlugs]
+      );
+
+      const productsBySlug = new Map(
+        productRows.map((row) => [String(row.slug), row])
+      );
+
+      let unitPricePaise = customComboPricePaise(pickSlugs.length);
+
+      for (const pickSlug of pickSlugs) {
+        const product = productsBySlug.get(pickSlug);
+        if (!product) {
+          throw new Error(
+            "A product in your custom combo is no longer available."
+          );
+        }
+
+        const sizes = parseJsonArray<SizeJson>(product.sizes);
+        const size = sizes.find(
+          (entry) => String(entry.label) === CUSTOM_COMBO_PACK_LABEL
+        );
+
+        if (!size) {
+          throw new Error(
+            `${String(product.name)} (${CUSTOM_COMBO_PACK_LABEL}) is no longer available.`
+          );
+        }
+      }
+
+      if (!unitPricePaise) {
+        throw new Error("This combo size is not available.");
+      }
+
+      lines.push({
+        kind: "combo",
+        productId: null,
+        comboId: null,
+        name: "Build Your Own Combo",
+        sizeLabel: `${pickSlugs.length} \u00d7 ${CUSTOM_COMBO_PACK_LABEL}`,
+        unitPricePaise,
+        quantity,
+        lineTotalPaise: unitPricePaise * quantity,
+      });
+      continue;
+    }
+
     if (kind === "combo") {
       const [rows] = await pool.query<ComboPriceRow[]>(
         `SELECT id, name, pricePaise, discountPercent, weightLabel
@@ -138,7 +214,7 @@ export async function priceOrderItems(
     }
 
     const [rows] = await pool.query<ProductPriceRow[]>(
-      `SELECT id, name, sizes
+      `SELECT id, slug, name, sizes
          FROM Product
         WHERE slug = ?
         LIMIT 1`,

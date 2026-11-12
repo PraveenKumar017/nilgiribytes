@@ -3,7 +3,7 @@ import { CartView } from "./cart-view";
 
 export const metadata: Metadata = {
   title: "Your Cart | Nilgiribytes",
-  description: "Review your Nilgiribytes cart and place your order on WhatsApp.",
+  description: "Review your Nilgiribytes cart and place your order online.",
   robots: { index: false, follow: false },
   alternates: { canonical: "/cart" },
 };
