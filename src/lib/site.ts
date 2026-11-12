@@ -46,20 +46,23 @@ export const SITE_KEYWORDS = [
 export const PHONE_DISPLAY = "+91 93449 21647";
 export const PHONE_TEL = "+919344921647";
 export const WHATSAPP_NUMBER = "919344921647";
-export const CONTACT_EMAIL = "nilgiribytes.info@gmail.com";
+export const CONTACT_EMAIL = "sujithvasu647@gmail.com";
 
 export const ADDRESS = {
+  streetAddress: "Keradamattam, Kodanad Road",
   locality: "Kotagiri",
-  region: "Tamil Nadu",
+  region: "The Nilgiris, Tamil Nadu",
   postalCode: "643217",
   country: "IN",
 };
 
-export const MAPS_URL =
-  "https://www.google.com/maps/search/?api=1&query=Nilgiribytes%2C%20Kotagiri%2C%20Tamil%20Nadu%20643217";
+export const FULL_ADDRESS =
+  "Keradamattam, Kodanad Road Kotagiri, The Nilgiriris, Tamilnadu - 643217";
+
+export const MAPS_URL = "https://maps.app.goo.gl/wTXXHw3X2kkmetQo9?g_st=awb";
 
 export const MAPS_EMBED_URL =
-  "https://maps.google.com/maps?q=Nilgiribytes%2C%20Kotagiri%2C%20Tamil%20Nadu%20643217&t=&z=14&ie=UTF8&iwloc=&output=embed";
+  "https://maps.google.com/maps?q=Keradamattam%2C%20Kodanad%20Road%20Kotagiri%2C%20The%20Nilgiris%2C%20Tamil%20Nadu%20643217&t=&z=15&ie=UTF8&iwloc=&output=embed";
 
 export const INSTAGRAM_URL = "https://www.instagram.com/nilgiri_bytes";
 

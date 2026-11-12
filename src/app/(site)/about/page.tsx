@@ -2,8 +2,9 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { pageMetadata } from "@/lib/seo";
 import {
+  CONTACT_EMAIL,
+  FULL_ADDRESS,
   MAPS_EMBED_URL,
-  MAPS_URL,
   PHONE_DISPLAY,
   PHONE_TEL,
 } from "@/lib/site";
@@ -203,28 +204,18 @@ export default function AboutPage() {
 
           <div className="visit-grid">
             <div className="visit-card reveal" data-reveal="slide-left">
-              <h3 className="visit-card_title">Address</h3>
-              <p>Kotagiri, Tamil Nadu 643217</p>
+              <h3 className="visit-card_title">Location</h3>
               <div className="visit-map">
                 <iframe
                   src={MAPS_EMBED_URL}
                   width="100%"
-                  height="260"
+                  height="380"
                   style={{ border: 0 }}
                   allowFullScreen
                   loading="lazy"
                   referrerPolicy="no-referrer-when-downgrade"
                   title="Nilgiribytes location on Google Maps"
                 />
-                <a
-                  className="visit-map_link"
-                  href={MAPS_URL}
-                  target="_blank"
-                  rel="noopener"
-                >
-                  Open in Google Maps{" "}
-                  <span aria-hidden="true">↗</span>
-                </a>
               </div>
             </div>
 
@@ -235,10 +226,15 @@ export default function AboutPage() {
                 <li>Sunday: 9:00 AM - 8:00 PM</li>
               </ul>
 
-              <h3 className="visit-card_title">Phone &amp; WhatsApp</h3>
+              <h3 className="visit-card_title">Contact</h3>
               <p>
                 <a className="link-arrow" href={`tel:${PHONE_TEL}`}>
                   {PHONE_DISPLAY}
+                </a>
+              </p>
+              <p>
+                <a className="link-arrow" href={`mailto:${CONTACT_EMAIL}`}>
+                  {CONTACT_EMAIL}
                 </a>
               </p>
               <p>
@@ -252,10 +248,10 @@ export default function AboutPage() {
                 </a>
               </p>
 
-              <p className="todo-note">
-                TODO: confirm the full street address and opening hours with the
-                bakery before launch.
-              </p>
+              <h3 className="visit-card_title" style={{ marginTop: "1.5rem" }}>
+                Address
+              </h3>
+              <p>{FULL_ADDRESS}</p>
             </div>
           </div>
 

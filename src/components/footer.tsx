@@ -1,5 +1,6 @@
 import Link from "next/link";
 import {
+  CONTACT_EMAIL,
   INSTAGRAM_URL,
   MAPS_URL,
   PHONE_DISPLAY,
@@ -63,7 +64,9 @@ export function Footer() {
           <div className="footer-col">
             <p className="footer-col_title">Visit us</p>
             <ul>
-              <li>Kotagiri, Tamil Nadu 643217</li>
+              <li>
+                Keradamattam, Kodanad Road Kotagiri, The Nilgiriris, Tamilnadu - 643217
+              </li>
               <li>
                 <a href={MAPS_URL} target="_blank" rel="noopener">
                   Open in Google Maps
@@ -71,6 +74,9 @@ export function Footer() {
               </li>
               <li>
                 <a href={`tel:${PHONE_TEL}`}>{PHONE_DISPLAY}</a>
+              </li>
+              <li>
+                <a href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</a>
               </li>
             </ul>
           </div>
