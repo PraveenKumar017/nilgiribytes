@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { getAdminSettings } from "@/lib/admin";
 import { CartView } from "./cart-view";
 
 export const metadata: Metadata = {
@@ -8,12 +9,14 @@ export const metadata: Metadata = {
   alternates: { canonical: "/cart" },
 };
 
-export default function CartPage() {
+export default async function CartPage() {
+  const settings = await getAdminSettings();
+
   return (
     <main id="main-content">
       <section className="section" aria-labelledby="cart-title">
         <div className="container">
-          <CartView />
+          <CartView offerBannerEnabled={settings.offerBannerEnabled} />
         </div>
       </section>
     </main>

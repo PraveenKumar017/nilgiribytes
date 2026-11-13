@@ -75,7 +75,11 @@ const EMPTY_CUSTOMER_DETAILS: CustomerDetails = {
   district: "",
 };
 
-export function CartView() {
+export function CartView({
+  offerBannerEnabled,
+}: {
+  offerBannerEnabled: boolean;
+}) {
   const router = useRouter();
   const { lines, ready, count, subtotal, changeQty, clear } = useCart();
   const [showCustomerModal, setShowCustomerModal] = useState(false);
@@ -533,7 +537,7 @@ export function CartView() {
         </Link>
       </div>
 
-      {showComboSample && (
+      {offerBannerEnabled && showComboSample && (
         <div className="cart-page_sample-note">
           <span className="cart-page_sample-note-title">
             A Little Something Extra !

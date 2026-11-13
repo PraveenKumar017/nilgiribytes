@@ -849,6 +849,7 @@ export async function updateSettingsAction(
 
   revalidatePath("/admin/settings");
   revalidatePath("/");
+  revalidatePath("/cart");
   revalidatePath("/policies/store");
   redirect("/admin/settings?saved=1");
 }
