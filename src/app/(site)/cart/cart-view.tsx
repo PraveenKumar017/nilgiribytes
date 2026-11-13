@@ -4,13 +4,14 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { formatINR } from "@/lib/format";
+import { itemMrp } from "@/lib/cart";
 import { useCart } from "@/components/cart-provider";
 import { SafeImage } from "@/components/safe-image";
 import {
   PaymentCheckout,
   type PaymentSuccessData,
 } from "@/components/payment-checkout";
-import type { StoreProduct, Catalog } from "@/lib/types";
+import type { CartLine, StoreProduct, Catalog } from "@/lib/types";
 import { ProductCollection } from "@/components/product-collection";
 
 interface CustomerDetails {
@@ -24,6 +25,45 @@ interface CustomerDetails {
 }
 
 const STORAGE_KEY = "nilgiribytes_customer_details";
+
+function isComboLine(line: {
+  kind?: string;
+  category?: string;
+  slug?: string;
+  name?: string;
+}): boolean {
+  return (
+    line.kind === "combo" ||
+    line.category === "Combos" ||
+    line.slug === "build-your-own-combo" ||
+    /\bcombo\b/i.test(line.name ?? "")
+  );
+}
+
+function isTrialCombo(line: { slug?: string; name?: string }): boolean {
+  const slug = (line.slug ?? "").toLowerCase();
+  const name = (line.name ?? "").toLowerCase();
+  return slug === "trial-combo" || /\btrial\b|\btrail\b/.test(name);
+}
+
+function lineMrpFromCatalog(
+  line: CartLine,
+  catalog: Catalog | null
+): number | null {
+  if (!catalog) return null;
+  const item = [...catalog.products, ...catalog.combos].find(
+    (entry) => entry.slug === line.slug
+  );
+  if (!item) return null;
+  const sizeIndex =
+    item.kind === "product"
+      ? Math.max(
+          0,
+          item.sizes.findIndex((size) => size.label === line.sizeLabel)
+        )
+      : 0;
+  return itemMrp(item, sizeIndex);
+}
 
 const EMPTY_CUSTOMER_DETAILS: CustomerDetails = {
   name: "",
@@ -72,6 +112,7 @@ export function CartView() {
         const response = await fetch("/api/catalog");
         if (response.ok) {
           const data: Catalog = await response.json();
+          setCatalog(data);
           console.log("Catalog fetched, total products:", data.products.length);
           console.log("Cart lines:", lines.length);
           console.log("Cart item details:", lines.map(l => ({ id: l.id, name: l.name, kind: l.kind })));
@@ -312,6 +353,18 @@ export function CartView() {
     );
   }
 
+  const showComboSample = lines.some(
+    (line) => isComboLine(line) && !isTrialCombo(line)
+  );
+
+  const orderSavings = lines.reduce((sum, line) => {
+    const mrp = line.mrpPaise ?? lineMrpFromCatalog(line, catalog);
+    if (typeof mrp === "number" && mrp > line.pricePaise) {
+      return sum + (mrp - line.pricePaise) * line.qty;
+    }
+    return sum;
+  }, 0);
+
   const paymentItems = lines.map((line) => ({
     kind: line.kind,
     slug: line.slug,
@@ -480,6 +533,21 @@ export function CartView() {
         </Link>
       </div>
 
+      {showComboSample && (
+        <div className="cart-page_sample-note">
+          <span className="cart-page_sample-note-title">
+            A Little Something Extra !
+          </span>
+          <p className="cart-page_sample-note-text">
+            Enjoy this complimentary 10g sample from NilgiriBytes. Discover
+            another favourite. <span className="cart-page_sample-note-small">
+            With every combo purchase, except the Trial Combo.
+          </span>
+          </p>
+          
+        </div>
+      )}
+
       <div className="cart-page_grid">
         <div className="cart-page_lines">
           {lines.map((line) => (
@@ -533,18 +601,39 @@ export function CartView() {
 
         <aside className="cart-page_summary" aria-label="Order summary">
           <h2 className="cart-page_summary-title">Order Summary</h2>
-          <div className="cart-summary">
-            <span>Items</span>
-            <span>{count} {count === 1 ? "item" : "items"}</span>
+          <div className="cart-page_summary-lines">
+            <div className="cart-summary">
+              <span>Total Items</span>
+              <span>{count} {count === 1 ? "item" : "items"}</span>
+            </div>
+            <div className="cart-summary">
+              <span>Price</span>
+              <span>{formatINR(subtotal)}</span>
+            </div>
+            <div className="cart-summary">
+              <span>Delivery Fee</span>
+              <span className="cart-summary_free">Free</span>
+            </div>
+            <hr className="cart-page_summary-rule" />
+            <div className="cart-summary cart-summary--total">
+              <span>Total</span>
+              <span className="cart-summary_total">{formatINR(subtotal)}</span>
+            </div>
           </div>
-          <hr className="cart-page_summary-rule" />
-          <div className="cart-summary cart-summary--total">
-            <span>Subtotal</span>
-            <span className="cart-summary_total">{formatINR(subtotal)}</span>
-          </div>
+
+          {orderSavings > 0 && (
+            <div className="cart-page_savings">
+              <span className="cart-page_savings-label">
+                Savings on this order
+              </span>
+              <span className="cart-page_savings-value">
+                {formatINR(orderSavings)}
+              </span>
+            </div>
+          )}
+
           <p className="cart-page_delivery-note">
-            Delivery or pickup charges, if any, will be confirmed after your
-            order.
+            Free delivery included. No extra charges.
           </p>
 
           {paymentError && (

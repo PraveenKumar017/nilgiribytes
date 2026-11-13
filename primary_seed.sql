@@ -77,4 +77,10 @@ INSERT INTO `AdminUser` (`username`, `passwordHash`, `role`) VALUES
 ('Sujith', '$2b$12$0GbImk6N75ojy32AMN9vOOxZPFIdmdimR3dRDobnsXpwUo/TJ.oB.', 'ADMIN')
 ON DUPLICATE KEY UPDATE `passwordHash` = VALUES(`passwordHash`);
 
+-- Coupons
+INSERT INTO `Coupon` (`code`, `title`, `discountType`, `discountValue`, `minOrderPaise`, `maxDiscountPaise`, `isActive`, `updatedAt`) VALUES
+('WELCOME100', 'Welcome offer — Flat ₹100 off on first box', 'fixed', 100, 49900, NULL, TRUE, NOW(3)),
+('NILGIRI50', 'Flat ₹50 off on traditional Ooty Varkey & Biscuits', 'fixed', 50, 29900, NULL, TRUE, NOW(3))
+ON DUPLICATE KEY UPDATE `code` = VALUES(`code`), `title` = VALUES(`title`), `discountType` = VALUES(`discountType`), `discountValue` = VALUES(`discountValue`), `minOrderPaise` = VALUES(`minOrderPaise`), `maxDiscountPaise` = VALUES(`maxDiscountPaise`), `isActive` = VALUES(`isActive`), `updatedAt` = NOW(3);
+
 COMMIT;

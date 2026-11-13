@@ -11,6 +11,12 @@ export default async function AdminDashboardPage() {
     { label: "Combos", value: data.combos, href: "/admin/combos" },
     { label: "Categories", value: data.categories, href: "/admin/categories" },
     {
+      label: "Coupons",
+      value: data.coupons,
+      href: "/admin/coupons",
+      hint: `${data.activeCoupons} active`,
+    },
+    {
       label: "Blog posts",
       value: data.posts,
       href: "/admin/blog",

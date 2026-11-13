@@ -198,3 +198,33 @@ export function FilterIcon({ className }: IconProps) {
   );
 }
 
+export function CouponIcon({ className }: IconProps) {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden="true" className={className}>
+      <path
+        d="M20.5 6h-17A1.5 1.5 0 002 7.5v2a2.5 2.5 0 010 5v2A1.5 1.5 0 003.5 18h17a1.5 1.5 0 001.5-1.5v-2a2.5 2.5 0 010-5v-2A1.5 1.5 0 0020.5 6zM9 6v2M9 11v2M9 16v2"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.8"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
+export function CheckIcon({ className }: IconProps) {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden="true" className={className}>
+      <path
+        d="M20 6L9 17l-5-5"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+

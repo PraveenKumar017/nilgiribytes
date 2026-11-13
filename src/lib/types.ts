@@ -104,6 +104,7 @@ export type CartLine = {
   category: string;
   sizeLabel: string;
   pricePaise: number;
+  mrpPaise?: number;
   qty: number;
   image: string;
   picks?: CustomComboPick[];

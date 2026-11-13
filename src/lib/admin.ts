@@ -497,10 +497,25 @@ export type AdminDashboard = {
   products: number;
   combos: number;
   categories: number;
+  coupons: number;
+  activeCoupons: number;
   posts: number;
   drafts: number;
   newOrders: number;
   recentOrders: AdminOrderRow[];
+};
+
+export type AdminCoupon = {
+  id: number;
+  code: string;
+  title: string;
+  discountType: "fixed" | "percentage";
+  discountValue: number;
+  minOrderPaise: number;
+  maxDiscountPaise: number | null;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
 };
 
 function dateOnly(value: Date | string): string {
@@ -515,6 +530,8 @@ export async function getDashboard(): Promise<AdminDashboard> {
        (SELECT COUNT(*) FROM Product) AS products,
        (SELECT COUNT(*) FROM Combo) AS combos,
        (SELECT COUNT(*) FROM Category) AS categories,
+       (SELECT COUNT(*) FROM Coupon) AS coupons,
+       (SELECT COUNT(*) FROM Coupon WHERE isActive = TRUE) AS activeCoupons,
        (SELECT COUNT(*) FROM BlogPost) AS posts,
        (SELECT COUNT(*) FROM BlogPost WHERE status = 'DRAFT') AS drafts,
        (SELECT COUNT(*) FROM \`Order\` WHERE status IN ('NEW', 'CONFIRMED')) AS newOrders`
@@ -525,11 +542,34 @@ export async function getDashboard(): Promise<AdminDashboard> {
     products: Number(counts.products ?? 0),
     combos: Number(counts.combos ?? 0),
     categories: Number(counts.categories ?? 0),
+    coupons: Number(counts.coupons ?? 0),
+    activeCoupons: Number(counts.activeCoupons ?? 0),
     posts: Number(counts.posts ?? 0),
     drafts: Number(counts.drafts ?? 0),
     newOrders: Number(counts.newOrders ?? 0),
     recentOrders: await listOrders(5),
   };
+}
+
+export async function listCoupons(): Promise<AdminCoupon[]> {
+  const [rows] = await pool().query<RowDataPacket[]>(
+    `SELECT id, code, title, discountType, discountValue, minOrderPaise, maxDiscountPaise, isActive, createdAt, updatedAt
+       FROM Coupon
+      ORDER BY id DESC`
+  );
+
+  return rows.map((row) => ({
+    id: Number(row.id),
+    code: String(row.code),
+    title: String(row.title),
+    discountType: row.discountType === "percentage" ? "percentage" : "fixed",
+    discountValue: Number(row.discountValue),
+    minOrderPaise: Number(row.minOrderPaise),
+    maxDiscountPaise: row.maxDiscountPaise !== null ? Number(row.maxDiscountPaise) : null,
+    isActive: Boolean(row.isActive),
+    createdAt: dateOnly(row.createdAt),
+    updatedAt: dateOnly(row.updatedAt),
+  }));
 }
 
 export async function listCategories(): Promise<AdminCategory[]> {

@@ -88,6 +88,7 @@ export function toCartLine(item: StoreItem, sizeIndex = 0, qty = 1): CartLine { 
     category: item.category,
     sizeLabel,
     pricePaise: itemPrice(item, sizeIndex),
+    mrpPaise: itemMrp(item, sizeIndex),
     qty,
     image: itemImage(item, sizeIndex),
   };
