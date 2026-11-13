@@ -3231,17 +3231,40 @@
   overflow-y: auto;
 }
 
+.admin-coupon-modal,
 .admin-coupon-modal-dialog {
-  background: var(--color-surface);
+  background: #ffffff !important;
   border: 1px solid var(--color-border);
   border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-modal);
+  box-shadow: 0 24px 60px -12px rgba(14, 10, 8, 0.45), 0 0 1px rgba(0, 0, 0, 0.2);
   width: 100%;
-  max-width: 620px;
+  max-width: 640px;
+  max-height: 90vh;
   overflow: hidden;
   display: flex;
   flex-direction: column;
   animation: adminModalEnter 220ms var(--ease-out);
+  position: relative;
+  z-index: 1001;
+}
+
+.admin-coupon-modal-content {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  flex: 1;
+  background: #ffffff;
+  overflow: hidden;
+}
+
+.admin-coupon-modal-body {
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  overflow-y: auto;
+  flex: 1;
+  background: #ffffff;
 }
 
 @keyframes adminModalEnter {

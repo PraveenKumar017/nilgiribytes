@@ -1,9 +1,11 @@
 import { NextResponse } from "next/server";
-import { getAdminSession, listCoupons } from "@/lib/admin";
+import { getAdminSession, listCoupons, ensureCouponTable } from "@/lib/admin";
 import { getPool } from "@/lib/db";
 import type { RowDataPacket, ResultSetHeader } from "mysql2/promise";
 
 export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
 
 export async function GET() {
   const session = await getAdminSession();
@@ -12,6 +14,7 @@ export async function GET() {
   }
 
   try {
+    await ensureCouponTable();
     const coupons = await listCoupons();
     return NextResponse.json({ coupons });
   } catch (error) {
@@ -30,6 +33,10 @@ export async function POST(request: Request) {
   if (!pool) {
     return NextResponse.json({ error: "Database not connected." }, { status: 500 });
   }
+
+  await ensureCouponTable();
+
+  await ensureCouponTable();
 
   try {
     const body = await request.json();
@@ -101,6 +108,8 @@ export async function PUT(request: Request) {
     return NextResponse.json({ error: "Database not connected." }, { status: 500 });
   }
 
+  await ensureCouponTable();
+
   try {
     const body = await request.json();
     const id = Number(body.id);
@@ -171,6 +180,8 @@ export async function DELETE(request: Request) {
   if (!pool) {
     return NextResponse.json({ error: "Database not connected." }, { status: 500 });
   }
+
+  await ensureCouponTable();
 
   try {
     const { searchParams } = new URL(request.url);

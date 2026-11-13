@@ -46,40 +46,20 @@ export function CouponsManager({
   const [formValue, setFormValue] = useState<number>(100);
   const [formMinOrder, setFormMinOrder] = useState<number>(499);
   const [formMaxDiscount, setFormMaxDiscount] = useState<number>(200);
-  const [formIsActive, setFormIsActive] = useState(true);
 
   // Toast / Feedback State
   const [toast, setToast] = useState<{ message: string; type: "success" | "error" } | null>(null);
 
-  // Fetch from database API if initialCoupons was empty
+  // Sync with database prefetched coupons
   useEffect(() => {
-    if (initialCoupons.length > 0) {
-      setCoupons(initialCoupons);
-      setIsLoading(false);
-      return;
+    try {
+      localStorage.removeItem("nilgiribytes_admin_coupons_v1");
+      localStorage.removeItem("nilgiri_admin_coupons");
+    } catch {
+      // Ignore
     }
-
-    let isMounted = true;
-    async function loadCoupons() {
-      try {
-        const res = await fetch("/api/admin/coupons");
-        if (res.ok) {
-          const data = await res.json();
-          if (isMounted && Array.isArray(data.coupons)) {
-            setCoupons(data.coupons);
-          }
-        }
-      } catch (err) {
-        console.error("Failed to load coupons from API:", err);
-      } finally {
-        if (isMounted) setIsLoading(false);
-      }
-    }
-
-    loadCoupons();
-    return () => {
-      isMounted = false;
-    };
+    setCoupons(initialCoupons);
+    setIsLoading(false);
   }, [initialCoupons]);
 
   const showToast = (message: string, type: "success" | "error" = "success") => {
@@ -98,7 +78,6 @@ export function CouponsManager({
     setFormValue(100);
     setFormMinOrder(499);
     setFormMaxDiscount(200);
-    setFormIsActive(true);
     setIsModalOpen(true);
   };
 
@@ -111,7 +90,6 @@ export function CouponsManager({
     setFormValue(coupon.discountValue);
     setFormMinOrder(Math.round(coupon.minOrderPaise / 100));
     setFormMaxDiscount(coupon.maxDiscountPaise ? Math.round(coupon.maxDiscountPaise / 100) : 200);
-    setFormIsActive(coupon.isActive);
     setIsModalOpen(true);
   };
 
@@ -134,7 +112,7 @@ export function CouponsManager({
           discountValue: Number(formValue) || 0,
           minOrderPaise: (Number(formMinOrder) || 0) * 100,
           maxDiscountPaise: formType === "percentage" ? (Number(formMaxDiscount) || 0) * 100 : null,
-          isActive: formIsActive,
+          isActive: editingCoupon.isActive,
         };
 
         const res = await fetch("/api/admin/coupons", {
@@ -162,7 +140,7 @@ export function CouponsManager({
                   discountValue: payload.discountValue,
                   minOrderPaise: payload.minOrderPaise,
                   maxDiscountPaise: payload.maxDiscountPaise,
-                  isActive: formIsActive,
+                  isActive: editingCoupon.isActive,
                 }
               : c
           )
@@ -170,7 +148,7 @@ export function CouponsManager({
 
         showToast(`Coupon "${cleanCode}" saved to database successfully!`, "success");
       } else {
-        // Create in DB
+        // Create in DB (defaults to active)
         const payload = {
           code: cleanCode,
           title: formTitle.trim() || `${formType === "fixed" ? `₹${formValue} OFF` : `${formValue}% OFF`} coupon`,
@@ -178,7 +156,7 @@ export function CouponsManager({
           discountValue: Number(formValue) || 0,
           minOrderPaise: (Number(formMinOrder) || 0) * 100,
           maxDiscountPaise: formType === "percentage" ? (Number(formMaxDiscount) || 0) * 100 : null,
-          isActive: formIsActive,
+          isActive: true,
         };
 
         const res = await fetch("/api/admin/coupons", {
@@ -492,17 +470,17 @@ export function CouponsManager({
                     </td>
 
                     <td>
-                      <button
-                        type="button"
-                        onClick={() => handleToggleStatus(coupon.id)}
-                        className={`admin-coupon-status-btn ${
-                          coupon.isActive ? "is-active" : "is-inactive"
-                        }`}
-                        title="Click to toggle status in database"
-                      >
-                        <span className="admin-coupon-status-dot" />
-                        {coupon.isActive ? "Active" : "Inactive"}
-                      </button>
+                      <label className="admin-coupon-toggle" title="Click to toggle status">
+                        <input
+                          type="checkbox"
+                          checked={coupon.isActive}
+                          onChange={() => handleToggleStatus(coupon.id)}
+                        />
+                        <span className="admin-coupon-toggle-slider" />
+                        <span className="admin-coupon-toggle-label">
+                          {coupon.isActive ? "Active" : "Inactive"}
+                        </span>
+                      </label>
                     </td>
 
                     <td className="admin-table_actions">
@@ -589,168 +567,143 @@ export function CouponsManager({
               </button>
             </header>
 
-            <form onSubmit={handleSubmitForm} className="admin-coupon-modal-form">
-              <div className="admin-coupon-form-grid">
-                {/* Coupon Code */}
-                <div className="admin-field admin-field--full">
-                  <label htmlFor="cpn-code">Coupon Code *</label>
-                  <input
-                    id="cpn-code"
-                    type="text"
-                    value={formCode}
-                    onChange={(e) => setFormCode(e.target.value.toUpperCase().replace(/\s+/g, ""))}
-                    placeholder="e.g. NILGIRI100"
-                    required
-                    disabled={isSubmitting}
-                    className="admin-input admin-input--code"
-                  />
-                  <span className="admin-field_hint">
-                    Codes are automatically uppercased and spaces are stripped.
-                  </span>
-                </div>
-
-                {/* Offer Title / Description */}
-                <div className="admin-field admin-field--full">
-                  <label htmlFor="cpn-title">Offer Description *</label>
-                  <input
-                    id="cpn-title"
-                    type="text"
-                    value={formTitle}
-                    onChange={(e) => setFormTitle(e.target.value)}
-                    placeholder="e.g. Flat ₹100 off on first box"
-                    required
-                    disabled={isSubmitting}
-                    className="admin-input"
-                  />
-                  <span className="admin-field_hint">
-                    Short description displayed to customers under the coupon code.
-                  </span>
-                </div>
-
-                {/* Discount Type */}
-                <div className="admin-field">
-                  <label htmlFor="cpn-type">Discount Type *</label>
-                  <select
-                    id="cpn-type"
-                    value={formType}
-                    onChange={(e) => setFormType(e.target.value as "fixed" | "percentage")}
-                    disabled={isSubmitting}
-                    className="admin-input"
-                  >
-                    <option value="fixed">Fixed Price Discount (₹ Flat OFF)</option>
-                    <option value="percentage">Percentage Discount (% OFF)</option>
-                  </select>
-                </div>
-
-                {/* Discount Value */}
-                <div className="admin-field">
-                  <label htmlFor="cpn-value">
-                    {formType === "fixed" ? "Discount Amount (₹) *" : "Discount Percentage (%) *"}
-                  </label>
-                  <input
-                    id="cpn-value"
-                    type="number"
-                    min={1}
-                    max={formType === "percentage" ? 100 : 10000}
-                    value={formValue}
-                    onChange={(e) => setFormValue(Number(e.target.value))}
-                    required
-                    disabled={isSubmitting}
-                    className="admin-input"
-                  />
-                </div>
-
-                {/* Min Order Value */}
-                <div className="admin-field">
-                  <label htmlFor="cpn-min">Minimum Order Value (₹)</label>
-                  <input
-                    id="cpn-min"
-                    type="number"
-                    min={0}
-                    step={10}
-                    value={formMinOrder}
-                    onChange={(e) => setFormMinOrder(Number(e.target.value))}
-                    disabled={isSubmitting}
-                    className="admin-input"
-                  />
-                  <span className="admin-field_hint">Set 0 for no minimum threshold.</span>
-                </div>
-
-                {/* Max Discount Cap (Only for Percentage) */}
-                {formType === "percentage" ? (
-                  <div className="admin-field">
-                    <label htmlFor="cpn-max-cap">Maximum Discount Cap (₹)</label>
+            <form onSubmit={handleSubmitForm} className="admin-coupon-modal-content">
+              <div className="admin-coupon-modal-body">
+                <div className="admin-coupon-form-grid">
+                  {/* Coupon Code */}
+                  <div className="admin-field admin-field--full">
+                    <label htmlFor="cpn-code">Coupon Code *</label>
                     <input
-                      id="cpn-max-cap"
-                      type="number"
-                      min={10}
-                      step={10}
-                      value={formMaxDiscount}
-                      onChange={(e) => setFormMaxDiscount(Number(e.target.value))}
+                      id="cpn-code"
+                      type="text"
+                      value={formCode}
+                      onChange={(e) => setFormCode(e.target.value.toUpperCase().replace(/\s+/g, ""))}
+                      placeholder="e.g. NILGIRI100"
+                      required
+                      disabled={isSubmitting}
+                      className="admin-input admin-input--code"
+                    />
+                    <span className="admin-field_hint">
+                      Codes are automatically uppercased and spaces are stripped.
+                    </span>
+                  </div>
+
+                  {/* Offer Description */}
+                  <div className="admin-field admin-field--full">
+                    <label htmlFor="cpn-title">Offer Description *</label>
+                    <input
+                      id="cpn-title"
+                      type="text"
+                      value={formTitle}
+                      onChange={(e) => setFormTitle(e.target.value)}
+                      placeholder="e.g. Flat ₹100 off on first box"
+                      required
                       disabled={isSubmitting}
                       className="admin-input"
                     />
-                    <span className="admin-field_hint">Limits max discount amount.</span>
+                    <span className="admin-field_hint">
+                      Short description displayed to customers under the coupon code.
+                    </span>
                   </div>
-                ) : (
+
+                  {/* Discount Type */}
                   <div className="admin-field">
-                    <label>Active on Storefront</label>
-                    <label className="admin-coupon-checkbox-label">
-                      <input
-                        type="checkbox"
-                        checked={formIsActive}
-                        onChange={(e) => setFormIsActive(e.target.checked)}
-                        disabled={isSubmitting}
-                      />
-                      <span>Enable this coupon immediately upon saving</span>
-                    </label>
+                    <label htmlFor="cpn-type">Discount Type *</label>
+                    <select
+                      id="cpn-type"
+                      value={formType}
+                      onChange={(e) => setFormType(e.target.value as "fixed" | "percentage")}
+                      disabled={isSubmitting}
+                      className="admin-input"
+                    >
+                      <option value="fixed">Fixed Price Discount (₹ Flat OFF)</option>
+                      <option value="percentage">Percentage Discount (% OFF)</option>
+                    </select>
                   </div>
-                )}
 
-                {formType === "percentage" && (
-                  <div className="admin-field admin-field--full">
-                    <label className="admin-coupon-checkbox-label">
-                      <input
-                        type="checkbox"
-                        checked={formIsActive}
-                        onChange={(e) => setFormIsActive(e.target.checked)}
-                        disabled={isSubmitting}
-                      />
-                      <span>Enable this coupon immediately upon saving</span>
+                  {/* Discount Value */}
+                  <div className="admin-field">
+                    <label htmlFor="cpn-value">
+                      {formType === "fixed" ? "Discount Amount (₹) *" : "Discount Percentage (%) *"}
                     </label>
+                    <input
+                      id="cpn-value"
+                      type="number"
+                      min={1}
+                      max={formType === "percentage" ? 100 : 10000}
+                      value={formValue}
+                      onChange={(e) => setFormValue(Number(e.target.value))}
+                      required
+                      disabled={isSubmitting}
+                      className="admin-input"
+                    />
                   </div>
-                )}
-              </div>
 
-              {/* Live Preview Card */}
-              <div className="admin-coupon-preview-box">
-                <span className="admin-coupon-preview-tag">Customer View Preview</span>
-                <div className="admin-coupon-preview-card">
-                  <div className="admin-coupon-preview-left">
-                    <span className="admin-coupon-preview-badge">
-                      {formType === "fixed" ? `FLAT ₹${formValue || 0} OFF` : `${formValue || 0}% OFF`}
-                    </span>
-                    <span className="admin-coupon-preview-code">
-                      {formCode.trim().toUpperCase() || "YOURCODE"}
-                    </span>
+                  {/* Min Order Value */}
+                  <div className={`admin-field ${formType === "fixed" ? "admin-field--full" : ""}`}>
+                    <label htmlFor="cpn-min">Minimum Order Value (₹)</label>
+                    <input
+                      id="cpn-min"
+                      type="number"
+                      min={0}
+                      step={10}
+                      value={formMinOrder}
+                      onChange={(e) => setFormMinOrder(Number(e.target.value))}
+                      disabled={isSubmitting}
+                      className="admin-input"
+                    />
+                    <span className="admin-field_hint">Set 0 for no minimum threshold.</span>
                   </div>
-                  <div className="admin-coupon-preview-right">
-                    <span className="admin-coupon-preview-title">
-                      {formTitle.trim() ||
-                        (formType === "fixed"
-                          ? `Flat ₹${formValue || 0} discount on your order`
-                          : `${formValue || 0}% off on selected order`)}
-                    </span>
-                    <span className="admin-coupon-preview-terms">
-                      {formMinOrder > 0 ? `Min. order ₹${formMinOrder}` : "No minimum order"}
-                      {formType === "percentage" && formMaxDiscount ? ` • Max cap ₹${formMaxDiscount}` : ""}
-                    </span>
+
+                  {/* Max Discount Cap (Only for Percentage) */}
+                  {formType === "percentage" ? (
+                    <div className="admin-field">
+                      <label htmlFor="cpn-max-cap">Maximum Discount Cap (₹)</label>
+                      <input
+                        id="cpn-max-cap"
+                        type="number"
+                        min={10}
+                        step={10}
+                        value={formMaxDiscount}
+                        onChange={(e) => setFormMaxDiscount(Number(e.target.value))}
+                        disabled={isSubmitting}
+                        className="admin-input"
+                      />
+                      <span className="admin-field_hint">Limits max discount amount.</span>
+                    </div>
+                  ) : null}
+                </div>
+
+                {/* Live Preview Card */}
+                <div className="admin-coupon-preview-box">
+                  <span className="admin-coupon-preview-tag">Customer View Preview</span>
+                  <div className="admin-coupon-preview-card">
+                    <div className="admin-coupon-preview-left">
+                      <span className="admin-coupon-preview-badge">
+                        {formType === "fixed" ? `FLAT ₹${formValue || 0} OFF` : `${formValue || 0}% OFF`}
+                      </span>
+                      <span className="admin-coupon-preview-code">
+                        {formCode.trim().toUpperCase() || "YOURCODE"}
+                      </span>
+                    </div>
+                    <div className="admin-coupon-preview-right">
+                      <span className="admin-coupon-preview-title">
+                        {formTitle.trim() ||
+                          (formType === "fixed"
+                            ? `Flat ₹${formValue || 0} discount on your order`
+                            : `${formValue || 0}% off on selected order`)}
+                      </span>
+                      <span className="admin-coupon-preview-terms">
+                        {formMinOrder > 0 ? `Min. order ₹${formMinOrder}` : "No minimum order"}
+                        {formType === "percentage" && formMaxDiscount ? ` • Max cap ₹${formMaxDiscount}` : ""}
+                      </span>
+                    </div>
                   </div>
                 </div>
               </div>
 
-              {/* Modal Actions */}
-              <div className="admin-coupon-modal-foot">
+              {/* Fixed Pinned Modal Footer */}
+              <footer className="admin-coupon-modal-foot">
                 <button
                   type="button"
                   className="admin-btn admin-btn--ghost"
@@ -770,7 +723,7 @@ export function CouponsManager({
                     ? "Save Changes"
                     : "Create Coupon"}
                 </button>
-              </div>
+              </footer>
             </form>
           </div>
         </div>
