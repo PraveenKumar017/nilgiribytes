@@ -24,6 +24,7 @@ export type OrderConfirmationEmail = {
   orderNumber: string;
   paymentId: string;
   razorpayOrderId: string;
+  paymentMethod?: "ONLINE" | "COD";
   lines: PricedOrderLine[];
   subtotalPaise: number;
   paidAt?: Date;
@@ -57,6 +58,7 @@ function buildHtml(
   trackUrl: string
 ): string {
   const paidAt = data.paidAt ?? new Date();
+  const isCod = data.paymentMethod === "COD";
   const itemRows = data.lines
     .map((line) => {
       const size = line.sizeLabel
@@ -94,10 +96,10 @@ function buildHtml(
 
   const detailRows = [
     detailRow("Order ID", data.orderNumber),
-    detailRow("Razorpay order ID", data.razorpayOrderId),
-    detailRow("Payment ID", data.paymentId),
+    isCod ? "" : detailRow("Razorpay order ID", data.razorpayOrderId),
+    detailRow(isCod ? "Order reference" : "Payment ID", data.paymentId),
     detailRow("Order date", formatDateTime(paidAt)),
-    detailRow("Payment status", "Paid"),
+    detailRow("Payment status", isCod ? "Pay on delivery" : "Paid"),
     data.address ? detailRow("Delivery address", data.address) : "",
     detailRow("Name", data.customerName),
     detailRow("Phone", data.customerPhone),
@@ -113,7 +115,11 @@ function buildHtml(
       </div>
       <div style="padding:22px 26px 8px;">
         <p style="margin:0;color:#35170f;font-size:15px;line-height:1.6;">
-          Hi ${escapeHtml(data.customerName)}, thank you for your order. Your payment was successful and we are preparing your items fresh.
+          Hi ${escapeHtml(data.customerName)}, thank you for your order. ${
+            isCod
+              ? "Your order is confirmed and will be paid on delivery."
+              : "Your payment was successful and we are preparing your items fresh."
+          }
         </p>
       </div>
       <table role="presentation" cellpadding="0" cellspacing="0" style="width:100%;border-collapse:collapse;">
@@ -135,7 +141,9 @@ function buildHtml(
           </tbody>
           <tfoot>
             <tr>
-              <td colspan="3" align="right" style="padding:14px;color:#35170f;font-size:14px;font-weight:600;">Total paid</td>
+              <td colspan="3" align="right" style="padding:14px;color:#35170f;font-size:14px;font-weight:600;">${
+                isCod ? "Amount due on delivery" : "Total paid"
+              }</td>
               <td align="right" style="padding:14px;color:#35170f;font-size:16px;font-weight:700;white-space:nowrap;">${escapeHtml(
                 formatINR(data.subtotalPaise)
               )}</td>
@@ -167,6 +175,7 @@ function buildText(
   trackUrl: string
 ): string {
   const paidAt = data.paidAt ?? new Date();
+  const isCod = data.paymentMethod === "COD";
   const items = data.lines.map(
     (line) =>
       `- ${line.name}${line.sizeLabel ? ` (${line.sizeLabel})` : ""} x ${
@@ -177,13 +186,15 @@ function buildText(
   return [
     "Order confirmed",
     "",
-    `Hi ${data.customerName}, thank you for your order. Your payment was successful.`,
+    `Hi ${data.customerName}, thank you for your order. ${
+      isCod ? "Your order is confirmed and will be paid on delivery." : "Your payment was successful."
+    }`,
     "",
     `Order ID: ${data.orderNumber}`,
-    `Razorpay order ID: ${data.razorpayOrderId}`,
-    `Payment ID: ${data.paymentId}`,
+    isCod ? "" : `Razorpay order ID: ${data.razorpayOrderId}`,
+    `${isCod ? "Order reference" : "Payment ID"}: ${data.paymentId}`,
     `Order date: ${formatDateTime(paidAt)}`,
-    `Payment status: Paid`,
+    `Payment status: ${isCod ? "Pay on delivery" : "Paid"}`,
     data.address ? `Delivery address: ${data.address}` : "",
     `Phone: ${data.customerPhone}`,
     data.customerEmail ? `Email: ${data.customerEmail}` : "",
@@ -191,7 +202,7 @@ function buildText(
     "Items ordered:",
     ...items,
     "",
-    `Total paid: ${formatINR(data.subtotalPaise)}`,
+    `${isCod ? "Amount due on delivery" : "Total paid"}: ${formatINR(data.subtotalPaise)}`,
     "",
     `View order details: ${orderUrl}`,
     `Track your order: ${trackUrl}`,

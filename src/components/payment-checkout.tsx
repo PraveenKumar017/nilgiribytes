@@ -14,6 +14,7 @@ interface PaymentCheckoutProps {
   state: string;
   district: string;
   items: OrderItemInput[];
+  codEnabled?: boolean;
   onSuccess: (paymentData: PaymentSuccessData) => void;
   onError: (error: string) => void;
   onClose?: () => void;
@@ -86,6 +87,7 @@ export function PaymentCheckout({
   state,
   district,
   items,
+  codEnabled = false,
   onSuccess,
   onError,
   onClose,
@@ -93,6 +95,7 @@ export function PaymentCheckout({
 }: PaymentCheckoutProps) {
   const [loading, setLoading] = useState(false);
   const [status, setStatus] = useState("");
+  const [paymentMethod, setPaymentMethod] = useState<"ONLINE" | "COD">("ONLINE");
   const scriptLoaded = useRef(false);
 
   // Load Razorpay script dynamically
@@ -120,6 +123,54 @@ export function PaymentCheckout({
       // Don't remove the script to avoid reloading on component remount
     };
   }, [onError]);
+
+  const handleCodOrder = async () => {
+    setLoading(true);
+    setStatus("Placing your order...");
+
+    try {
+      const response = await fetch("/api/create-cod-order", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          customerName,
+          customerEmail,
+          customerPhone,
+          address,
+          pincode,
+          state,
+          district,
+          items,
+        }),
+      });
+
+      const result = await response.json().catch(() => null);
+
+      if (
+        !response.ok ||
+        !result?.success ||
+        typeof result.orderNumber !== "string" ||
+        typeof result.paymentId !== "string"
+      ) {
+        throw new Error(result?.error || "Could not place your order.");
+      }
+
+      setStatus("Order placed successfully!");
+      onSuccess({
+        orderId: result.paymentId,
+        paymentId: result.paymentId,
+        signature: "",
+        orderNumber: result.orderNumber,
+        databaseOrderId: result.databaseOrderId,
+      });
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : "Order failed";
+      setStatus(`Error: ${errorMessage}`);
+      onError(errorMessage);
+      setLoading(false);
+    }
+  };
 
   const handlePaymentClick = async () => {
     console.log("Payment button clicked");
@@ -153,6 +204,11 @@ export function PaymentCheckout({
       console.error("Validation errors:", errors);
       onValidationError?.(errors);
       onError("Please fill in all required fields");
+      return;
+    }
+
+    if (paymentMethod === "COD") {
+      await handleCodOrder();
       return;
     }
 
@@ -296,6 +352,41 @@ export function PaymentCheckout({
 
   return (
     <div className="payment-checkout">
+      {codEnabled ? (
+        <div className="payment-methods" role="radiogroup" aria-label="Payment method">
+          <label
+            className={`payment-method${
+              paymentMethod === "ONLINE" ? " is-active" : ""
+            }`}
+          >
+            <input
+              type="radio"
+              name="paymentMethod"
+              value="ONLINE"
+              checked={paymentMethod === "ONLINE"}
+              onChange={() => setPaymentMethod("ONLINE")}
+              disabled={loading}
+            />
+            <span>Pay Online</span>
+          </label>
+          <label
+            className={`payment-method${
+              paymentMethod === "COD" ? " is-active" : ""
+            }`}
+          >
+            <input
+              type="radio"
+              name="paymentMethod"
+              value="COD"
+              checked={paymentMethod === "COD"}
+              onChange={() => setPaymentMethod("COD")}
+              disabled={loading}
+            />
+            <span>Cash on Delivery</span>
+          </label>
+        </div>
+      ) : null}
+
       <button
         type="button"
         className="btn btn--primary"
@@ -303,7 +394,11 @@ export function PaymentCheckout({
         disabled={loading}
         aria-busy={loading}
       >
-        {loading ? "Processing..." : `Pay ₹${amount.toFixed(2)}`}
+        {loading
+          ? "Processing..."
+          : paymentMethod === "COD"
+            ? "Place COD Order"
+            : `Pay \u20b9${amount.toFixed(2)}`}
       </button>
       {status && (
         <p className="payment-status" role="status">

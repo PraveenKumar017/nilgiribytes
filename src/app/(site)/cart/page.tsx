@@ -16,7 +16,10 @@ export default async function CartPage() {
     <main id="main-content">
       <section className="section" aria-labelledby="cart-title">
         <div className="container">
-          <CartView offerBannerEnabled={settings.offerBannerEnabled} />
+          <CartView
+            offerBannerEnabled={settings.offerBannerEnabled}
+            codEnabled={settings.codEnabled}
+          />
         </div>
       </section>
     </main>

@@ -115,6 +115,7 @@ export default async function OrderConfirmationPage({ searchParams }: PageProps)
 
   const { order, items } = details;
   const firstName = order.customerName.split(" ")[0] || "there";
+  const isCod = order.paymentId?.startsWith("COD-") ?? false;
 
   return (
     <main id="main-content">
@@ -124,8 +125,9 @@ export default async function OrderConfirmationPage({ searchParams }: PageProps)
             <span className="section-kicker text-left">Order confirmed</span>
             <h1 className="section-heading">Thank you, {firstName}.</h1>
             <p className="order-confirmation_lead">
-              Your payment was successful and we have started preparing your
-              order. A copy of these details is shown below.
+              {isCod
+                ? "Your order is confirmed. Please keep the amount ready to pay on delivery."
+                : "Your payment was successful and we have started preparing your order. A copy of these details is shown below."}
             </p>
           </div>
 
@@ -150,7 +152,9 @@ export default async function OrderConfirmationPage({ searchParams }: PageProps)
             </div>
 
             <aside className="cart-page_summary">
-              <div className="order-confirmation_badge">Paid</div>
+              <div className="order-confirmation_badge">
+                {isCod ? "COD" : "Paid"}
+              </div>
               <h2 className="cart-page_summary-title">{order.orderNumber}</h2>
               <p className="cart-page_delivery-note">
                 Placed {formatOrderDate(order.createdAt)}
@@ -161,7 +165,7 @@ export default async function OrderConfirmationPage({ searchParams }: PageProps)
                 <span>{formatINR(order.subtotalPaise)}</span>
               </div>
               <div className="cart-summary cart-summary--total">
-                <span>Total paid</span>
+                <span>{isCod ? "Amount due on delivery" : "Total paid"}</span>
                 <span>{formatINR(order.totalPaise)}</span>
               </div>
               <hr className="cart-page_summary-rule" />
@@ -170,7 +174,9 @@ export default async function OrderConfirmationPage({ searchParams }: PageProps)
                 <span>Ordered</span>
               </div>
               <p className="cart-page_delivery-note">
-                Payment reference: {order.paymentId ?? paymentId}
+                {isCod
+                  ? "Payment method: Cash on Delivery"
+                  : `Payment reference: ${order.paymentId ?? paymentId}`}
               </p>
               <Link className="btn btn--primary" href="/shop">
                 Continue shopping

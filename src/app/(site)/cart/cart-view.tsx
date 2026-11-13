@@ -77,8 +77,10 @@ const EMPTY_CUSTOMER_DETAILS: CustomerDetails = {
 
 export function CartView({
   offerBannerEnabled,
+  codEnabled,
 }: {
   offerBannerEnabled: boolean;
+  codEnabled: boolean;
 }) {
   const router = useRouter();
   const { lines, ready, count, subtotal, changeQty, clear } = useCart();
@@ -703,6 +705,7 @@ export function CartView({
                     state={customerDetails.state}
                     district={customerDetails.district}
                     items={paymentItems}
+                    codEnabled={codEnabled}
                     onSuccess={handlePaymentSuccess}
                     onError={handlePaymentError}
                     onValidationError={handleValidationError}
@@ -723,7 +726,7 @@ export function CartView({
                 width: "100%",
               }}
             >
-              Pay Online
+              Pay Now
             </button>
           )}
         </aside>
