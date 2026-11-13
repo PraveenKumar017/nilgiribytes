@@ -109,6 +109,11 @@
 .order-confirmation_head {
   max-width: 720px;
   margin-bottom: 2rem;
+  text-align: left;
+}
+
+.order-confirmation_head .section-heading {
+  text-align: left;
 }
 
 .order-confirmation_lead {

@@ -36,8 +36,6 @@ export async function POST(request: Request) {
 
   await ensureCouponTable();
 
-  await ensureCouponTable();
-
   try {
     const body = await request.json();
     const code = String(body.code ?? "").trim().toUpperCase().replace(/\s+/g, "");

@@ -551,6 +551,28 @@ export async function getDashboard(): Promise<AdminDashboard> {
   };
 }
 
+export async function ensureCouponTable(): Promise<void> {
+  const db = getPool();
+  if (!db) throw new Error("Database not connected.");
+  await db.execute(
+    `CREATE TABLE IF NOT EXISTS \`Coupon\` (
+      \`id\` INTEGER NOT NULL AUTO_INCREMENT,
+      \`code\` VARCHAR(60) NOT NULL,
+      \`title\` VARCHAR(255) NOT NULL,
+      \`discountType\` ENUM('fixed', 'percentage') NOT NULL DEFAULT 'fixed',
+      \`discountValue\` INTEGER NOT NULL,
+      \`minOrderPaise\` INTEGER NOT NULL DEFAULT 0,
+      \`maxDiscountPaise\` INTEGER NULL,
+      \`isActive\` BOOLEAN NOT NULL DEFAULT TRUE,
+      \`createdAt\` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+      \`updatedAt\` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3) ON UPDATE CURRENT_TIMESTAMP(3),
+      UNIQUE INDEX \`Coupon_code_key\`(\`code\`),
+      INDEX \`Coupon_isActive_idx\`(\`isActive\`),
+      PRIMARY KEY (\`id\`)
+    ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci`
+  );
+}
+
 export async function listCoupons(): Promise<AdminCoupon[]> {
   const [rows] = await pool().query<RowDataPacket[]>(
     `SELECT id, code, title, discountType, discountValue, minOrderPaise, maxDiscountPaise, isActive, createdAt, updatedAt
