@@ -86,7 +86,7 @@ const WHY_REASONS = [
 
 const WHY_STATS = [
   { value: "1980", label: "Baking since" },
-  { value: "28,000+", label: "Pin codes served" },
+  { value: "19,299+", label: "Pin codes served" },
   { value: "90 days", label: "Shelf life" },
 ] as const;
 

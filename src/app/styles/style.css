@@ -979,7 +979,7 @@ p {
 .category-grid {
   display: grid;
   grid-template-columns: 1.25fr 1fr 1fr;
-  grid-template-rows: repeat(2, 1fr);
+  grid-template-rows: 1.35fr 0.9fr;
   gap: 1.25rem;
   grid-auto-flow: dense;
 }
@@ -1190,7 +1190,7 @@ p {
 }
 
 .category-card--wide .category-card_media {
-  flex: 0 0 44%;
+  flex: 0 0 42%;
 }
 
 .category-card--wide .category-card_body {
@@ -1198,11 +1198,11 @@ p {
   display: flex;
   flex-direction: column;
   justify-content: center;
-  padding: 1.35rem 2rem 1.35rem 1.6rem;
+  padding: 1rem 1.6rem;
 }
 
 .category-card--wide .category-card_title {
-  font-size: 1.75rem;
+  font-size: 1.45rem;
 }
 
 /* ---------- Signature range poster deck ---------- */

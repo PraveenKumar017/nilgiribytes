@@ -38,11 +38,11 @@
 }
 
 .category-card--wide .category-card_media {
-  flex: 0 0 165px;
+  flex: 0 0 135px;
 }
 
 .category-card--wide .category-card_body {
-  padding: 1.05rem 1.3rem 1.25rem;
+  padding: 0.85rem 1.15rem 1rem;
 }
 
 .category-collection_head {
@@ -337,14 +337,16 @@
   .category-card--wide {
     grid-column: 1 / -1;
     flex-direction: row;
+    min-height: 180px;
+    max-height: 220px;
   }
 
   .category-card--wide .category-card_media {
-    flex: 0 0 45%;
+    flex: 0 0 42%;
   }
 
   .category-card--wide .category-card_body {
-    padding: 1.35rem 2rem 1.35rem 1.6rem;
+    padding: 1rem 1.6rem;
   }
 
   .category-collection_head {
@@ -421,7 +423,7 @@
 
   .category-grid {
     grid-template-columns: 1.25fr 1fr 1fr;
-    grid-template-rows: repeat(2, 1fr);
+    grid-template-rows: 1.35fr 0.9fr;
   }
 
   .category-card--feature {

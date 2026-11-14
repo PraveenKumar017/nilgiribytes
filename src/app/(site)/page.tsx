@@ -149,7 +149,7 @@ export default async function HomePage() {
               >
                 <div
                   className="category-card_media"
-                  style={{ flex: "0 0 auto", aspectRatio: "4 / 4" }}
+                  style={{ flex: "0 0 auto", aspectRatio: "16 / 11", maxHeight: "260px" }}
                 >
                   <img
                     className="category-card_texture"
@@ -162,13 +162,10 @@ export default async function HomePage() {
                 <span className="category-card_index" aria-hidden="true">
                   01
                 </span>
-                <div
-                  className="category-card_body"
-                  style={{ marginTop: "auto" }}
-                >
-                  <h3 className="category-card_title">Ooty Varkey</h3>
+                <div className="category-card_body">
+                  <h3 className="category-card_title">Classic Ooty Varkey</h3>
                   <p className="category-card_text">
-                    Crisp, golden perfection defines the flaky, buttery layers baked fresh every morning - the taste the Nilgiris is known for.
+                    Its crunchy texture slowly softens when enjoyed with hot tea or coffee, making every bite a delightful experience. A perfect companion for your favourite tea-time moments!
                   </p>
                   <span className="category-card_link">Shop varkey</span>
                 </div>
@@ -194,8 +191,7 @@ export default async function HomePage() {
                 <div className="category-card_body">
                   <h3 className="category-card_title">Salt Biscuit</h3>
                   <p className="category-card_text">
-                    Savoury, subtly salted and crumbly - made for a hot cup of
-                    chai.
+                    Light and easy to enjoy, these biscuits make a wonderful companion. 
                   </p>
                   <span className="category-card_link">
                     Shop salt biscuit
@@ -223,8 +219,7 @@ export default async function HomePage() {
                 <div className="category-card_body">
                   <h3 className="category-card_title">Sweet Biscuit</h3>
                   <p className="category-card_text">
-                    Gently sweet, golden-baked and perfect with evening tea or
-                    coffee.
+                    Perfect for those little sweet cravings, with your favourite tea or coffee.
                   </p>
                   <span className="category-card_link">
                     Shop sweet biscuit
@@ -235,7 +230,7 @@ export default async function HomePage() {
               <Link
                 className="category-card category-card--light category-card--wide reveal"
                 data-reveal="fade-up"
-                href="/shop?category=Combos"
+                href="/shop/family-combo"
               >
                 <span className="category-card_index" aria-hidden="true">
                   04
@@ -244,18 +239,17 @@ export default async function HomePage() {
                   <img
                     className="category-card_texture"
                     src="/assets/images/combo_choice.jpg"
-                    alt=""
+                    alt="Family Combo from Nilgiribytes"
                     aria-hidden="true"
                     loading="lazy"
                   />
                 </div>
                 <div className="category-card_body">
-                  <h3 className="category-card_title">Trail Combos</h3>
+                  <h3 className="category-card_title">Family Combo</h3>
                   <p className="category-card_text">
-                    Thoughtfully paired varkey and biscuits - the perfect gift or
-                    tea-time spread.
+                    A generous 1kg pack of our most-loved varkeys and biscuits &mdash; packed together for the whole family.
                   </p>
-                  <span className="category-card_link">Shop combos</span>
+                  <span className="category-card_link">Shop Family Combo</span>
                 </div>
               </Link>
             </div>
