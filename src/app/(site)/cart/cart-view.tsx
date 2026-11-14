@@ -243,6 +243,23 @@ export function CartView({
     };
   }, [subtotal, coupon?.code, lines]);
 
+  // Lock page scroll and close on Escape while the verification panel is open.
+  useEffect(() => {
+    if (!showPaymentForm) return;
+
+    document.body.classList.add("is-locked");
+
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setShowPaymentForm(false);
+    };
+    window.addEventListener("keydown", onKeyDown);
+
+    return () => {
+      document.body.classList.remove("is-locked");
+      window.removeEventListener("keydown", onKeyDown);
+    };
+  }, [showPaymentForm]);
+
   const handleApplyCoupon = async () => {
     const code = couponInput.trim();
     if (!code) {
@@ -799,90 +816,125 @@ export function CartView({
             </div>
           )}
 
-          {showPaymentForm ? (
-            <>
-              <div className="cart-page_payment-verification">
-                <h3 className="verification-title">Verify Your Details</h3>
-                <div className="verification-details">
-                  <div className="detail-row">
-                    <span className="detail-label">Name:</span>
-                    <span className="detail-value">{customerDetails.name}</span>
-                  </div>
-                  <div className="detail-row">
-                    <span className="detail-label">Mobile:</span>
-                    <span className="detail-value">{customerDetails.mobile}</span>
-                  </div>
-                  <div className="detail-row">
-                    <span className="detail-label">Email:</span>
-                    <span className="detail-value">{customerDetails.email}</span>
-                  </div>
-                  <div className="detail-row">
-                    <span className="detail-label">Address:</span>
-                    <span className="detail-value">{customerDetails.address}</span>
-                  </div>
-                  <div className="detail-row">
-                    <span className="detail-label">Pincode:</span>
-                    <span className="detail-value">{customerDetails.pincode}</span>
-                  </div>
-                  <div className="detail-row">
-                    <span className="detail-label">State:</span>
-                    <span className="detail-value">{customerDetails.state}</span>
-                  </div>
-                  <div className="detail-row">
-                    <span className="detail-label">District:</span>
-                    <span className="detail-value">{customerDetails.district}</span>
-                  </div>
-                </div>
-
-                <div className="form-actions">
-                  <button
-                    type="button"
-                    className="btn btn--outline"
-                    onClick={() => {
-                      setShowPaymentForm(false);
-                      setShowCustomerModal(true);
-                    }}
-                  >
-                    Edit Details
-                  </button>
-                  <PaymentCheckout
-                    amount={Math.ceil(totalPaise / 100)}
-                    description="Nilgiribytes Bakery Order"
-                    customerName={customerDetails.name}
-                    customerEmail={customerDetails.email}
-                    customerPhone={customerDetails.mobile}
-                    address={customerDetails.address}
-                    pincode={customerDetails.pincode}
-                    state={customerDetails.state}
-                    district={customerDetails.district}
-                    couponCode={coupon?.code}
-                    items={paymentItems}
-                    codEnabled={codEnabled}
-                    onSuccess={handlePaymentSuccess}
-                    onError={handlePaymentError}
-                    onValidationError={handleValidationError}
-                    onClose={() => setShowPaymentForm(false)}
-                  />
-                </div>
-              </div>
-            </>
-          ) : (
-            <button
-              type="button"
-              className="btn btn--primary"
-              onClick={handlePayOnlineClick}
-              style={{
-                padding: "0.5rem 1.4rem",
-                fontSize: "0.86rem",
-                lineHeight: 1.2,
-                width: "100%",
-              }}
-            >
-              Pay Now
-            </button>
-          )}
+          <button
+            type="button"
+            className="btn btn--primary"
+            onClick={handlePayOnlineClick}
+            style={{
+              padding: "0.5rem 1.4rem",
+              fontSize: "0.86rem",
+              lineHeight: 1.2,
+              width: "100%",
+            }}
+          >
+            Pay Now
+          </button>
         </aside>
       </div>
+
+      {showPaymentForm && (
+        <>
+          <div
+            className="cart-verify-overlay"
+            onClick={() => setShowPaymentForm(false)}
+          />
+          <div
+            className="cart-verify-panel"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="verify-title"
+          >
+            <div className="cart-verify-panel_header">
+              <h3 className="verification-title" id="verify-title">
+                Verify Your Details
+              </h3>
+              <button
+                type="button"
+                className="modal-close cart-verify-panel_close"
+                aria-label="Close verification"
+                onClick={() => setShowPaymentForm(false)}
+              >
+                &times;
+              </button>
+            </div>
+
+            <div className="cart-verify-panel_body">
+              <div className="verification-details">
+                <div className="detail-row">
+                  <span className="detail-label">Name:</span>
+                  <span className="detail-value">{customerDetails.name}</span>
+                </div>
+                <div className="detail-row">
+                  <span className="detail-label">Mobile:</span>
+                  <span className="detail-value">{customerDetails.mobile}</span>
+                </div>
+                <div className="detail-row">
+                  <span className="detail-label">Email:</span>
+                  <span className="detail-value">{customerDetails.email}</span>
+                </div>
+                <div className="detail-row">
+                  <span className="detail-label">Address:</span>
+                  <span className="detail-value">{customerDetails.address}</span>
+                </div>
+                <div className="detail-row">
+                  <span className="detail-label">Pincode:</span>
+                  <span className="detail-value">{customerDetails.pincode}</span>
+                </div>
+                <div className="detail-row">
+                  <span className="detail-label">State:</span>
+                  <span className="detail-value">{customerDetails.state}</span>
+                </div>
+                <div className="detail-row">
+                  <span className="detail-label">District:</span>
+                  <span className="detail-value">{customerDetails.district}</span>
+                </div>
+              </div>
+
+              <div className="cart-verify-panel_note">
+                <span>Amount payable</span>
+                <strong>{formatINR(totalPaise)}</strong>
+              </div>
+
+              {paymentError && (
+                <div className="cart-page_payment-error" role="alert">
+                  {paymentError}
+                </div>
+              )}
+
+              <div className="form-actions">
+                <button
+                  type="button"
+                  className="btn btn--outline"
+                  onClick={() => {
+                    setShowPaymentForm(false);
+                    setShowCustomerModal(true);
+                  }}
+                >
+                  Edit Details
+                </button>
+                <PaymentCheckout
+                  amount={Math.ceil(totalPaise / 100)}
+                  description="Nilgiribytes Bakery Order"
+                  customerName={customerDetails.name}
+                  customerEmail={customerDetails.email}
+                  customerPhone={customerDetails.mobile}
+                  address={customerDetails.address}
+                  pincode={customerDetails.pincode}
+                  state={customerDetails.state}
+                  district={customerDetails.district}
+                  couponCode={coupon?.code}
+                  items={paymentItems}
+                  codEnabled={codEnabled}
+                  onSuccess={handlePaymentSuccess}
+                  onError={handlePaymentError}
+                  onValidationError={handleValidationError}
+                  onClose={() => setShowPaymentForm(false)}
+                />
+              </div>
+            </div>
+          </div>
+        </>
+      )}
 
       {/* You may also like section - Full width white background */}
       {relatedProducts.length > 0 && (
