@@ -2991,6 +2991,17 @@ body[data-page="cart"] .section {
   white-space: pre-line;
 }
 
+.product-detail_tagline {
+  display: block;
+  margin-bottom: 0.4rem;
+  color: var(--color-chocolate);
+  font-family: var(--font-display);
+  font-size: 1.15rem;
+  font-weight: 700;
+  line-height: 1.4;
+  letter-spacing: -0.01em;
+}
+
 .product-detail_facts {
   display: grid;
   grid-template-columns: max-content 1fr;

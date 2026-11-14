@@ -46,7 +46,7 @@ export const SITE_KEYWORDS = [
 export const PHONE_DISPLAY = "+91 93449 21647";
 export const PHONE_TEL = "+919344921647";
 export const WHATSAPP_NUMBER = "919344921647";
-export const CONTACT_EMAIL = "sujithvasu647@gmail.com";
+export const CONTACT_EMAIL = "nilgiribytes.info@gmail.com";
 
 export const ADDRESS = {
   streetAddress: "Keradamattam, Kodanad Road",

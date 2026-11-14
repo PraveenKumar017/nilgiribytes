@@ -44,6 +44,13 @@ export function ProductDetail({ item }: ProductDetailProps) {
       : [itemImage(item, sizeIndex)];
   const activeIndex = Math.min(imageIndex, images.length - 1);
   const activeImage = images[activeIndex] ?? images[0];
+  const [taglineLine = "", ...descriptionLines] =
+    item.description.split(/\r?\n/);
+  const tagline = taglineLine.trim();
+  const descriptionBody = descriptionLines
+    .join("\n")
+    .replace(/^\s*\n/, "")
+    .trim();
 
   useEffect(() => {
     if (!lightboxOpen) return;
@@ -162,7 +169,10 @@ export function ProductDetail({ item }: ProductDetailProps) {
             <span className="todo-note">Description: {item.description}</span>
           </p>
         ) : (
-          <p className="product-detail_desc">{item.description}</p>
+          <p className="product-detail_desc">
+            <strong className="product-detail_tagline">{tagline}</strong>
+            {descriptionBody ? `\n${descriptionBody}` : null}
+          </p>
         )}
 
         {item.ingredients || item.shelfLife ? (
