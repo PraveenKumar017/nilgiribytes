@@ -5,6 +5,7 @@ import {
   ConfirmSubmit,
   ImagesField,
   ItemsEditor,
+  VideoField,
   type ComboItemDraft,
   type ProductOption,
 } from "@/components/admin/admin-ui";
@@ -145,6 +146,11 @@ function ComboForm({
           name="images"
           label="Images"
           defaultImages={combo?.images}
+        />
+        <VideoField
+          name="videoUrl"
+          label="Combo video"
+          defaultValue={combo?.videoUrl}
         />
       </div>
     </ActionForm>

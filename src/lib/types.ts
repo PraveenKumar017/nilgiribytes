@@ -22,6 +22,7 @@ export type StoreProduct = {
   poster: string;
   images: string[];
   imageAlt: string;
+  videoUrl?: string | null;
   sizes: StoreSize[];
   rating: number;
   sortOrder?: number;
@@ -46,6 +47,7 @@ export type StoreCombo = {
   image: string;
   images: string[];
   imageAlt: string;
+  videoUrl?: string | null;
   weight: string;
   pricePaise: number;
   mrpPaise: number;

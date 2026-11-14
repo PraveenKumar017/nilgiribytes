@@ -42,8 +42,11 @@ export function ProductDetail({ item }: ProductDetailProps) {
     : fallbackImages.length
       ? fallbackImages
       : [itemImage(item, sizeIndex)];
-  const activeIndex = Math.min(imageIndex, images.length - 1);
-  const activeImage = images[activeIndex] ?? images[0];
+  const videoUrl = item.videoUrl ?? null;
+  const mediaCount = images.length + (videoUrl ? 1 : 0);
+  const activeIndex = Math.min(imageIndex, mediaCount - 1);
+  const isVideoActive = Boolean(videoUrl) && activeIndex === images.length;
+  const activeImage = images[Math.min(activeIndex, images.length - 1)] ?? images[0];
   const [taglineLine = "", ...descriptionLines] =
     item.description.split(/\r?\n/);
   const tagline = taglineLine.trim();
@@ -72,7 +75,7 @@ export function ProductDetail({ item }: ProductDetailProps) {
   function moveImage(delta: number) {
     setImageIndex((current) => {
       const next = current + delta;
-      return (next + images.length) % images.length;
+      return (next + mediaCount) % mediaCount;
     });
   }
 
@@ -80,21 +83,31 @@ export function ProductDetail({ item }: ProductDetailProps) {
     <article className="product-detail">
       <div className="product-detail_media">
         <div className="product-detail_stage">
-          <button
-            type="button"
-            className="product-detail_zoom"
-            aria-label={`View ${item.name} full size`}
-            onClick={() => setLightboxOpen(true)}
-          >
-            <SafeImage
-              src={activeImage}
-              alt={`${item.name} — ${item.category}`}
-              width={900}
-              height={900}
-              loading="eager"
+          {isVideoActive && videoUrl ? (
+            <video
+              src={videoUrl}
+              poster={activeImage}
+              controls
+              playsInline
+              preload="metadata"
             />
-          </button>
-          {images.length > 1 ? (
+          ) : (
+            <button
+              type="button"
+              className="product-detail_zoom"
+              aria-label={`View ${item.name} full size`}
+              onClick={() => setLightboxOpen(true)}
+            >
+              <SafeImage
+                src={activeImage}
+                alt={`${item.name} — ${item.category}`}
+                width={900}
+                height={900}
+                loading="eager"
+              />
+            </button>
+          )}
+          {mediaCount > 1 ? (
             <>
               <button
                 type="button"
@@ -120,8 +133,8 @@ export function ProductDetail({ item }: ProductDetailProps) {
           ) : null}
         </div>
 
-        {images.length > 1 ? (
-          <div className="product-detail_thumbs" aria-label="Product images">
+        {mediaCount > 1 ? (
+          <div className="product-detail_thumbs" aria-label="Product media">
             {images.map((image, index) => (
               <button
                 key={`${image}-${index}`}
@@ -136,6 +149,26 @@ export function ProductDetail({ item }: ProductDetailProps) {
                 <SafeImage src={image} alt="" width={80} height={80} />
               </button>
             ))}
+            {videoUrl ? (
+              <button
+                type="button"
+                className={`product-detail_thumb product-detail_thumb--video${
+                  isVideoActive ? " is-active" : ""
+                }`}
+                aria-label="Play product video"
+                aria-pressed={isVideoActive}
+                onClick={() => setImageIndex(images.length)}
+              >
+                <SafeImage src={images[0]} alt="" width={80} height={80} />
+                <svg
+                  className="product-detail_thumb-play"
+                  viewBox="0 0 24 24"
+                  aria-hidden="true"
+                >
+                  <path d="M8 5v14l11-7z" />
+                </svg>
+              </button>
+            ) : null}
           </div>
         ) : null}
       </div>

@@ -714,6 +714,112 @@ export function ImageField({
   );
 }
 
+export function VideoField({
+  name,
+  label,
+  defaultValue,
+}: {
+  name: string;
+  label: string;
+  defaultValue?: string | null;
+}) {
+  const [value, setValue] = useState(defaultValue ?? "");
+  const [uploading, setUploading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  async function upload(file: File) {
+    if (file.type !== "video/mp4") {
+      setError("Upload an MP4 video.");
+      return;
+    }
+
+    if (file.size > 20 * 1024 * 1024) {
+      setError("Each video must be 20 MB or smaller.");
+      return;
+    }
+
+    setUploading(true);
+    setError(null);
+
+    try {
+      const body = new FormData();
+      body.append("file", file);
+
+      const response = await fetch("/api/admin/upload", {
+        method: "POST",
+        body,
+      });
+      const result = (await response.json().catch(() => null)) as
+        | { url?: unknown; error?: unknown }
+        | null;
+
+      if (!response.ok || typeof result?.url !== "string") {
+        setError(
+          typeof result?.error === "string"
+            ? result.error
+            : "Could not upload the video."
+        );
+        return;
+      }
+
+      setValue(result.url);
+    } catch {
+      setError("Could not upload the video.");
+    } finally {
+      setUploading(false);
+    }
+  }
+
+  return (
+    <div className="admin-field admin-field--image admin-field--video">
+      <span>{label}</span>
+      <input type="hidden" name={name} value={value} />
+      <div className="admin-image-preview admin-video-preview">
+        {value ? (
+          <video src={imageSrc(value)} controls playsInline preload="metadata" />
+        ) : (
+          <span>No video selected</span>
+        )}
+      </div>
+      <div className="admin-image-upload-actions">
+        <label className="admin-btn admin-btn--small">
+          {uploading ? "Uploading..." : value ? "Replace video" : "Upload video"}
+          <input
+            className="admin-image-file"
+            type="file"
+            accept="video/mp4"
+            disabled={uploading}
+            onChange={(event) => {
+              const file = event.target.files?.[0];
+              event.currentTarget.value = "";
+              if (file) void upload(file);
+            }}
+          />
+        </label>
+        {value ? (
+          <button
+            type="button"
+            className="admin-btn admin-btn--small admin-btn--danger"
+            onClick={() => {
+              setValue("");
+              setError(null);
+            }}
+            disabled={uploading}
+          >
+            Remove
+          </button>
+        ) : null}
+      </div>
+      <p className="admin-field_hint">MP4 only, up to 20 MB.</p>
+      {error ? (
+        <p className="admin-alert admin-alert--error" role="alert">
+          {error}
+        </p>
+      ) : null}
+    </div>
+  );
+}
+
 export function ImagesField({
   name,
   label,

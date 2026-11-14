@@ -4,6 +4,7 @@ import {
   ActionForm,
   ConfirmSubmit,
   SizesEditor,
+  VideoField,
   type SizeDraft,
 } from "@/components/admin/admin-ui";
 import { EditIcon, TrashIcon } from "@/components/admin/icons";
@@ -135,6 +136,18 @@ function ProductForm({
           <p>Enter prices in rupees. Discounts are calculated automatically.</p>
         </div>
         <SizesEditor defaultSizes={sizes} />
+      </div>
+
+      <div className="admin-form_section">
+        <div className="admin-form_section-head">
+          <h2>Video</h2>
+          <p>Optional video shown on the product page.</p>
+        </div>
+        <VideoField
+          name="videoUrl"
+          label="Product video"
+          defaultValue={product?.videoUrl}
+        />
       </div>
 
     </ActionForm>
@@ -277,7 +290,20 @@ export default async function AdminProductsPage({ searchParams }: PageProps) {
 
                       return (
                         <td key={grams}>
-                          {size ? formatINR(size.pricePaise) : "\u2014"}
+                          {size ? (
+                            <span className="admin-price">
+                              {size.mrpPaise > size.pricePaise ? (
+                                <s className="admin-price_mrp">
+                                  {formatINR(size.mrpPaise)}
+                                </s>
+                              ) : null}
+                              <span className="admin-price_sale">
+                                {formatINR(size.pricePaise)}
+                              </span>
+                            </span>
+                          ) : (
+                            "\u2014"
+                          )}
                         </td>
                       );
                     })}

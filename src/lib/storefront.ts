@@ -95,6 +95,7 @@ type ProductRow = RowDataPacket & {
   categoryName: string;
   sizes: unknown;
   imageUrl: unknown;
+  videoUrl: string | null;
   rating: number;
 };
 
@@ -107,6 +108,7 @@ type ComboRow = RowDataPacket & {
   shelfLife: string | null;
   items: unknown;
   imageUrl: unknown;
+  videoUrl: string | null;
   weightLabel: string | null;
   pricePaise: number;
   discountPercent: number;
@@ -125,6 +127,23 @@ type BlogPostRow = RowDataPacket & {
 };
 
 const IMAGE_FALLBACK = "/assets/placeholder.svg";
+
+function isHeroProduct(item: { slug?: string; name?: string }): boolean {
+  const slug = (item.slug ?? "").toLowerCase();
+  const name = (item.name ?? "").toLowerCase();
+  return (
+    slug === "premium-special-varkey" ||
+    (name.includes("premium") && name.includes("varkey"))
+  );
+}
+
+function heroFirst<T extends { slug?: string; name?: string }>(
+  items: T[]
+): T[] {
+  const hero = items.filter(isHeroProduct);
+  if (!hero.length) return items;
+  return [...hero, ...items.filter((item) => !isHeroProduct(item))];
+}
 
 let databaseFailed = false;
 
@@ -312,21 +331,22 @@ export async function getCatalog(): Promise<Catalog> {
       pool.query<ProductRow[]>(
         `SELECT p.id, p.slug, p.name, p.description, p.ingredients,
                 p.shelfLife, p.sizes, c.name AS categoryName, p.imageUrl,
-                p.rating
+                p.videoUrl, p.rating
            FROM Product p
            JOIN Category c ON c.id = p.categoryId
           ORDER BY p.sortOrder ASC, p.id ASC`
       ),
       pool.query<ComboRow[]>(
         `SELECT id, slug, name, description, ingredients, shelfLife, items,
-                imageUrl, weightLabel, pricePaise, discountPercent, rating
+                imageUrl, videoUrl, weightLabel, pricePaise, discountPercent, rating
            FROM Combo
           ORDER BY sortOrder ASC, id ASC`
       ),
     ]);
 
     return {
-      products: productRows[0].map((product, index) => {
+      products: heroFirst(
+        productRows[0].map((product, index) => {
         const sizes = parseJsonArray<SizeJson>(product.sizes).map((size) => {
           const images = (size.images ?? [])
             .filter(
@@ -372,10 +392,12 @@ export async function getCatalog(): Promise<Catalog> {
           poster: image,
           images: productImages.length ? productImages : [image],
           imageAlt: `${product.name} from Nilgiribytes`,
+          videoUrl: product.videoUrl ? assetUrl(product.videoUrl) : null,
           sizes,
           rating: Number(product.rating ?? 4.3),
         };
-      }),
+        })
+      ),
       combos: comboRows[0].map((combo, index) => {
         const mrpPaise = Number(combo.pricePaise);
         const discountPercent = Math.min(
@@ -403,15 +425,18 @@ export async function getCatalog(): Promise<Catalog> {
           image,
           images: images.length ? images : [image],
           imageAlt: `${combo.name} from Nilgiribytes`,
+          videoUrl: combo.videoUrl ? assetUrl(combo.videoUrl) : null,
           weight: combo.weightLabel ?? "1 kg total",
           pricePaise: Math.round((mrpPaise * (100 - discountPercent)) / 100),
           mrpPaise,
           discountPercent,
-          includes: parseJsonArray<ComboItemJson>(combo.items).map((item) => ({
-            productId: item.productId ? String(item.productId) : null,
-            name: item.name,
-            quantity: item.quantity,
-          })),
+          includes: heroFirst(
+            parseJsonArray<ComboItemJson>(combo.items).map((item) => ({
+              productId: item.productId ? String(item.productId) : null,
+              name: item.name,
+              quantity: item.quantity,
+            }))
+          ),
           rating: Number(combo.rating ?? 4.3),
         };
       }),

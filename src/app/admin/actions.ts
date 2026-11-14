@@ -348,6 +348,7 @@ function readProduct(formData: FormData) {
       };
     }),
     images,
+    videoUrl: formText(formData, "videoUrl") || null,
     sortOrder: formInt(formData, "sortOrder"),
     rating: Number.isFinite(rating) ? rating : 4.3,
   };
@@ -389,8 +390,8 @@ export async function createProductAction(
   try {
     await pool.execute(
       `INSERT INTO Product
-         (slug, name, description, ingredients, shelfLife, categoryId, sizes, imageUrl, sortOrder, rating, updatedAt)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(3))`,
+         (slug, name, description, ingredients, shelfLife, categoryId, sizes, imageUrl, videoUrl, sortOrder, rating, updatedAt)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(3))`,
       [
         data.slug,
         data.name,
@@ -400,6 +401,7 @@ export async function createProductAction(
         data.categoryId,
         JSON.stringify(sizesForStorage(data)),
         JSON.stringify(data.images),
+        data.videoUrl,
         data.sortOrder,
         data.rating,
       ]
@@ -436,7 +438,7 @@ export async function updateProductAction(
     await pool.execute(
       `UPDATE Product
           SET slug = ?, name = ?, description = ?, ingredients = ?, shelfLife = ?, categoryId = ?,
-              sizes = ?, imageUrl = ?, sortOrder = ?, rating = ?, updatedAt = NOW(3)
+              sizes = ?, imageUrl = ?, videoUrl = ?, sortOrder = ?, rating = ?, updatedAt = NOW(3)
         WHERE id = ?`,
       [
         data.slug,
@@ -447,6 +449,7 @@ export async function updateProductAction(
         data.categoryId,
         JSON.stringify(sizesForStorage(data)),
         JSON.stringify(data.images),
+        data.videoUrl,
         data.sortOrder,
         data.rating,
         id,
@@ -514,6 +517,7 @@ function readCombo(formData: FormData) {
       quantity: typeof item.quantity === "string" ? item.quantity : "",
     })),
     images,
+    videoUrl: formText(formData, "videoUrl") || null,
     weightLabel: formText(formData, "weightLabel") || null,
     pricePaise: Number.isFinite(price) ? Math.round(price * 100) : 0,
     discountPercent: formInt(formData, "discountPercent"),
@@ -543,9 +547,9 @@ export async function createComboAction(
   try {
     await pool.execute(
       `INSERT INTO Combo
-         (slug, name, description, ingredients, shelfLife, items, imageUrl, weightLabel,
+         (slug, name, description, ingredients, shelfLife, items, imageUrl, videoUrl, weightLabel,
           pricePaise, discountPercent, sortOrder, rating, updatedAt)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(3))`,
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(3))`,
       [
         data.slug,
         data.name,
@@ -554,6 +558,7 @@ export async function createComboAction(
         data.shelfLife,
         JSON.stringify(data.items),
         JSON.stringify(data.images),
+        data.videoUrl,
         data.weightLabel,
         data.pricePaise,
         data.discountPercent,
@@ -593,7 +598,7 @@ export async function updateComboAction(
     await pool.execute(
       `UPDATE Combo
           SET slug = ?, name = ?, description = ?, ingredients = ?, shelfLife = ?, items = ?,
-              imageUrl = ?, weightLabel = ?, pricePaise = ?,
+              imageUrl = ?, videoUrl = ?, weightLabel = ?, pricePaise = ?,
               discountPercent = ?, sortOrder = ?, rating = ?, updatedAt = NOW(3)
         WHERE id = ?`,
       [
@@ -604,6 +609,7 @@ export async function updateComboAction(
         data.shelfLife,
         JSON.stringify(data.items),
         JSON.stringify(data.images),
+        data.videoUrl,
         data.weightLabel,
         data.pricePaise,
         data.discountPercent,

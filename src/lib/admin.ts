@@ -114,6 +114,7 @@ export const productSchema = z.object({
     .array(z.string().trim().min(1).max(500))
     .max(3, "Add up to three images.")
     .default([]),
+  videoUrl: optionalString(500),
   sortOrder: z.number().int().min(0),
   rating: z.number().min(0).max(5).default(4.3),
 });
@@ -135,6 +136,7 @@ export const comboSchema = z.object({
     .array(z.string().trim().min(1).max(500))
     .max(3, "Add up to three images per combo.")
     .default([]),
+  videoUrl: optionalString(500),
   weightLabel: optionalString(60),
   pricePaise: z.number().int().positive("Price must be greater than zero."),
   discountPercent: z.number().int().min(0).max(100).default(0),
@@ -389,6 +391,7 @@ export type AdminProduct = {
   categoryName: string;
   sizes: AdminSize[];
   images: string[];
+  videoUrl: string | null;
   sortOrder: number;
   rating: number;
 };
@@ -398,7 +401,12 @@ export type AdminProductRow = {
   slug: string;
   name: string;
   categoryName: string;
-  sizes: { label: string; grams: number | null; pricePaise: number }[];
+  sizes: {
+    label: string;
+    grams: number | null;
+    mrpPaise: number;
+    pricePaise: number;
+  }[];
   sortOrder: number;
   rating: number;
 };
@@ -412,6 +420,7 @@ export type AdminCombo = {
   shelfLife: string | null;
   items: { productId: string | null; name: string; quantity: string }[];
   images: string[];
+  videoUrl: string | null;
   weightLabel: string | null;
   pricePaise: number;
   discountPercent: number;
@@ -649,14 +658,21 @@ export async function listProducts(): Promise<AdminProductRow[]> {
     slug: String(row.slug),
     name: String(row.name),
     categoryName: String(row.categoryName),
-    sizes: json<{ label: string; grams: number | null; pricePaise: number }[]>(
-      row.sizes,
-      []
-    ).map((size) => ({
-      label: String(size.label),
-      grams: size.grams == null ? null : Number(size.grams),
-      pricePaise: Number(size.pricePaise),
-    })),
+    sizes: json<{
+      label: string;
+      grams: number | null;
+      mrpPaise: number;
+      pricePaise: number;
+    }[]>(row.sizes, []).map((size) => {
+      const pricePaise = Number(size.pricePaise);
+      const mrpPaise = Number(size.mrpPaise ?? 0);
+      return {
+        label: String(size.label),
+        grams: size.grams == null ? null : Number(size.grams),
+        mrpPaise: mrpPaise > pricePaise ? mrpPaise : pricePaise,
+        pricePaise,
+      };
+    }),
     sortOrder: Number(row.sortOrder),
     rating: Number(row.rating ?? 4.3),
   }));
@@ -700,6 +716,7 @@ export async function getProduct(id: number): Promise<AdminProduct | null> {
       (image): image is string =>
         typeof image === "string" && image.trim() !== ""
     ),
+    videoUrl: row.videoUrl ? String(row.videoUrl) : null,
     sortOrder: Number(row.sortOrder),
     rating: Number(row.rating ?? 4.3),
   };
@@ -746,6 +763,7 @@ export async function getCombo(id: number): Promise<AdminCombo | null> {
     shelfLife: row.shelfLife ? String(row.shelfLife) : null,
     items: json<AdminCombo["items"]>(row.items, []),
     images,
+    videoUrl: row.videoUrl ? String(row.videoUrl) : null,
     weightLabel: row.weightLabel ? String(row.weightLabel) : null,
     pricePaise: Number(row.pricePaise),
     discountPercent: Number(row.discountPercent ?? 0),
