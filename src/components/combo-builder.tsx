@@ -100,7 +100,7 @@ export function ComboBuilder({
           <header className="combo-panel_head">
             <div>
               <h2 className="combo-panel_title" id="combo-choose-title">
-                Choose your varieties
+                Choose Your Favourite Varieties!
               </h2>
               <p className="combo-panel_text">
                 Every pick is a 250g pack. Choose {CUSTOM_COMBO_MIN_PACKS} to{" "}

@@ -235,6 +235,7 @@ export function PaymentCheckout({
           customerName,
           customerEmail,
           customerPhone,
+          state,
           couponCode,
           items,
         }),

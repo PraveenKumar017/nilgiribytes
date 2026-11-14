@@ -5,7 +5,9 @@ import { getAdminSettings } from "@/lib/admin";
 import { applyCoupon } from "@/lib/coupons";
 import { getPool } from "@/lib/db";
 import { sendOrderConfirmationEmail } from "@/lib/order-email";
+import { ensureOrderShippingColumns } from "@/lib/order-shipping";
 import { priceOrderItems, type OrderItemInput } from "@/lib/order-pricing";
+import { getShippingQuote } from "@/lib/shipping";
 
 interface CodOrderRequest {
   customerName?: string;
@@ -50,11 +52,22 @@ export async function POST(request: NextRequest) {
 
     const { lines, subtotalPaise } = await priceOrderItems(body.items ?? []);
 
+    const shipping = getShippingQuote(body.state, subtotalPaise, lines);
+    if (!shipping) {
+      return Response.json(
+        { error: "Select a valid delivery state to calculate shipping." },
+        { status: 400 }
+      );
+    }
+
     const coupon = body.couponCode
       ? await applyCoupon(body.couponCode, subtotalPaise)
       : null;
     const discountPaise = coupon?.discountPaise ?? 0;
-    const totalPaise = Math.max(0, subtotalPaise - discountPaise);
+    const totalPaise =
+      Math.max(0, subtotalPaise - discountPaise) + shipping.shippingPaise;
+
+    await ensureOrderShippingColumns();
 
     const fullAddress = [body.address, body.district, body.state, body.pincode]
       .map((part) => (typeof part === "string" ? part.trim() : ""))
@@ -84,12 +97,14 @@ export async function POST(request: NextRequest) {
           email,
           address,
           subtotalPaise,
+          shippingPaise,
+          shippingDiscountPaise,
           totalPaise,
           channel,
           status,
           razorpayOrderId,
           paymentId
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, 'ONLINE', 'NEW', NULL, ?)`,
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'ONLINE', 'NEW', NULL, ?)`,
         [
           temporaryNumber,
           customerName,
@@ -97,6 +112,8 @@ export async function POST(request: NextRequest) {
           body.customerEmail?.trim() || null,
           fullAddress || null,
           subtotalPaise,
+          shipping.shippingPaise,
+          shipping.shippingDiscountPaise,
           totalPaise,
           paymentId,
         ]
@@ -154,7 +171,11 @@ export async function POST(request: NextRequest) {
         razorpayOrderId: "",
         paymentMethod: "COD",
         lines,
-        subtotalPaise: totalPaise,
+        subtotalPaise,
+        totalPaise,
+        discountPaise,
+        shippingPaise: shipping.shippingPaise,
+        shippingDiscountPaise: shipping.shippingDiscountPaise,
       });
     } catch (error) {
       console.error("COD order confirmation email failed:", error);

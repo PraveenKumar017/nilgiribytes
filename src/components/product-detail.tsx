@@ -29,8 +29,11 @@ export function ProductDetail({ item }: ProductDetailProps) {
   const qty = quantityOf(lineKey);
   const price = itemPrice(item, sizeIndex);
   const mrp = itemMrp(item, sizeIndex);
-  const discount = itemDiscountPercent(item, sizeIndex);
-  const hasDiscount = discount > 0 && mrp > price;
+  const hasDiscount = mrp > price;
+  const discount = hasDiscount
+    ? itemDiscountPercent(item, sizeIndex) ||
+      Math.round(((mrp - price) / mrp) * 100)
+    : 0;
   const sizeImages =
     item.kind === "product"
       ? item.sizes[sizeIndex]?.images?.filter(Boolean) ?? []

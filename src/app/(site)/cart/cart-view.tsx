@@ -4,7 +4,8 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { formatINR } from "@/lib/format";
-import { itemMrp } from "@/lib/cart";
+import { cartLinePackedWeightGrams, itemMrp } from "@/lib/cart";
+import { getShippingQuote, INDIAN_STATES, stateToZone } from "@/lib/shipping";
 import { useCart } from "@/components/cart-provider";
 import { SafeImage } from "@/components/safe-image";
 import {
@@ -350,6 +351,8 @@ export function CartView({
 
     if (!customerDetails.state.trim()) {
       errors.state = "State is required";
+    } else if (!stateToZone(customerDetails.state)) {
+      errors.state = "Select a valid delivery state";
     }
 
     if (!customerDetails.district.trim()) {
@@ -371,21 +374,6 @@ export function CartView({
       setShowCustomerModal(false);
       // Don't show modal again even if cart count changes
     }
-  };
-
-  const handleContinueToPayment = () => {
-    if (!validateForm()) return;
-
-    persistCustomerDetails();
-    setShowCustomerModal(false);
-    setShowPaymentForm(true);
-    setPaymentError("");
-
-    requestAnimationFrame(() => {
-      document
-        .querySelector(".cart-page_summary")
-        ?.scrollIntoView({ behavior: "smooth", block: "start" });
-    });
   };
 
   const handlePaymentSuccess = (data: PaymentSuccessData) => {
@@ -483,7 +471,16 @@ export function CartView({
 
   const paymentItems = buildItemsPayload(lines);
   const discountPaise = coupon?.discountPaise ?? 0;
-  const totalPaise = Math.max(0, subtotal - discountPaise);
+  const shippingQuote = getShippingQuote(
+    customerDetails.state,
+    subtotal,
+    lines.map((line) => ({
+      packedWeightGrams: cartLinePackedWeightGrams(line),
+      quantity: line.qty,
+    }))
+  );
+  const shippingPaise = shippingQuote?.shippingPaise ?? 0;
+  const totalPaise = Math.max(0, subtotal - discountPaise) + shippingPaise;
 
   return (
     <>
@@ -585,15 +582,20 @@ export function CartView({
 
                 <div className="form-group">
                   <label htmlFor="modal-state">State *</label>
-                  <input
-                    type="text"
+                  <select
                     id="modal-state"
                     name="state"
                     value={customerDetails.state}
                     onChange={handleInputChange}
-                    placeholder="State name"
                     className={`form-input ${formErrors.state ? "is-error" : ""}`}
-                  />
+                  >
+                    <option value="">Select delivery state</option>
+                    {INDIAN_STATES.map((state) => (
+                      <option key={state} value={state}>
+                        {state}
+                      </option>
+                    ))}
+                  </select>
                   {formErrors.state && <span className="form-error">{formErrors.state}</span>}
                 </div>
               </div>
@@ -620,13 +622,6 @@ export function CartView({
                 onClick={handleSaveCustomerDetails}
               >
                 Save Details
-              </button>
-              <button
-                type="button"
-                className="btn btn--primary"
-                onClick={handleContinueToPayment}
-              >
-                Continue to Payment
               </button>
             </div>
           </div>
@@ -730,8 +725,22 @@ export function CartView({
             )}
             <div className="cart-summary">
               <span>Delivery Fee</span>
-              <span className="cart-summary_free">Free</span>
+              <span className={shippingPaise === 0 ? "cart-summary_free" : undefined}>
+                {shippingQuote
+                  ? shippingQuote.baseShippingPaise === 0
+                    ? "Free"
+                    : formatINR(shippingQuote.baseShippingPaise)
+                  : "Select state"}
+              </span>
             </div>
+            {shippingQuote && shippingQuote.shippingDiscountPaise > 0 && (
+              <div className="cart-summary cart-page_coupon-discount">
+                <span>Delivery offer</span>
+                <span>
+                  &minus;{formatINR(shippingQuote.shippingDiscountPaise)}
+                </span>
+              </div>
+            )}
             <hr className="cart-page_summary-rule" />
             <div className="cart-summary cart-summary--total">
               <span>Total</span>
@@ -805,10 +814,6 @@ export function CartView({
               </span>
             </div>
           )}
-
-          <p className="cart-page_delivery-note">
-            Free delivery included. No extra charges.
-          </p>
 
           {paymentError && (
             <div className="cart-page_payment-error" role="alert">

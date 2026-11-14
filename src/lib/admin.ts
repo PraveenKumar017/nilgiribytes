@@ -6,6 +6,7 @@ import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import { getPool } from "./db";
+import { ensureOrderShippingColumns } from "./order-shipping";
 import type { BlogBlock } from "./types";
 
 /* -------------------------------------------------------------------------- */
@@ -487,6 +488,8 @@ export type AdminOrderRow = {
   address: string | null;
   notes: string | null;
   subtotalPaise: number;
+  shippingPaise: number;
+  shippingDiscountPaise: number;
   totalPaise: number;
   channel: "WHATSAPP" | "ONLINE";
   status: "NEW" | "CONFIRMED" | "PACKED" | "DELIVERED" | "CANCELLED";
@@ -844,9 +847,11 @@ export async function getPost(id: number): Promise<AdminPost | null> {
 }
 
 export async function listOrders(limit?: number): Promise<AdminOrderRow[]> {
+  await ensureOrderShippingColumns();
   const [rows] = await pool().query<RowDataPacket[]>(
     `SELECT id, orderNumber, customerName, phone, email, address, notes,
-            subtotalPaise, totalPaise, channel, status, razorpayOrderId, paymentId,
+            subtotalPaise, shippingPaise, shippingDiscountPaise, totalPaise,
+            channel, status, razorpayOrderId, paymentId,
             trackingId, createdAt, updatedAt
        FROM \`Order\`
       ORDER BY createdAt DESC, id DESC
@@ -902,6 +907,8 @@ export async function listOrders(limit?: number): Promise<AdminOrderRow[]> {
       address: row.address ? String(row.address) : null,
       notes: row.notes ? String(row.notes) : null,
       subtotalPaise: Number(row.subtotalPaise),
+      shippingPaise: Number(row.shippingPaise ?? 0),
+      shippingDiscountPaise: Number(row.shippingDiscountPaise ?? 0),
       totalPaise: Number(row.totalPaise),
       channel: row.channel,
       status: row.status,
@@ -918,6 +925,7 @@ export async function listOrders(limit?: number): Promise<AdminOrderRow[]> {
 }
 
 export async function getOrder(id: number): Promise<AdminOrder | null> {
+  await ensureOrderShippingColumns();
   const [rows] = await pool().query<RowDataPacket[]>(
     "SELECT * FROM `Order` WHERE id = ? LIMIT 1",
     [id]
@@ -962,6 +970,8 @@ export async function getOrder(id: number): Promise<AdminOrder | null> {
     address: row.address ? String(row.address) : null,
     notes: row.notes ? String(row.notes) : null,
     subtotalPaise: Number(row.subtotalPaise),
+    shippingPaise: Number(row.shippingPaise ?? 0),
+    shippingDiscountPaise: Number(row.shippingDiscountPaise ?? 0),
     totalPaise: Number(row.totalPaise),
     channel: row.channel,
     status: row.status,

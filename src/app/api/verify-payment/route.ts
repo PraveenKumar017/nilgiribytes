@@ -4,7 +4,9 @@ import type { ResultSetHeader, RowDataPacket } from "mysql2";
 import { applyCoupon } from "@/lib/coupons";
 import { getPool } from "@/lib/db";
 import { sendOrderConfirmationEmail } from "@/lib/order-email";
+import { ensureOrderShippingColumns } from "@/lib/order-shipping";
 import { priceOrderItems, type OrderItemInput } from "@/lib/order-pricing";
+import { getShippingQuote } from "@/lib/shipping";
 
 const RAZORPAY_KEY_ID = process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID;
 const RAZORPAY_KEY_SECRET = process.env.RAZORPAY_KEY_SECRET;
@@ -142,11 +144,22 @@ export async function POST(request: NextRequest) {
 
     const { lines, subtotalPaise } = await priceOrderItems(body.items ?? []);
 
+    const shipping = getShippingQuote(body.state, subtotalPaise, lines);
+    if (!shipping) {
+      return Response.json(
+        { error: "Select a valid delivery state to calculate shipping." },
+        { status: 400 }
+      );
+    }
+
     const coupon = body.couponCode
       ? await applyCoupon(body.couponCode, subtotalPaise)
       : null;
     const discountPaise = coupon?.discountPaise ?? 0;
-    const totalPaise = Math.max(0, subtotalPaise - discountPaise);
+    const totalPaise =
+      Math.max(0, subtotalPaise - discountPaise) + shipping.shippingPaise;
+
+    await ensureOrderShippingColumns();
 
     const paymentResponse = await fetch(
       `https://api.razorpay.com/v1/payments/${encodeURIComponent(
@@ -253,12 +266,14 @@ export async function POST(request: NextRequest) {
           email,
           address,
           subtotalPaise,
+          shippingPaise,
+          shippingDiscountPaise,
           totalPaise,
           channel,
           status,
           razorpayOrderId,
           paymentId
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, 'ONLINE', 'NEW', ?, ?)`,
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'ONLINE', 'NEW', ?, ?)`,
         [
           temporaryNumber,
           customerName,
@@ -266,6 +281,8 @@ export async function POST(request: NextRequest) {
           body.customerEmail?.trim() || null,
           fullAddress || null,
           subtotalPaise,
+          shipping.shippingPaise,
+          shipping.shippingDiscountPaise,
           totalPaise,
           body.razorpay_order_id,
           body.razorpay_payment_id,
@@ -343,7 +360,11 @@ export async function POST(request: NextRequest) {
         paymentId: body.razorpay_payment_id,
         razorpayOrderId: body.razorpay_order_id,
         lines,
-        subtotalPaise: totalPaise,
+        subtotalPaise,
+        totalPaise,
+        discountPaise,
+        shippingPaise: shipping.shippingPaise,
+        shippingDiscountPaise: shipping.shippingDiscountPaise,
       });
     } catch (error) {
       console.error("Order confirmation email failed:", error);

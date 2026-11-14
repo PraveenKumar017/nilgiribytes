@@ -27,6 +27,10 @@ export type OrderConfirmationEmail = {
   paymentMethod?: "ONLINE" | "COD";
   lines: PricedOrderLine[];
   subtotalPaise: number;
+  totalPaise?: number;
+  discountPaise?: number;
+  shippingPaise?: number;
+  shippingDiscountPaise?: number;
   paidAt?: Date;
 };
 
@@ -59,6 +63,11 @@ function buildHtml(
 ): string {
   const paidAt = data.paidAt ?? new Date();
   const isCod = data.paymentMethod === "COD";
+  const totalPaise = data.totalPaise ?? data.subtotalPaise;
+  const shippingPaise = data.shippingPaise ?? 0;
+  const discountPaise = data.discountPaise ?? 0;
+  const shippingDiscountPaise = data.shippingDiscountPaise ?? 0;
+  const shippingBasePaise = shippingPaise + shippingDiscountPaise;
   const itemRows = data.lines
     .map((line) => {
       const size = line.sizeLabel
@@ -141,11 +150,45 @@ function buildHtml(
           </tbody>
           <tfoot>
             <tr>
+              <td colspan="3" align="right" style="padding:8px 14px;color:#6e6258;font-size:13px;">Items subtotal</td>
+              <td align="right" style="padding:8px 14px;color:#35170f;font-size:14px;white-space:nowrap;">${escapeHtml(
+                formatINR(data.subtotalPaise)
+              )}</td>
+            </tr>
+            ${
+              discountPaise > 0
+                ? `<tr>
+                    <td colspan="3" align="right" style="padding:8px 14px;color:#6e6258;font-size:13px;">Coupon discount</td>
+                    <td align="right" style="padding:8px 14px;color:#35170f;font-size:14px;white-space:nowrap;">-${escapeHtml(
+                      formatINR(discountPaise)
+                    )}</td>
+                  </tr>`
+                : ""
+            }
+            <tr>
+              <td colspan="3" align="right" style="padding:8px 14px;color:#6e6258;font-size:13px;">Shipping</td>
+              <td align="right" style="padding:8px 14px;color:#35170f;font-size:14px;white-space:nowrap;">${
+                shippingBasePaise > 0
+                  ? escapeHtml(formatINR(shippingBasePaise))
+                  : "Free"
+              }</td>
+            </tr>
+            ${
+              shippingDiscountPaise > 0
+                ? `<tr>
+                    <td colspan="3" align="right" style="padding:8px 14px;color:#6e6258;font-size:13px;">Shipping offer</td>
+                    <td align="right" style="padding:8px 14px;color:#35170f;font-size:14px;white-space:nowrap;">-${escapeHtml(
+                      formatINR(shippingDiscountPaise)
+                    )}</td>
+                  </tr>`
+                : ""
+            }
+            <tr>
               <td colspan="3" align="right" style="padding:14px;color:#35170f;font-size:14px;font-weight:600;">${
                 isCod ? "Amount due on delivery" : "Total paid"
               }</td>
               <td align="right" style="padding:14px;color:#35170f;font-size:16px;font-weight:700;white-space:nowrap;">${escapeHtml(
-                formatINR(data.subtotalPaise)
+                formatINR(totalPaise)
               )}</td>
             </tr>
           </tfoot>
@@ -176,6 +219,11 @@ function buildText(
 ): string {
   const paidAt = data.paidAt ?? new Date();
   const isCod = data.paymentMethod === "COD";
+  const totalPaise = data.totalPaise ?? data.subtotalPaise;
+  const shippingPaise = data.shippingPaise ?? 0;
+  const discountPaise = data.discountPaise ?? 0;
+  const shippingDiscountPaise = data.shippingDiscountPaise ?? 0;
+  const shippingBasePaise = shippingPaise + shippingDiscountPaise;
   const items = data.lines.map(
     (line) =>
       `- ${line.name}${line.sizeLabel ? ` (${line.sizeLabel})` : ""} x ${
@@ -202,7 +250,13 @@ function buildText(
     "Items ordered:",
     ...items,
     "",
-    `${isCod ? "Amount due on delivery" : "Total paid"}: ${formatINR(data.subtotalPaise)}`,
+    `Items subtotal: ${formatINR(data.subtotalPaise)}`,
+    discountPaise > 0 ? `Coupon discount: -${formatINR(discountPaise)}` : "",
+    `Shipping: ${shippingBasePaise > 0 ? formatINR(shippingBasePaise) : "Free"}`,
+    shippingDiscountPaise > 0
+      ? `Shipping offer: -${formatINR(shippingDiscountPaise)}`
+      : "",
+    `${isCod ? "Amount due on delivery" : "Total paid"}: ${formatINR(totalPaise)}`,
     "",
     `View order details: ${orderUrl}`,
     `Track your order: ${trackUrl}`,

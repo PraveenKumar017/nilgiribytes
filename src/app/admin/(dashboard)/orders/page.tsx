@@ -136,8 +136,18 @@ export default async function AdminOrdersPage({ searchParams }: PageProps) {
               </div>
               <div>
                 <dt>Shipping</dt>
-                <dd>Free</dd>
+                <dd>
+                  {order.shippingPaise > 0
+                    ? formatINR(order.shippingPaise)
+                    : "Free"}
+                </dd>
               </div>
+              {order.shippingDiscountPaise > 0 ? (
+                <div>
+                  <dt>Shipping offer</dt>
+                  <dd>&minus;{formatINR(order.shippingDiscountPaise)}</dd>
+                </div>
+              ) : null}
               <div style={{ fontSize: "1.1rem", fontWeight: 700, color: "var(--color-chocolate)" }}>
                 <dt>Grand Total</dt>
                 <dd>{formatINR(order.totalPaise)}</dd>

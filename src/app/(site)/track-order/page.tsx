@@ -4,6 +4,7 @@ import type { RowDataPacket } from "mysql2";
 import { CopyIconButton } from "@/components/share-icon-button";
 import { getPool } from "@/lib/db";
 import { formatINR } from "@/lib/format";
+import { ensureOrderShippingColumns } from "@/lib/order-shipping";
 import { PHONE_DISPLAY, PHONE_TEL } from "@/lib/site";
 import {
   ORDER_STATUS_OPTIONS,
@@ -34,6 +35,8 @@ type OrderRow = RowDataPacket & {
   phone: string;
   address: string | null;
   subtotalPaise: number;
+  shippingPaise: number;
+  shippingDiscountPaise: number;
   totalPaise: number;
   status: string;
   trackingId: string | null;
@@ -61,10 +64,12 @@ function normalizeOrderNumber(value: string): string {
 async function loadOrder(orderNumber: string): Promise<OrderDetails | null> {
   const pool = getPool();
   if (!pool || !orderNumber) return null;
+  await ensureOrderShippingColumns();
 
   const [rows] = await pool.query<OrderRow[]>(
     `SELECT id, orderNumber, customerName, phone, address,
-            subtotalPaise, totalPaise, status, trackingId, createdAt
+            subtotalPaise, shippingPaise, shippingDiscountPaise, totalPaise,
+            status, trackingId, createdAt
        FROM \`Order\`
       WHERE orderNumber = ?
       LIMIT 1`,
@@ -226,6 +231,22 @@ export default async function TrackOrderPage({ searchParams }: PageProps) {
                     <span>Subtotal</span>
                     <span>{formatINR(details.order.subtotalPaise)}</span>
                   </div>
+                  <div className="cart-summary">
+                    <span>Shipping</span>
+                    <span>
+                      {details.order.shippingPaise > 0
+                        ? formatINR(details.order.shippingPaise)
+                        : "Free"}
+                    </span>
+                  </div>
+                  {details.order.shippingDiscountPaise > 0 ? (
+                    <div className="cart-summary cart-page_coupon-discount">
+                      <span>Delivery offer</span>
+                      <span>
+                        &minus;{formatINR(details.order.shippingDiscountPaise)}
+                      </span>
+                    </div>
+                  ) : null}
                   <div className="cart-summary cart-summary--total">
                     <span>Total</span>
                     <span>{formatINR(details.order.totalPaise)}</span>

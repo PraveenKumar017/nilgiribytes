@@ -1,6 +1,8 @@
 import type { NextRequest } from "next/server";
 import { applyCoupon } from "@/lib/coupons";
+import { ensureOrderShippingColumns } from "@/lib/order-shipping";
 import { priceOrderItems, type OrderItemInput } from "@/lib/order-pricing";
+import { getShippingQuote } from "@/lib/shipping";
 
 const RAZORPAY_KEY_ID = process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID;
 const RAZORPAY_KEY_SECRET = process.env.RAZORPAY_KEY_SECRET;
@@ -10,6 +12,7 @@ interface CreateOrderRequest {
   customerName?: string;
   customerEmail?: string;
   customerPhone?: string;
+  state?: string;
   couponCode?: string;
   items?: OrderItemInput[];
 }
@@ -33,13 +36,24 @@ export async function POST(request: NextRequest) {
     }
 
     const body = (await request.json()) as CreateOrderRequest;
-    const { subtotalPaise } = await priceOrderItems(body.items ?? []);
+    await ensureOrderShippingColumns();
+
+    const { lines, subtotalPaise } = await priceOrderItems(body.items ?? []);
+
+    const shipping = getShippingQuote(body.state, subtotalPaise, lines);
+    if (!shipping) {
+      return Response.json(
+        { error: "Select a valid delivery state to calculate shipping." },
+        { status: 400 }
+      );
+    }
 
     const coupon = body.couponCode
       ? await applyCoupon(body.couponCode, subtotalPaise)
       : null;
     const discountPaise = coupon?.discountPaise ?? 0;
-    const totalPaise = Math.max(0, subtotalPaise - discountPaise);
+    const totalPaise =
+      Math.max(0, subtotalPaise - discountPaise) + shipping.shippingPaise;
 
     if (totalPaise < 100) {
       return Response.json(
@@ -87,6 +101,8 @@ export async function POST(request: NextRequest) {
       amountInPaise: totalPaise,
       subtotalPaise,
       discountPaise,
+      shippingPaise: shipping.shippingPaise,
+      shippingDiscountPaise: shipping.shippingDiscountPaise,
       couponCode: coupon?.code ?? null,
     });
   } catch (error) {

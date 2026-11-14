@@ -119,5 +119,6 @@ export type CartLine = {
   mrpPaise?: number;
   qty: number;
   image: string;
+  packedWeightGrams?: number;
   picks?: CustomComboPick[];
 };

@@ -975,8 +975,24 @@ export function OrdersTable({ orders }: { orders: AdminOrderRow[] }) {
                     </tr>
                     <tr>
                       <th>Shipping / Courier:</th>
-                      <td style={{ color: "#2e7d32", fontWeight: 700 }}>FREE</td>
+                      <td
+                        style={
+                          printOrder.shippingPaise === 0
+                            ? { color: "#2e7d32", fontWeight: 700 }
+                            : undefined
+                        }
+                      >
+                        {printOrder.shippingPaise === 0
+                          ? "FREE"
+                          : formatINR(printOrder.shippingPaise)}
+                      </td>
                     </tr>
+                    {printOrder.shippingDiscountPaise > 0 ? (
+                      <tr>
+                        <th>Shipping Offer:</th>
+                        <td>−{formatINR(printOrder.shippingDiscountPaise)}</td>
+                      </tr>
+                    ) : null}
                     <tr>
                       <th>Taxes &amp; Packaging:</th>
                       <td>Included</td>

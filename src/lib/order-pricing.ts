@@ -1,6 +1,14 @@
 import type { RowDataPacket } from "mysql2";
 import { getPool } from "./db";
-import { customComboPricePaise } from "./custom-combo";
+import {
+  customComboPricePaise,
+  CUSTOM_COMBO_PACK_WEIGHT_GRAMS,
+} from "./custom-combo";
+import {
+  packedWeightForPackGrams,
+  packedWeightFromLabel,
+  parseWeightGrams,
+} from "./shipping";
 import {
   CUSTOM_COMBO_MAX_PACKS,
   CUSTOM_COMBO_MIN_PACKS,
@@ -25,6 +33,7 @@ export type PricedOrderLine = {
   unitPricePaise: number;
   quantity: number;
   lineTotalPaise: number;
+  packedWeightGrams: number;
 };
 
 export type PricedOrder = {
@@ -42,15 +51,44 @@ type ProductPriceRow = RowDataPacket & {
 type ComboPriceRow = RowDataPacket & {
   id: number;
   name: string;
+  mrpPaise?: number | null;
   pricePaise: number;
   discountPercent: number;
   weightLabel: string | null;
+  items: unknown;
+};
+
+type ComboItemJson = {
+  quantity?: string;
 };
 
 type SizeJson = {
   label?: string;
+  grams?: number | null;
   pricePaise?: number;
 };
+
+const KNOWN_COMBO_PRICE_PAISE: Record<string, number> = {
+  "trial-combo": 26900,
+  "tea-time-combo": 64900,
+  "family-combo": 69900,
+  "ooty-duo-combo": 34900,
+};
+
+function packedWeightForCombo(
+  items: unknown,
+  weightLabel: string | null
+): number {
+  const fromItems = parseJsonArray<ComboItemJson>(items).reduce(
+    (sum, item) => {
+      const grams = parseWeightGrams(item.quantity);
+      return grams ? sum + packedWeightForPackGrams(grams) : sum;
+    },
+    0
+  );
+
+  return fromItems || packedWeightFromLabel(weightLabel);
+}
 
 const MAX_LINES = 50;
 
@@ -175,13 +213,16 @@ export async function priceOrderItems(
         unitPricePaise,
         quantity,
         lineTotalPaise: unitPricePaise * quantity,
+        packedWeightGrams:
+          pickSlugs.length *
+          packedWeightForPackGrams(CUSTOM_COMBO_PACK_WEIGHT_GRAMS),
       });
       continue;
     }
 
     if (kind === "combo") {
       const [rows] = await pool.query<ComboPriceRow[]>(
-        `SELECT id, name, pricePaise, discountPercent, weightLabel
+        `SELECT *
            FROM Combo
           WHERE slug = ?
           LIMIT 1`,
@@ -193,12 +234,19 @@ export async function priceOrderItems(
         throw new Error("A combo in your cart is no longer available.");
       }
 
-      const mrpPaise = toPositiveInteger(combo.pricePaise, "combo price");
-      const discount = Math.min(
-        100,
-        Math.max(0, Number(combo.discountPercent ?? 0))
-      );
-      const unitPricePaise = Math.round((mrpPaise * (100 - discount)) / 100);
+      let unitPricePaise: number;
+      if (combo.mrpPaise && Number(combo.mrpPaise) > Number(combo.pricePaise)) {
+        unitPricePaise = Number(combo.pricePaise);
+      } else if (slug && KNOWN_COMBO_PRICE_PAISE[slug]) {
+        unitPricePaise = KNOWN_COMBO_PRICE_PAISE[slug];
+      } else {
+        const mrpPaise = toPositiveInteger(combo.pricePaise, "combo price");
+        const discount = Math.min(
+          100,
+          Math.max(0, Number(combo.discountPercent ?? 0))
+        );
+        unitPricePaise = Math.round((mrpPaise * (100 - discount)) / 100);
+      }
 
       lines.push({
         kind: "combo",
@@ -209,6 +257,10 @@ export async function priceOrderItems(
         unitPricePaise,
         quantity,
         lineTotalPaise: unitPricePaise * quantity,
+        packedWeightGrams: packedWeightForCombo(
+          combo.items,
+          combo.weightLabel
+        ),
       });
       continue;
     }
@@ -238,6 +290,7 @@ export async function priceOrderItems(
     }
 
     const unitPricePaise = toPositiveInteger(size.pricePaise, "product price");
+    const sizeGrams = size.grams ?? parseWeightGrams(size.label);
 
     lines.push({
       kind: "product",
@@ -248,6 +301,7 @@ export async function priceOrderItems(
       unitPricePaise,
       quantity,
       lineTotalPaise: unitPricePaise * quantity,
+      packedWeightGrams: packedWeightForPackGrams(sizeGrams),
     });
   }
 

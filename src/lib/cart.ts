@@ -1,6 +1,14 @@
 import type { CartLine, CustomComboPick, StoreItem, StoreSize } from "./types";
 import { CUSTOM_COMBO_SLUG } from "./types";
-import { customComboPricePaise } from "./custom-combo";
+import {
+  customComboPricePaise,
+  CUSTOM_COMBO_PACK_WEIGHT_GRAMS,
+} from "./custom-combo";
+import {
+  packedWeightForPackGrams,
+  packedWeightFromLabel,
+  parseWeightGrams,
+} from "./shipping";
 
 export const CART_STORAGE_KEY = "veb_cart";
 
@@ -21,11 +29,14 @@ export function itemMrp(item: StoreItem, sizeIndex = 0): number {
 
 export function itemDiscountPercent(item: StoreItem, sizeIndex = 0): number {
   if (item.kind === "combo") {
-    return item.mrpPaise > item.pricePaise ? item.discountPercent : 0;
+    if (item.mrpPaise > item.pricePaise) {
+      return item.discountPercent || Math.round(((item.mrpPaise - item.pricePaise) / item.mrpPaise) * 100);
+    }
+    return 0;
   }
   const size = item.sizes[sizeIndex];
   if (!size || size.mrpPaise <= size.pricePaise) return 0;
-  return size.discountPercent;
+  return size.discountPercent || Math.round(((size.mrpPaise - size.pricePaise) / size.mrpPaise) * 100);
 }
 
 export function itemSaving(item: StoreItem, sizeIndex = 0): number {
@@ -36,6 +47,30 @@ export function itemImage(item: StoreItem, sizeIndex = 0): string {
   if (item.kind === "combo") return item.images[0] || item.image;
   const size: StoreSize | undefined = item.sizes[sizeIndex];
   return size?.imageUrl || item.image;
+}
+
+export function itemPackedWeightGrams(
+  item: StoreItem,
+  sizeIndex = 0
+): number {
+  if (item.kind === "combo") {
+    const fromItems = item.includes.reduce((sum, include) => {
+      const grams = parseWeightGrams(include.quantity);
+      return grams ? sum + packedWeightForPackGrams(grams) : sum;
+    }, 0);
+    return fromItems || packedWeightFromLabel(item.weight);
+  }
+
+  const size = item.sizes[sizeIndex];
+  const grams = size?.grams ?? parseWeightGrams(size?.label);
+  return packedWeightForPackGrams(grams);
+}
+
+export function cartLinePackedWeightGrams(line: CartLine): number {
+  if (line.packedWeightGrams && line.packedWeightGrams > 0) {
+    return line.packedWeightGrams;
+  }
+  return packedWeightFromLabel(line.sizeLabel);
 }
 
 export function cartLineKey(
@@ -74,6 +109,8 @@ export function buildCustomComboLine(
     pricePaise,
     qty,
     image: picks[0]?.image ?? "",
+    packedWeightGrams:
+      picks.length * packedWeightForPackGrams(CUSTOM_COMBO_PACK_WEIGHT_GRAMS),
     picks: picks.map((pick) => ({ ...pick })),
   };
 }
@@ -91,6 +128,7 @@ export function toCartLine(item: StoreItem, sizeIndex = 0, qty = 1): CartLine { 
     mrpPaise: itemMrp(item, sizeIndex),
     qty,
     image: itemImage(item, sizeIndex),
+    packedWeightGrams: itemPackedWeightGrams(item, sizeIndex),
   };
 }
 

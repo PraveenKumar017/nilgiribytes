@@ -3,6 +3,7 @@ import Link from "next/link";
 import type { RowDataPacket } from "mysql2";
 import { getPool } from "@/lib/db";
 import { formatINR } from "@/lib/format";
+import { ensureOrderShippingColumns } from "@/lib/order-shipping";
 
 export const dynamic = "force-dynamic";
 
@@ -27,6 +28,8 @@ type OrderRow = RowDataPacket & {
   email: string | null;
   address: string | null;
   subtotalPaise: number;
+  shippingPaise: number;
+  shippingDiscountPaise: number;
   totalPaise: number;
   status: string;
   createdAt: Date | string;
@@ -53,10 +56,12 @@ async function loadOrder(
 ): Promise<OrderDetails | null> {
   const pool = getPool();
   if (!pool || !orderNumber || !paymentId) return null;
+  await ensureOrderShippingColumns();
 
   const [rows] = await pool.query<OrderRow[]>(
     `SELECT id, orderNumber, customerName, phone, email, address,
-            subtotalPaise, totalPaise, status, createdAt, paymentId
+            subtotalPaise, shippingPaise, shippingDiscountPaise,
+            totalPaise, status, createdAt, paymentId
        FROM \`Order\`
       WHERE orderNumber = ? AND paymentId = ?
       LIMIT 1`,
@@ -164,6 +169,20 @@ export default async function OrderConfirmationPage({ searchParams }: PageProps)
                 <span>Subtotal</span>
                 <span>{formatINR(order.subtotalPaise)}</span>
               </div>
+              <div className="cart-summary">
+                <span>Shipping</span>
+                <span>
+                  {order.shippingPaise > 0
+                    ? formatINR(order.shippingPaise)
+                    : "Free"}
+                </span>
+              </div>
+              {order.shippingDiscountPaise > 0 ? (
+                <div className="cart-summary cart-page_coupon-discount">
+                  <span>Delivery offer</span>
+                  <span>&minus;{formatINR(order.shippingDiscountPaise)}</span>
+                </div>
+              ) : null}
               <div className="cart-summary cart-summary--total">
                 <span>{isCod ? "Amount due on delivery" : "Total paid"}</span>
                 <span>{formatINR(order.totalPaise)}</span>

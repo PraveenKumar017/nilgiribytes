@@ -4,7 +4,6 @@ import Link from "next/link";
 import { useState } from "react";
 import {
   cartLineKey,
-  itemDiscountPercent,
   itemImage,
   itemMrp,
   itemPrice,
@@ -34,8 +33,10 @@ export function ProductCard({
   const image = itemImage(item, sizeIndex);
   const price = itemPrice(item, sizeIndex);
   const mrp = itemMrp(item, sizeIndex);
-  const discount = itemDiscountPercent(item, sizeIndex);
-  const hasDiscount = discount > 0 && mrp > price;
+  const hasDiscount = mrp > price;
+  const discount = hasDiscount
+    ? Math.round(((mrp - price) / mrp) * 100)
+    : 0;
   const href = `/shop/${item.slug}`;
 
   return (
@@ -123,6 +124,11 @@ export function ProductCard({
             <div className="size-select_wrap">
               <span className="size-select_label">Size</span>
               <div className="size-select_static">{item.sizes[0].label}</div>
+            </div>
+          ) : item.kind === "combo" && item.weight ? (
+            <div className="size-select_wrap">
+              <span className="size-select_label">Weight</span>
+              <div className="size-select_static">{item.weight}</div>
             </div>
           ) : null}
 

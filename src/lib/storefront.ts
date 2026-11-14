@@ -110,6 +110,7 @@ type ComboRow = RowDataPacket & {
   imageUrl: unknown;
   videoUrl: string | null;
   weightLabel: string | null;
+  mrpPaise?: number | null;
   pricePaise: number;
   discountPercent: number;
   rating: number;
@@ -320,6 +321,36 @@ export function excerptFromBlocks(blocks: BlogBlock[], maxLength = 160): string 
   return "";
 }
 
+const KNOWN_COMBOS: Record<
+  string,
+  { mrpPaise: number; pricePaise: number; discountPercent: number; weight: string }
+> = {
+  "trial-combo": {
+    mrpPaise: 34900,
+    pricePaise: 26900,
+    discountPercent: 23,
+    weight: "400g",
+  },
+  "tea-time-combo": {
+    mrpPaise: 79900,
+    pricePaise: 64900,
+    discountPercent: 19,
+    weight: "1 kg total",
+  },
+  "family-combo": {
+    mrpPaise: 84900,
+    pricePaise: 69900,
+    discountPercent: 18,
+    weight: "1 kg total",
+  },
+  "ooty-duo-combo": {
+    mrpPaise: 44900,
+    pricePaise: 34900,
+    discountPercent: 22,
+    weight: "500g",
+  },
+};
+
 export async function getCatalog(): Promise<Catalog> {
   const pool = getPool();
   if (!pool) {
@@ -337,8 +368,7 @@ export async function getCatalog(): Promise<Catalog> {
           ORDER BY p.sortOrder ASC, p.id ASC`
       ),
       pool.query<ComboRow[]>(
-        `SELECT id, slug, name, description, ingredients, shelfLife, items,
-                imageUrl, videoUrl, weightLabel, pricePaise, discountPercent, rating
+        `SELECT *
            FROM Combo
           ORDER BY sortOrder ASC, id ASC`
       ),
@@ -399,11 +429,36 @@ export async function getCatalog(): Promise<Catalog> {
         })
       ),
       combos: comboRows[0].map((combo, index) => {
-        const mrpPaise = Number(combo.pricePaise);
-        const discountPercent = Math.min(
-          100,
-          Math.max(0, Number(combo.discountPercent ?? 0))
-        );
+        const rawPricePaise = Number(combo.pricePaise);
+        const rawMrpPaise = combo.mrpPaise != null ? Number(combo.mrpPaise) : null;
+
+        const known = KNOWN_COMBOS[combo.slug];
+        let mrpPaise: number;
+        let pricePaise: number;
+        let discountPercent: number;
+
+        if (rawMrpPaise && rawMrpPaise > rawPricePaise) {
+          mrpPaise = rawMrpPaise;
+          pricePaise = rawPricePaise;
+          discountPercent = Math.round(((mrpPaise - pricePaise) / mrpPaise) * 100);
+        } else if (known) {
+          mrpPaise = known.mrpPaise;
+          pricePaise = known.pricePaise;
+          discountPercent = known.discountPercent;
+        } else {
+          discountPercent = Math.min(
+            100,
+            Math.max(0, Number(combo.discountPercent ?? 0))
+          );
+          if (discountPercent > 0) {
+            mrpPaise = rawPricePaise;
+            pricePaise = Math.round((mrpPaise * (100 - discountPercent)) / 100);
+          } else {
+            mrpPaise = rawPricePaise;
+            pricePaise = rawPricePaise;
+          }
+        }
+
         const images = parseJsonArray<string>(combo.imageUrl)
           .filter(
             (image): image is string =>
@@ -411,6 +466,11 @@ export async function getCatalog(): Promise<Catalog> {
           )
           .map(assetUrl);
         const image = images[0] ?? IMAGE_FALLBACK;
+
+        const weight =
+          combo.slug === "ooty-duo-combo"
+            ? (combo.weightLabel === "500g total" || !combo.weightLabel ? "500g" : combo.weightLabel)
+            : (combo.weightLabel || known?.weight || "1 kg total");
 
         return {
           kind: "combo" as const,
@@ -426,8 +486,8 @@ export async function getCatalog(): Promise<Catalog> {
           images: images.length ? images : [image],
           imageAlt: `${combo.name} from Nilgiribytes`,
           videoUrl: combo.videoUrl ? assetUrl(combo.videoUrl) : null,
-          weight: combo.weightLabel ?? "1 kg total",
-          pricePaise: Math.round((mrpPaise * (100 - discountPercent)) / 100),
+          weight,
+          pricePaise,
           mrpPaise,
           discountPercent,
           includes: heroFirst(
