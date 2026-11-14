@@ -1545,6 +1545,13 @@ p {
   transform: scale(1.08);
 }
 
+.product-card_overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  border-radius: inherit;
+}
+
 .product-card_badge {
   position: absolute;
   top: 0.7rem;
@@ -1751,6 +1758,8 @@ p {
 }
 
 .product-card_footer {
+  position: relative;
+  z-index: 2;
   margin-top: auto;
   display: flex;
   flex-direction: column;

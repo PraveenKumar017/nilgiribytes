@@ -157,6 +157,13 @@ export function ProductCard({
           </div>
         </div>
       </div>
+
+      <Link
+        className="product-card_overlay"
+        href={href}
+        aria-hidden="true"
+        tabIndex={-1}
+      />
     </article>
   );
 }
