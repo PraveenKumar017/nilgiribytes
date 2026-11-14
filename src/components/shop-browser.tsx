@@ -10,7 +10,6 @@ const CATEGORIES = [
   "Varkey",
   "Salt Biscuit",
   "Sweet Biscuit",
-  "Cakes",
   "Combos",
 ];
 

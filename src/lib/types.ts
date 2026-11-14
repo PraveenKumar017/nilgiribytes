@@ -95,6 +95,16 @@ export type StorePost = {
   status: "published";
 };
 
+export type AppliedCoupon = {
+  code: string;
+  title: string;
+  discountType: "fixed" | "percentage";
+  discountValue: number;
+  minOrderPaise: number;
+  maxDiscountPaise: number | null;
+  discountPaise: number;
+};
+
 export type CartLine = {
   key: string;
   id: string;

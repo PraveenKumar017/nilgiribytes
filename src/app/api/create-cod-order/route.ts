@@ -2,6 +2,7 @@ import { randomBytes } from "crypto";
 import type { NextRequest } from "next/server";
 import type { ResultSetHeader } from "mysql2";
 import { getAdminSettings } from "@/lib/admin";
+import { applyCoupon } from "@/lib/coupons";
 import { getPool } from "@/lib/db";
 import { sendOrderConfirmationEmail } from "@/lib/order-email";
 import { priceOrderItems, type OrderItemInput } from "@/lib/order-pricing";
@@ -14,6 +15,7 @@ interface CodOrderRequest {
   pincode?: string;
   state?: string;
   district?: string;
+  couponCode?: string;
   items?: OrderItemInput[];
 }
 
@@ -47,6 +49,12 @@ export async function POST(request: NextRequest) {
     }
 
     const { lines, subtotalPaise } = await priceOrderItems(body.items ?? []);
+
+    const coupon = body.couponCode
+      ? await applyCoupon(body.couponCode, subtotalPaise)
+      : null;
+    const discountPaise = coupon?.discountPaise ?? 0;
+    const totalPaise = Math.max(0, subtotalPaise - discountPaise);
 
     const fullAddress = [body.address, body.district, body.state, body.pincode]
       .map((part) => (typeof part === "string" ? part.trim() : ""))
@@ -89,7 +97,7 @@ export async function POST(request: NextRequest) {
           body.customerEmail?.trim() || null,
           fullAddress || null,
           subtotalPaise,
-          subtotalPaise,
+          totalPaise,
           paymentId,
         ]
       );
@@ -146,7 +154,7 @@ export async function POST(request: NextRequest) {
         razorpayOrderId: "",
         paymentMethod: "COD",
         lines,
-        subtotalPaise,
+        subtotalPaise: totalPaise,
       });
     } catch (error) {
       console.error("COD order confirmation email failed:", error);

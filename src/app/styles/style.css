@@ -2344,6 +2344,99 @@ body[data-page="cart"] .section {
   white-space: nowrap;
 }
 
+.cart-page_coupon {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.cart-page_coupon-label {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--color-cocoa);
+}
+
+.cart-page_coupon-row {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.cart-page_coupon-input {
+  flex: 1 1 auto;
+  min-width: 0;
+  padding: 0.55rem 0.75rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-cream);
+  color: var(--color-heading);
+  font-size: 0.85rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.cart-page_coupon-input:focus {
+  outline: none;
+  border-color: var(--color-gold);
+  box-shadow: 0 0 0 2px rgba(199, 154, 66, 0.18);
+}
+
+.cart-page_coupon-input:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.cart-page_coupon-btn {
+  flex: 0 0 auto;
+  padding: 0.55rem 1rem;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: var(--color-heading);
+  color: var(--color-cream);
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.cart-page_coupon-btn:hover:not(:disabled) {
+  background: var(--color-gold);
+}
+
+.cart-page_coupon-btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.cart-page_coupon-btn.is-remove {
+  background: transparent;
+  color: var(--color-heading);
+  border: 1px solid var(--color-border);
+}
+
+.cart-page_coupon-btn.is-remove:hover {
+  background: var(--color-cream);
+  border-color: var(--color-gold);
+}
+
+.cart-page_coupon-message {
+  margin: 0;
+  font-size: 0.78rem;
+  line-height: 1.45;
+}
+
+.cart-page_coupon-message.is-error {
+  color: #b3261e;
+}
+
+.cart-page_coupon-message.is-success {
+  color: var(--color-olive);
+}
+
+.cart-page_coupon-discount span:last-child {
+  color: var(--color-olive);
+  font-weight: 700;
+}
+
 .cart-summary--total {
   font-size: 1.05rem;
   font-weight: 700;

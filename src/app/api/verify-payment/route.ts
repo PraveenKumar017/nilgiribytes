@@ -1,6 +1,7 @@
 import { createHmac, timingSafeEqual } from "crypto";
 import type { NextRequest } from "next/server";
 import type { ResultSetHeader, RowDataPacket } from "mysql2";
+import { applyCoupon } from "@/lib/coupons";
 import { getPool } from "@/lib/db";
 import { sendOrderConfirmationEmail } from "@/lib/order-email";
 import { priceOrderItems, type OrderItemInput } from "@/lib/order-pricing";
@@ -19,6 +20,7 @@ interface VerifyPaymentRequest {
   pincode: string;
   state: string;
   district: string;
+  couponCode?: string;
   items?: OrderItemInput[];
 }
 
@@ -140,6 +142,12 @@ export async function POST(request: NextRequest) {
 
     const { lines, subtotalPaise } = await priceOrderItems(body.items ?? []);
 
+    const coupon = body.couponCode
+      ? await applyCoupon(body.couponCode, subtotalPaise)
+      : null;
+    const discountPaise = coupon?.discountPaise ?? 0;
+    const totalPaise = Math.max(0, subtotalPaise - discountPaise);
+
     const paymentResponse = await fetch(
       `https://api.razorpay.com/v1/payments/${encodeURIComponent(
         body.razorpay_payment_id
@@ -168,9 +176,9 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    if (Number(payment.amount) !== subtotalPaise) {
+    if (Number(payment.amount) !== totalPaise) {
       console.error("Payment amount mismatch", {
-        expected: subtotalPaise,
+        expected: totalPaise,
         received: Number(payment.amount),
       });
       return Response.json(
@@ -191,7 +199,7 @@ export async function POST(request: NextRequest) {
             Authorization: razorpayAuthHeader(),
           },
           body: JSON.stringify({
-            amount: subtotalPaise,
+            amount: totalPaise,
             currency: "INR",
           }),
         }
@@ -258,7 +266,7 @@ export async function POST(request: NextRequest) {
           body.customerEmail?.trim() || null,
           fullAddress || null,
           subtotalPaise,
-          subtotalPaise,
+          totalPaise,
           body.razorpay_order_id,
           body.razorpay_payment_id,
         ]
@@ -335,7 +343,7 @@ export async function POST(request: NextRequest) {
         paymentId: body.razorpay_payment_id,
         razorpayOrderId: body.razorpay_order_id,
         lines,
-        subtotalPaise,
+        subtotalPaise: totalPaise,
       });
     } catch (error) {
       console.error("Order confirmation email failed:", error);

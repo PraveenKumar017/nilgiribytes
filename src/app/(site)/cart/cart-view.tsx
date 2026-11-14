@@ -11,7 +11,7 @@ import {
   PaymentCheckout,
   type PaymentSuccessData,
 } from "@/components/payment-checkout";
-import type { CartLine, StoreProduct, Catalog } from "@/lib/types";
+import type { CartLine, StoreProduct, Catalog, AppliedCoupon } from "@/lib/types";
 import { ProductCollection } from "@/components/product-collection";
 
 interface CustomerDetails {
@@ -65,6 +65,16 @@ function lineMrpFromCatalog(
   return itemMrp(item, sizeIndex);
 }
 
+function buildItemsPayload(lines: CartLine[]) {
+  return lines.map((line) => ({
+    kind: line.kind,
+    slug: line.slug,
+    sizeLabel: line.sizeLabel,
+    quantity: line.qty,
+    picks: line.picks?.map((pick) => ({ slug: pick.slug })),
+  }));
+}
+
 const EMPTY_CUSTOMER_DETAILS: CustomerDetails = {
   name: "",
   email: "",
@@ -96,6 +106,10 @@ export function CartView({
     EMPTY_CUSTOMER_DETAILS
   );
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
+  const [coupon, setCoupon] = useState<AppliedCoupon | null>(null);
+  const [couponInput, setCouponInput] = useState("");
+  const [couponError, setCouponError] = useState("");
+  const [couponLoading, setCouponLoading] = useState(false);
 
   // Load customer details from localStorage on mount
   useEffect(() => {
@@ -191,6 +205,85 @@ export function CartView({
     customerDetails.email,
     hasShownModalOnce,
   ]);
+
+  // Re-validate the applied coupon whenever the cart changes.
+  useEffect(() => {
+    const appliedCode = coupon?.code;
+    if (!appliedCode || lines.length === 0) return;
+
+    let cancelled = false;
+    const timer = setTimeout(async () => {
+      try {
+        const response = await fetch("/api/coupons/validate", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            code: appliedCode,
+            items: buildItemsPayload(lines),
+          }),
+        });
+        const data = await response.json().catch(() => null);
+        if (cancelled) return;
+
+        if (!response.ok || !data?.success) {
+          setCoupon(null);
+          setCouponError(data?.error || "This coupon is no longer valid.");
+          return;
+        }
+
+        setCoupon(data.coupon as AppliedCoupon);
+      } catch {
+        // Keep the current coupon; checkout re-validates server-side.
+      }
+    }, 400);
+
+    return () => {
+      cancelled = true;
+      clearTimeout(timer);
+    };
+  }, [subtotal, coupon?.code, lines]);
+
+  const handleApplyCoupon = async () => {
+    const code = couponInput.trim();
+    if (!code) {
+      setCouponError("Enter a coupon code.");
+      return;
+    }
+
+    setCouponLoading(true);
+    setCouponError("");
+
+    try {
+      const response = await fetch("/api/coupons/validate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          code,
+          items: buildItemsPayload(lines),
+        }),
+      });
+      const data = await response.json().catch(() => null);
+
+      if (!response.ok || !data?.success || !data.coupon) {
+        setCoupon(null);
+        setCouponError(data?.error || "Could not apply this coupon.");
+        return;
+      }
+
+      setCoupon(data.coupon as AppliedCoupon);
+      setCouponInput(data.coupon.code);
+    } catch {
+      setCouponError("Could not apply this coupon. Please try again.");
+    } finally {
+      setCouponLoading(false);
+    }
+  };
+
+  const handleRemoveCoupon = () => {
+    setCoupon(null);
+    setCouponInput("");
+    setCouponError("");
+  };
 
   const handleInputChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
@@ -371,13 +464,9 @@ export function CartView({
     return sum;
   }, 0);
 
-  const paymentItems = lines.map((line) => ({
-    kind: line.kind,
-    slug: line.slug,
-    sizeLabel: line.sizeLabel,
-    quantity: line.qty,
-    picks: line.picks?.map((pick) => ({ slug: pick.slug })),
-  }));
+  const paymentItems = buildItemsPayload(lines);
+  const discountPaise = coupon?.discountPaise ?? 0;
+  const totalPaise = Math.max(0, subtotal - discountPaise);
 
   return (
     <>
@@ -616,6 +705,12 @@ export function CartView({
               <span>Price</span>
               <span>{formatINR(subtotal)}</span>
             </div>
+            {coupon && discountPaise > 0 && (
+              <div className="cart-summary cart-page_coupon-discount">
+                <span>Coupon ({coupon.code})</span>
+                <span>&minus;{formatINR(discountPaise)}</span>
+              </div>
+            )}
             <div className="cart-summary">
               <span>Delivery Fee</span>
               <span className="cart-summary_free">Free</span>
@@ -623,8 +718,64 @@ export function CartView({
             <hr className="cart-page_summary-rule" />
             <div className="cart-summary cart-summary--total">
               <span>Total</span>
-              <span className="cart-summary_total">{formatINR(subtotal)}</span>
+              <span className="cart-summary_total">{formatINR(totalPaise)}</span>
             </div>
+          </div>
+
+          <div className="cart-page_coupon">
+            <label className="cart-page_coupon-label" htmlFor="cart-coupon">
+              Have a coupon?
+            </label>
+            <div className="cart-page_coupon-row">
+              <input
+                id="cart-coupon"
+                type="text"
+                className="cart-page_coupon-input"
+                value={couponInput}
+                onChange={(event) => {
+                  setCouponInput(event.target.value.toUpperCase());
+                  if (couponError) setCouponError("");
+                }}
+                onKeyDown={(event) => {
+                  if (event.key === "Enter" && !coupon && !couponLoading) {
+                    event.preventDefault();
+                    handleApplyCoupon();
+                  }
+                }}
+                placeholder="Enter coupon code"
+                autoComplete="off"
+                spellCheck={false}
+                disabled={!!coupon || couponLoading}
+              />
+              {coupon ? (
+                <button
+                  type="button"
+                  className="cart-page_coupon-btn is-remove"
+                  onClick={handleRemoveCoupon}
+                >
+                  Remove
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  className="cart-page_coupon-btn"
+                  onClick={handleApplyCoupon}
+                  disabled={couponLoading || !couponInput.trim()}
+                >
+                  {couponLoading ? "Checking..." : "Apply"}
+                </button>
+              )}
+            </div>
+            {couponError && (
+              <p className="cart-page_coupon-message is-error" role="alert">
+                {couponError}
+              </p>
+            )}
+            {coupon && (
+              <p className="cart-page_coupon-message is-success">
+                {coupon.title} applied. You saved {formatINR(discountPaise)}.
+              </p>
+            )}
           </div>
 
           {orderSavings > 0 && (
@@ -695,7 +846,7 @@ export function CartView({
                     Edit Details
                   </button>
                   <PaymentCheckout
-                    amount={Math.ceil(subtotal / 100)}
+                    amount={Math.ceil(totalPaise / 100)}
                     description="Nilgiribytes Bakery Order"
                     customerName={customerDetails.name}
                     customerEmail={customerDetails.email}
@@ -704,6 +855,7 @@ export function CartView({
                     pincode={customerDetails.pincode}
                     state={customerDetails.state}
                     district={customerDetails.district}
+                    couponCode={coupon?.code}
                     items={paymentItems}
                     codEnabled={codEnabled}
                     onSuccess={handlePaymentSuccess}

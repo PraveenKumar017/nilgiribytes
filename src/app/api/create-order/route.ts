@@ -1,4 +1,5 @@
 import type { NextRequest } from "next/server";
+import { applyCoupon } from "@/lib/coupons";
 import { priceOrderItems, type OrderItemInput } from "@/lib/order-pricing";
 
 const RAZORPAY_KEY_ID = process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID;
@@ -9,6 +10,7 @@ interface CreateOrderRequest {
   customerName?: string;
   customerEmail?: string;
   customerPhone?: string;
+  couponCode?: string;
   items?: OrderItemInput[];
 }
 
@@ -33,6 +35,19 @@ export async function POST(request: NextRequest) {
     const body = (await request.json()) as CreateOrderRequest;
     const { subtotalPaise } = await priceOrderItems(body.items ?? []);
 
+    const coupon = body.couponCode
+      ? await applyCoupon(body.couponCode, subtotalPaise)
+      : null;
+    const discountPaise = coupon?.discountPaise ?? 0;
+    const totalPaise = Math.max(0, subtotalPaise - discountPaise);
+
+    if (totalPaise < 100) {
+      return Response.json(
+        { error: "Order total must be at least \u20b91 after discount." },
+        { status: 400 }
+      );
+    }
+
     const orderResponse = await fetch("https://api.razorpay.com/v1/orders", {
       method: "POST",
       headers: {
@@ -42,13 +57,14 @@ export async function POST(request: NextRequest) {
         ).toString("base64")}`,
       },
       body: JSON.stringify({
-        amount: subtotalPaise,
+        amount: totalPaise,
         currency: "INR",
         receipt: `nb_${Date.now()}`,
         notes: {
           customer_name: body.customerName?.trim() || "Customer",
           customer_email: body.customerEmail?.trim() || "not_provided",
           customer_phone: body.customerPhone?.trim() || "not_provided",
+          coupon_code: coupon?.code || "not_applied",
         },
       }),
     });
@@ -67,8 +83,11 @@ export async function POST(request: NextRequest) {
     return Response.json({
       success: true,
       orderId: order.id,
-      amount: subtotalPaise / 100,
-      amountInPaise: subtotalPaise,
+      amount: totalPaise / 100,
+      amountInPaise: totalPaise,
+      subtotalPaise,
+      discountPaise,
+      couponCode: coupon?.code ?? null,
     });
   } catch (error) {
     const message =

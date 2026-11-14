@@ -13,6 +13,7 @@ interface PaymentCheckoutProps {
   pincode: string;
   state: string;
   district: string;
+  couponCode?: string;
   items: OrderItemInput[];
   codEnabled?: boolean;
   onSuccess: (paymentData: PaymentSuccessData) => void;
@@ -86,6 +87,7 @@ export function PaymentCheckout({
   pincode,
   state,
   district,
+  couponCode,
   items,
   codEnabled = false,
   onSuccess,
@@ -140,6 +142,7 @@ export function PaymentCheckout({
           pincode,
           state,
           district,
+          couponCode,
           items,
         }),
       });
@@ -232,6 +235,7 @@ export function PaymentCheckout({
           customerName,
           customerEmail,
           customerPhone,
+          couponCode,
           items,
         }),
       });
@@ -289,6 +293,7 @@ export function PaymentCheckout({
                 pincode,
                 state,
                 district,
+                couponCode,
                 items,
               }),
             });
