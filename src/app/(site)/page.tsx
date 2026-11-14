@@ -65,7 +65,23 @@ export const metadata: Metadata = pageMetadata({
 
 export default async function HomePage() {
   const catalog = await getCatalog();
-  const bestsellers = [...catalog.combos, ...catalog.products].slice(0, 4);
+  const allItems = [...catalog.products, ...catalog.combos];
+  const featuredBestsellerSlugs = [
+    "special-varkey",
+    "mini-varkey",
+    "trial-combo",
+    "family-combo",
+  ];
+  const bestsellers = featuredBestsellerSlugs
+    .map((slug) => allItems.find((item) => item.slug === slug))
+    .filter((item): item is (typeof allItems)[number] => Boolean(item));
+
+  if (bestsellers.length < 4) {
+    const existing = new Set(bestsellers.map((item) => item.id));
+    bestsellers.push(
+      ...allItems.filter((item) => !existing.has(item.id)).slice(0, 4 - bestsellers.length)
+    );
+  }
 
   return (
     <>
@@ -300,7 +316,7 @@ export default async function HomePage() {
               cart.
             </p>
             <div className="product-grid" id="bestsellers-grid">
-              <ProductCollection items={bestsellers} />
+              <ProductCollection items={bestsellers} showDescription={true} />
             </div>
             <p className="text-center reveal mt-2" data-reveal="fade-up">
               <Link

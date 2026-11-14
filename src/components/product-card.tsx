@@ -18,12 +18,14 @@ type ProductCardProps = {
   item: StoreItem;
   animate?: boolean;
   quick?: boolean;
+  showDescription?: boolean;
 };
 
 export function ProductCard({
   item,
   animate = true,
   quick = false,
+  showDescription = false,
 }: ProductCardProps) {
   const { add, changeQty, quantityOf } = useCart();
   const [sizeIndex, setSizeIndex] = useState(0);
@@ -100,6 +102,10 @@ export function ProductCard({
             {item.includes
               .map((include) => `${include.name} ${include.quantity}`)
               .join(" \u00b7 ")}
+          </p>
+        ) : showDescription && item.kind === "product" && item.description ? (
+          <p className="product-card_desc">
+            {item.description.replace(/\s+/g, " ").trim()}
           </p>
         ) : null}
 

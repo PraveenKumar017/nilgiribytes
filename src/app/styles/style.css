@@ -1678,7 +1678,8 @@ p {
   white-space: nowrap;
 }
 
-.product-card_includes {
+.product-card_includes,
+.product-card_desc {
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;

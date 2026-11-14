@@ -4,7 +4,13 @@ import { useEffect } from "react";
 import type { StoreItem } from "@/lib/types";
 import { ProductCard } from "./product-card";
 
-export function ProductCollection({ items }: { items: StoreItem[] }) {
+export function ProductCollection({
+  items,
+  showDescription = false,
+}: {
+  items: StoreItem[];
+  showDescription?: boolean;
+}) {
   useEffect(() => {
     window.refreshReveals?.(document);
   }, [items]);
@@ -20,7 +26,11 @@ export function ProductCollection({ items }: { items: StoreItem[] }) {
   return (
     <>
       {items.map((item) => (
-        <ProductCard key={item.id} item={item} />
+        <ProductCard
+          key={item.id}
+          item={item}
+          showDescription={showDescription}
+        />
       ))}
     </>
   );
