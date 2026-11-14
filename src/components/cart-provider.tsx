@@ -19,7 +19,12 @@ import {
   toCartLine,
   writeCart,
 } from "@/lib/cart";
-import type { CartLine, CustomComboPick, StoreItem } from "@/lib/types";
+import {
+  CUSTOM_COMBO_SLUG,
+  type CartLine,
+  type CustomComboPick,
+  type StoreItem,
+} from "@/lib/types";
 
 type CartContextValue = {
   lines: CartLine[];
@@ -96,17 +101,16 @@ export function CartProvider({ children }: { children: ReactNode }) {
   );
 
   const addCustomCombo = useCallback(
-    (picks: CustomComboPick[], qty = 1) => {
-      const line = buildCustomComboLine(picks, qty);
+    (picks: CustomComboPick[], _qty = 1) => {
+      const line = buildCustomComboLine(picks, 1);
       const current = readCart();
-      const existing = current.find((entry) => entry.key === line.key);
-      const next = existing
-        ? current.map((entry) =>
-            entry.key === existing.key
-              ? { ...entry, ...line, qty: entry.qty + qty }
-              : entry
-          )
-        : [...current, line];
+      // Only 1 Build Your Own Combo is allowed per order.
+      // Replace any existing custom combo in the cart with the new one.
+      const withoutCustom = current.filter(
+        (entry) =>
+          entry.slug !== CUSTOM_COMBO_SLUG && entry.id !== CUSTOM_COMBO_SLUG
+      );
+      const next = [...withoutCustom, { ...line, qty: 1 }];
       commit(next);
       setAnnouncement(
         `Build Your Own Combo (${line.sizeLabel}) added to cart.`
@@ -115,14 +119,21 @@ export function CartProvider({ children }: { children: ReactNode }) {
     [commit]
   );
 
-  const setQty = useCallback(    (key: string, qty: number) => {
+  const setQty = useCallback(
+    (key: string, qty: number) => {
       const current = readCart();
+      const line = current.find((entry) => entry.key === key);
+      const isCustom =
+        line?.slug === CUSTOM_COMBO_SLUG || line?.id === CUSTOM_COMBO_SLUG;
+      const targetQty = isCustom
+        ? Math.min(1, Math.round(qty))
+        : Math.round(qty);
       const next =
-        qty <= 0
+        targetQty <= 0
           ? current.filter((entry) => entry.key !== key)
           : current.map((entry) =>
               entry.key === key
-                ? { ...entry, qty: Math.round(qty) }
+                ? { ...entry, qty: targetQty }
                 : entry
             );
       commit(next);
@@ -135,6 +146,12 @@ export function CartProvider({ children }: { children: ReactNode }) {
       const current = readCart();
       const line = current.find((entry) => entry.key === key);
       if (!line) return;
+      const isCustom =
+        line.slug === CUSTOM_COMBO_SLUG || line.id === CUSTOM_COMBO_SLUG;
+      if (isCustom && delta > 0 && line.qty >= 1) {
+        setAnnouncement("Limit reached: Only 1 Build Your Own Combo allowed per order.");
+        return;
+      }
       setQty(key, line.qty + delta);
     },
     [setQty]

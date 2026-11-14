@@ -12,7 +12,13 @@ import {
   PaymentCheckout,
   type PaymentSuccessData,
 } from "@/components/payment-checkout";
-import type { CartLine, StoreProduct, Catalog, AppliedCoupon } from "@/lib/types";
+import {
+  CUSTOM_COMBO_SLUG,
+  type CartLine,
+  type StoreProduct,
+  type Catalog,
+  type AppliedCoupon,
+} from "@/lib/types";
 import { ProductCollection } from "@/components/product-collection";
 
 interface CustomerDetails {
@@ -26,6 +32,32 @@ interface CustomerDetails {
 }
 
 const STORAGE_KEY = "nilgiribytes_customer_details";
+
+const CONFETTI_COLORS = [
+  "#c79a42",
+  "#16a34a",
+  "#f59e0b",
+  "#ec4899",
+  "#3b82f6",
+  "#8b5cf6",
+  "#10b981",
+  "#eab308",
+];
+
+const CONFETTI_PIECES = Array.from({ length: 36 }, (_, i) => {
+  const angle = (i / 36) * Math.PI * 2 + ((i % 5) - 2) * 0.08;
+  const distance = 70 + (i % 6) * 22;
+  return {
+    id: i,
+    x: Math.round(Math.cos(angle) * distance),
+    y: Math.round(Math.sin(angle) * distance - 35),
+    r: (i * 53) % 360,
+    color: CONFETTI_COLORS[i % CONFETTI_COLORS.length],
+    delay: (i % 6) * 0.045,
+    size: 7 + (i % 4) * 2.5,
+    shape: i % 3 === 0 ? "circle" : i % 3 === 1 ? "rect" : "ribbon",
+  };
+});
 
 function isComboLine(line: {
   kind?: string;
@@ -111,6 +143,7 @@ export function CartView({
   const [couponInput, setCouponInput] = useState("");
   const [couponError, setCouponError] = useState("");
   const [couponLoading, setCouponLoading] = useState(false);
+  const [couponJustApplied, setCouponJustApplied] = useState(false);
 
   // Load customer details from localStorage on mount
   useEffect(() => {
@@ -290,6 +323,8 @@ export function CartView({
 
       setCoupon(data.coupon as AppliedCoupon);
       setCouponInput(data.coupon.code);
+      setCouponJustApplied(true);
+      setTimeout(() => setCouponJustApplied(false), 3800);
     } catch {
       setCouponError("Could not apply this coupon. Please try again.");
     } finally {
@@ -301,6 +336,7 @@ export function CartView({
     setCoupon(null);
     setCouponInput("");
     setCouponError("");
+    setCouponJustApplied(false);
   };
 
   const handleInputChange = (
@@ -657,53 +693,68 @@ export function CartView({
 
       <div className="cart-page_grid">
         <div className="cart-page_lines">
-          {lines.map((line) => (
-            <div className="cart-line" key={line.key}>
-              <div className="cart-line_media">
-                <SafeImage
-                  className="cart-line_img"
-                  src={line.image}
-                  alt=""
-                  width={64}
-                  height={64}
-                  loading="lazy"
-                />
-              </div>
-              <div className="cart-line_info">
-                <div className="cart-line_row">
-                  <p className="cart-line_name">{line.name}</p>
-                  <div className="qty-stepper">
-                    <button
-                      type="button"
-                      onClick={() => changeQty(line.key, -1)}
-                      aria-label={`Decrease quantity of ${line.name}`}
-                    >
-                      &minus;
-                    </button>
-                    <span aria-live="polite">{line.qty}</span>
-                    <button
-                      type="button"
-                      onClick={() => changeQty(line.key, 1)}
-                      aria-label={`Increase quantity of ${line.name}`}
-                    >
-                      +
-                    </button>
+          {lines.map((line) => {
+            const isCustom =
+              line.slug === CUSTOM_COMBO_SLUG || line.id === CUSTOM_COMBO_SLUG;
+            return (
+              <div className="cart-line" key={line.key}>
+                <div className="cart-line_media">
+                  <SafeImage
+                    className="cart-line_img"
+                    src={line.image}
+                    alt=""
+                    width={64}
+                    height={64}
+                    loading="lazy"
+                  />
+                </div>
+                <div className="cart-line_info">
+                  <div className="cart-line_row">
+                    <div className="cart-line_name-wrap">
+                      <p className="cart-line_name">{line.name}</p>
+                      {isCustom && (
+                        <span className="cart-line_limit-badge">Limit: 1 per order</span>
+                      )}
+                    </div>
+                    <div className="qty-stepper">
+                      <button
+                        type="button"
+                        onClick={() => changeQty(line.key, -1)}
+                        aria-label={`Decrease quantity of ${line.name}`}
+                      >
+                        &minus;
+                      </button>
+                      <span aria-live="polite">{line.qty}</span>
+                      <button
+                        type="button"
+                        onClick={() => changeQty(line.key, 1)}
+                        disabled={isCustom && line.qty >= 1}
+                        title={
+                          isCustom && line.qty >= 1
+                            ? "Limit reached: Only 1 Build Your Own Combo allowed per order"
+                            : `Increase quantity of ${line.name}`
+                        }
+                        aria-label={`Increase quantity of ${line.name}`}
+                      >
+                        +
+                      </button>
+                    </div>
                   </div>
+                  <div className="cart-line_row">
+                    <p className="cart-line_meta">
+                      {line.sizeLabel} &middot; {formatINR(line.pricePaise)} each
+                    </p>
+                    <p className="cart-line_price">{formatINR(line.pricePaise * line.qty)}</p>
+                  </div>
+                  {line.picks?.length ? (
+                    <p className="cart-line_meta">
+                      {line.picks.map((pick) => pick.name).join(", ")}
+                    </p>
+                  ) : null}
                 </div>
-                <div className="cart-line_row">
-                  <p className="cart-line_meta">
-                    {line.sizeLabel} &middot; {formatINR(line.pricePaise)} each
-                  </p>
-                  <p className="cart-line_price">{formatINR(line.pricePaise * line.qty)}</p>
-                </div>
-                {line.picks?.length ? (
-                  <p className="cart-line_meta">
-                    {line.picks.map((pick) => pick.name).join(", ")}
-                  </p>
-                ) : null}
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
 
         <aside className="cart-page_summary" aria-label="Order summary">
@@ -718,7 +769,11 @@ export function CartView({
               <span>{formatINR(subtotal)}</span>
             </div>
             {coupon && discountPaise > 0 && (
-              <div className="cart-summary cart-page_coupon-discount">
+              <div
+                className={`cart-summary cart-page_coupon-discount ${
+                  couponJustApplied ? "is-highlighted" : ""
+                }`}
+              >
                 <span>Coupon ({coupon.code})</span>
                 <span>&minus;{formatINR(discountPaise)}</span>
               </div>
@@ -749,58 +804,104 @@ export function CartView({
           </div>
 
           <div className="cart-page_coupon">
-            <label className="cart-page_coupon-label" htmlFor="cart-coupon">
-              Have a coupon?
-            </label>
-            <div className="cart-page_coupon-row">
-              <input
-                id="cart-coupon"
-                type="text"
-                className="cart-page_coupon-input"
-                value={couponInput}
-                onChange={(event) => {
-                  setCouponInput(event.target.value.toUpperCase());
-                  if (couponError) setCouponError("");
-                }}
-                onKeyDown={(event) => {
-                  if (event.key === "Enter" && !coupon && !couponLoading) {
-                    event.preventDefault();
-                    handleApplyCoupon();
-                  }
-                }}
-                placeholder="Enter coupon code"
-                autoComplete="off"
-                spellCheck={false}
-                disabled={!!coupon || couponLoading}
-              />
-              {coupon ? (
+            {couponJustApplied && (
+              <div className="coupon-confetti-burst" aria-hidden="true">
+                {CONFETTI_PIECES.map((p) => (
+                  <span
+                    key={p.id}
+                    className={`confetti-piece confetti-${p.shape}`}
+                    style={
+                      {
+                        "--x": `${p.x}px`,
+                        "--y": `${p.y}px`,
+                        "--r": `${p.r}deg`,
+                        width:
+                          p.shape === "ribbon"
+                            ? `${p.size * 2}px`
+                            : `${p.size}px`,
+                        height:
+                          p.shape === "ribbon"
+                            ? `${p.size * 0.5}px`
+                            : `${p.size}px`,
+                        backgroundColor: p.color,
+                        borderRadius: p.shape === "circle" ? "50%" : "2px",
+                        animationDelay: `${p.delay}s`,
+                      } as React.CSSProperties
+                    }
+                  />
+                ))}
+              </div>
+            )}
+
+            {!coupon ? (
+              <>
+                <label className="cart-page_coupon-label" htmlFor="cart-coupon">
+                  Have a coupon?
+                </label>
+                <div className="cart-page_coupon-row">
+                  <input
+                    id="cart-coupon"
+                    type="text"
+                    className="cart-page_coupon-input"
+                    value={couponInput}
+                    onChange={(event) => {
+                      setCouponInput(event.target.value.toUpperCase());
+                      if (couponError) setCouponError("");
+                    }}
+                    onKeyDown={(event) => {
+                      if (event.key === "Enter" && !coupon && !couponLoading) {
+                        event.preventDefault();
+                        handleApplyCoupon();
+                      }
+                    }}
+                    placeholder="Enter coupon code"
+                    autoComplete="off"
+                    spellCheck={false}
+                    disabled={couponLoading}
+                  />
+                  <button
+                    type="button"
+                    className="cart-page_coupon-btn"
+                    onClick={handleApplyCoupon}
+                    disabled={couponLoading || !couponInput.trim()}
+                  >
+                    {couponLoading ? "Checking..." : "Apply"}
+                  </button>
+                </div>
+                {couponError && (
+                  <p className="cart-page_coupon-message is-error" role="alert">
+                    {couponError}
+                  </p>
+                )}
+              </>
+            ) : (
+              <div
+                className={`cart-page_coupon-applied-card ${
+                  couponJustApplied ? "is-celebrating" : ""
+                }`}
+              >
+                <div className="coupon-applied_icon" aria-hidden="true">
+                  🎉
+                </div>
+                <div className="coupon-applied_body">
+                  <div className="coupon-applied_top">
+                    <span className="coupon-applied_code">{coupon.code}</span>
+                    <span className="coupon-applied_badge">APPLIED</span>
+                  </div>
+                  <p className="coupon-applied_saving">
+                    You saved <strong>{formatINR(discountPaise)}</strong> with this coupon!
+                  </p>
+                  <p className="coupon-applied_title">{coupon.title}</p>
+                </div>
                 <button
                   type="button"
-                  className="cart-page_coupon-btn is-remove"
+                  className="coupon-applied_remove"
                   onClick={handleRemoveCoupon}
+                  aria-label={`Remove coupon ${coupon.code}`}
                 >
                   Remove
                 </button>
-              ) : (
-                <button
-                  type="button"
-                  className="cart-page_coupon-btn"
-                  onClick={handleApplyCoupon}
-                  disabled={couponLoading || !couponInput.trim()}
-                >
-                  {couponLoading ? "Checking..." : "Apply"}
-                </button>
-              )}
-            </div>
-            {couponError && (
-              <p className="cart-page_coupon-message is-error" role="alert">
-                {couponError}
-              </p>
-            )}
-            {coupon && (
-              <p className="cart-page_coupon-message is-success">
-                {coupon.title} applied. You saved {formatINR(discountPaise)}.
-              </p>
+              </div>
             )}
           </div>
 

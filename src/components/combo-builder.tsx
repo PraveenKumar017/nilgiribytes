@@ -12,6 +12,7 @@ import {
 import {
   CUSTOM_COMBO_MAX_PACKS,
   CUSTOM_COMBO_MIN_PACKS,
+  CUSTOM_COMBO_SLUG,
   type CustomComboPick,
 } from "@/lib/types";
 import { useCart } from "./cart-provider";
@@ -30,7 +31,10 @@ export function ComboBuilder({
 }: {
   products: ComboBuilderProduct[];
 }) {
-  const { addCustomCombo } = useCart();
+  const { lines, addCustomCombo } = useCart();
+  const existingCustomCombo = lines.find(
+    (line) => line.slug === CUSTOM_COMBO_SLUG || line.id === CUSTOM_COMBO_SLUG
+  );
   const [quantities, setQuantities] = useState<Record<string, number>>({});
   const [added, setAdded] = useState(false);
 
@@ -305,13 +309,17 @@ export function ComboBuilder({
             </div>
           ) : null}
 
+          <div className="combo-builder_limit-note">
+            <span>Limit: Only 1 Build Your Own Combo allowed per order.</span>
+          </div>
+
           <button
             type="button"
             className="btn btn--primary combo-builder_add"
             onClick={handleAdd}
             disabled={!isValid}
           >
-            Add combo to cart
+            {existingCustomCombo ? "Update combo in cart" : "Add combo to cart"}
           </button>
 
           {!isValid ? (
@@ -320,9 +328,16 @@ export function ComboBuilder({
             </p>
           ) : null}
 
+          {existingCustomCombo && !added ? (
+            <p className="combo-builder_replace-hint">
+              You already have a custom combo in your cart. Saving this will replace it.
+            </p>
+          ) : null}
+
           {added ? (
             <p className="combo-builder_success" role="status">
-              Combo added. <Link href="/cart">View cart &rarr;</Link>
+              {existingCustomCombo ? "Custom combo updated in cart." : "Combo added."}{" "}
+              <Link href="/cart">View cart &rarr;</Link>
             </p>
           ) : null}
         </aside>

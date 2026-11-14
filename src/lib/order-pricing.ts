@@ -130,6 +130,7 @@ export async function priceOrderItems(
   }
 
   const lines: PricedOrderLine[] = [];
+  let customComboCount = 0;
 
   for (const item of items) {
     const kind = item.kind;
@@ -151,6 +152,11 @@ export async function priceOrderItems(
         : null;
 
     if (kind === "combo" && slug === CUSTOM_COMBO_SLUG) {
+      customComboCount += quantity;
+      if (customComboCount > 1) {
+        throw new Error("Only 1 Build Your Own Combo is allowed per order.");
+      }
+
       const pickSlugs = (Array.isArray(item.picks) ? item.picks : [])
         .map((pick) =>
           typeof pick?.slug === "string" ? pick.slug.trim() : ""

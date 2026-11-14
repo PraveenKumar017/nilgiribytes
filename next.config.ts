@@ -12,6 +12,9 @@ const nextConfig: NextConfig = {
       { source: "/admin.html", destination: "/admin", permanent: true },
       { source: "/privacy_policy.html", destination: "/policies/privacy", permanent: true },
       { source: "/store_policy.html", destination: "/policies/store", permanent: true },
+      { source: "/shop/build-your-own-combo", destination: "/build-your-own-combo", permanent: true },
+      { source: "/shop/create-your-own-combo", destination: "/build-your-own-combo", permanent: true },
+      { source: "/create-your-own-combo", destination: "/build-your-own-combo", permanent: true },
     ];
   },
   async headers() {

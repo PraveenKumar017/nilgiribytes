@@ -1,16 +1,18 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { cache } from "react";
 import { JsonLd } from "@/components/json-ld";
 import { ProductCollection } from "@/components/product-collection";
 import { ProductDetail } from "@/components/product-detail";
+import { SafeImage } from "@/components/safe-image";
 import { ShareIconButton } from "@/components/share-icon-button";
 import {
   itemImage,
   itemMrp,
   itemPrice,
 } from "@/lib/cart";
+import { formatINR } from "@/lib/format";
 import { pageMetadata } from "@/lib/seo";
 import { absoluteUrl } from "@/lib/site";
 import { getCatalog } from "@/lib/storefront";
@@ -66,8 +68,43 @@ export async function generateMetadata({
   });
 }
 
+function CreateYourOwnComboCard() {
+  return (
+    <Link
+      href="/build-your-own-combo"
+      className="product-card product-card--create-custom reveal"
+      data-reveal="fade-up"
+      aria-label="Create your own combo"
+    >
+      <div className="product-card_create-content">
+        <div className="product-card_add-circle" aria-hidden="true">
+          <svg
+            viewBox="0 0 24 24"
+            width="32"
+            height="32"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2.5"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <line x1="12" y1="5" x2="12" y2="19" />
+            <line x1="5" y1="12" x2="19" y2="12" />
+          </svg>
+        </div>
+        <h3 className="product-card_create-title">Create your own combo</h3>
+        <p className="product-card_create-subtitle">Customize your perfect box</p>
+      </div>
+    </Link>
+  );
+}
+
 export default async function ProductPage({ params }: ProductPageProps) {
   const { slug } = await params;
+  if (slug === "build-your-own-combo" || slug === "create-your-own-combo") {
+    redirect("/build-your-own-combo");
+  }
+
   const [item, catalog] = await Promise.all([loadItem(slug), loadCatalog()]);
 
   if (!item) notFound();
@@ -76,11 +113,12 @@ export default async function ProductPage({ params }: ProductPageProps) {
   const sameCategory = allItems.filter(
     (entry) => entry.id !== item.id && entry.category === item.category
   );
+  const maxRelated = item.kind === "combo" ? 3 : 4;
   const related = (
     sameCategory.length
       ? sameCategory
       : allItems.filter((entry) => entry.id !== item.id)
-  ).slice(0, 4);
+  ).slice(0, maxRelated);
 
   const price = itemPrice(item, 0);
   const mrp = itemMrp(item, 0);
@@ -207,6 +245,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
             </h2>
             <div className="product-grid">
               <ProductCollection items={related} />
+              {item.kind === "combo" ? <CreateYourOwnComboCard /> : null}
             </div>
           </div>
         </section>
