@@ -287,6 +287,24 @@
     background-position: center;
     background-size: cover;
   }
+
+  .product-card_top {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.35rem;
+  }
+
+  .product-card_price {
+    align-items: flex-start;
+    text-align: left;
+    width: 100%;
+  }
+
+  .price-offer {
+    justify-content: flex-start;
+    align-items: baseline;
+    gap: 0.25rem 0.45rem;
+  }
 }
 
 /* ---------- 480px ---------- */
@@ -503,16 +521,17 @@
   }
 
   .product-card_body {
-    padding: 1rem 1rem 1.1rem;
-    gap: 0.8rem;
+    padding: 0.75rem 0.75rem 0.85rem;
+    gap: 0.65rem;
   }
 
   .product-card_name {
-    font-size: 1rem;
+    font-size: 0.95rem;
+    line-height: 1.3;
   }
 
   .product-card_price {
-    font-size: 0.95rem;
+    font-size: 0.92rem;
   }
 
   .size-select_btn {
