@@ -57,7 +57,7 @@ export const ADDRESS = {
 };
 
 export const FULL_ADDRESS =
-  "Keradamattam, Kodanad Road Kotagiri, The Nilgiriris, Tamilnadu - 643217";
+  "Keradamattam, Kodanad Road Kotagiri, The Nilgiris, Tamilnadu - 643217";
 
 export const MAPS_URL = "https://maps.app.goo.gl/wTXXHw3X2kkmetQo9?g_st=awb";
 

@@ -3078,6 +3078,36 @@ body[data-page="cart"] .section {
   line-height: 1.12;
 }
 
+.product-detail_reviews {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: -0.35rem;
+}
+
+.product-detail_stars {
+  display: inline-flex;
+  gap: 0.15rem;
+  color: var(--color-gold);
+  font-size: 1.15rem;
+  line-height: 1;
+}
+
+.product-detail_star.is-filled {
+  color: var(--color-gold);
+}
+
+.product-detail_star.is-empty {
+  color: var(--color-border);
+}
+
+.product-detail_rating {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--color-cocoa);
+  line-height: 1;
+}
+
 .product-detail_pricing {
   padding-block: 0.9rem;
   border-block: 1px solid var(--color-border);

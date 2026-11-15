@@ -180,6 +180,26 @@ export function ProductDetail({ item }: ProductDetailProps) {
         <span className="product-detail_category">{item.category}</span>
         <h1 className="product-detail_title">{item.name}</h1>
 
+        <div className="product-detail_reviews">
+          <div
+            className="product-detail_stars"
+            aria-label={`${item.rating.toFixed(1)} out of 5 stars`}
+          >
+            {Array.from({ length: 5 }, (_, index) => (
+              <span
+                key={index}
+                className={`product-detail_star ${
+                  index < Math.round(item.rating) ? "is-filled" : "is-empty"
+                }`}
+                aria-hidden="true"
+              >
+                ★
+              </span>
+            ))}
+          </div>
+          <span className="product-detail_rating">{item.rating.toFixed(1)}</span>
+        </div>
+
         <div className="product-detail_pricing">
           <p className="product-detail_price">
             <span className="price-current">{formatINR(price)}</span>

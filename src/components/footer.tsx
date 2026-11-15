@@ -65,7 +65,7 @@ export function Footer() {
             <p className="footer-col_title">Visit us</p>
             <ul>
               <li>
-                Keradamattam, Kodanad Road Kotagiri, The Nilgiriris, Tamilnadu - 643217
+                Keradamattam, Kodanad Road, Kotagiri, The Nilgiris, Tamilnadu - 643217
               </li>
               <li>
                 <a href={MAPS_URL} target="_blank" rel="noopener">
