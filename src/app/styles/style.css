@@ -2898,13 +2898,14 @@ body[data-page="cart"] .section {
 .product-detail_badge {
   position: absolute;
   top: 1rem;
-  left: 1rem;
+  right: 1rem;
   z-index: 2;
   padding: 0.35rem 0.7rem;
   border-radius: 999px;
   background: var(--color-chocolate);
   color: var(--color-ivory);
-  font-size: 0.7rem;
+  font-family: var(--font-body);
+  font-size: 0.72rem;
   font-weight: 700;
   letter-spacing: 0.08em;
   text-transform: uppercase;

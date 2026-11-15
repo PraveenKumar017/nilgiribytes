@@ -86,6 +86,9 @@ export function ProductDetail({ item }: ProductDetailProps) {
     <article className="product-detail">
       <div className="product-detail_media">
         <div className="product-detail_stage">
+          {hasDiscount ? (
+            <span className="product-detail_badge">{discount}% OFF</span>
+          ) : null}
           {isVideoActive && videoUrl ? (
             <video
               src={videoUrl}
@@ -205,9 +208,6 @@ export function ProductDetail({ item }: ProductDetailProps) {
             <span className="price-current">{formatINR(price)}</span>
             {hasDiscount ? (
               <s className="price-mrp">{formatINR(mrp)}</s>
-            ) : null}
-            {hasDiscount ? (
-              <span className="discount-pill">{discount}% OFF</span>
             ) : null}
             {item.kind === "combo" ? (
               <span className="product-detail_price-meta">{item.weight}</span>
