@@ -369,9 +369,10 @@ export function CartView({
       errors.mobile = "Enter a valid 10-digit mobile number";
     }
 
-    if (!customerDetails.email.trim()) {
-      errors.email = "Email ID is required";
-    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(customerDetails.email.trim())) {
+    if (
+      customerDetails.email.trim() &&
+      !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(customerDetails.email.trim())
+    ) {
       errors.email = "Enter a valid email address";
     }
 
@@ -572,7 +573,7 @@ export function CartView({
               </div>
 
               <div className="form-group">
-                <label htmlFor="modal-email">Email ID *</label>
+                <label htmlFor="modal-email">Email ID</label>
                 <input
                   type="email"
                   id="modal-email"
@@ -976,7 +977,7 @@ export function CartView({
                 </div>
                 <div className="detail-row">
                   <span className="detail-label">Email:</span>
-                  <span className="detail-value">{customerDetails.email}</span>
+                  <span className="detail-value">{customerDetails.email || "—"}</span>
                 </div>
                 <div className="detail-row">
                   <span className="detail-label">Address:</span>

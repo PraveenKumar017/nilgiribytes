@@ -197,9 +197,10 @@ export function PaymentCheckout({
       errors.mobile = "Enter a valid 10-digit mobile number";
     }
 
-    if (!customerEmail.trim()) {
-      errors.email = "Email ID is required";
-    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(customerEmail.trim())) {
+    if (
+      customerEmail.trim() &&
+      !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(customerEmail.trim())
+    ) {
       errors.email = "Enter a valid email address";
     }
 

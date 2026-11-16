@@ -271,22 +271,21 @@ function buildText(
 export async function sendOrderConfirmationEmail(
   data: OrderConfirmationEmail
 ): Promise<boolean> {
+  const customerEmail = data.customerEmail?.trim();
+  if (!customerEmail) {
+    return true;
+  }
+
   if (!RESEND_API_KEY) {
     console.error("Order confirmation email skipped: RESEND_API_KEY is not set.");
     return false;
   }
 
-  const customerEmail = data.customerEmail?.trim();
-  const recipients = customerEmail ? [customerEmail] : [STORE_EMAIL];
+  const recipients = [customerEmail];
   const bcc =
-    customerEmail && STORE_EMAIL && STORE_EMAIL !== customerEmail
+    STORE_EMAIL && STORE_EMAIL !== customerEmail
       ? [STORE_EMAIL]
       : undefined;
-
-  if (!recipients.length || !recipients[0]) {
-    console.error("Order confirmation email skipped: no recipient available.");
-    return false;
-  }
 
   const orderUrl = absoluteUrl(
     `/order-confirmation?order=${encodeURIComponent(
