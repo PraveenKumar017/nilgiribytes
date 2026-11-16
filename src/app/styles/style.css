@@ -2295,6 +2295,8 @@ body[data-page="cart"] .section {
   display: flex;
   flex-direction: column;
   gap: 0.8rem;
+  min-width: 0;
+  box-sizing: border-box;
 }
 
 @media (min-width: 900px) {
@@ -2701,8 +2703,21 @@ body[data-page="cart"] .section {
 .cart-summary {
   display: flex;
   justify-content: space-between;
+  align-items: baseline;
+  gap: 0.5rem;
   font-weight: 600;
   margin-bottom: 1rem;
+  min-width: 0;
+}
+
+.cart-summary span:first-child {
+  min-width: 0;
+  overflow-wrap: break-word;
+}
+
+.cart-summary span:last-child {
+  flex-shrink: 0;
+  text-align: right;
 }
 
 .cart-summary_total {

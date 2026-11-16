@@ -305,6 +305,35 @@
     align-items: baseline;
     gap: 0.25rem 0.45rem;
   }
+
+  .cart-page_summary {
+    padding: 1.15rem 1rem;
+    min-width: 0;
+  }
+
+  .cart-summary {
+    gap: 0.5rem;
+    align-items: baseline;
+  }
+
+  .cart-summary span:first-child {
+    min-width: 0;
+    overflow-wrap: break-word;
+  }
+
+  .cart-summary span:last-child {
+    flex-shrink: 0;
+    text-align: right;
+  }
+
+  .cart-summary_total {
+    font-size: 1.15rem;
+  }
+
+  .cart-page_savings {
+    flex-wrap: wrap;
+    gap: 0.35rem 0.75rem;
+  }
 }
 
 /* ---------- 480px ---------- */
@@ -532,6 +561,18 @@
 
   .product-card_price {
     font-size: 0.92rem;
+  }
+
+  .cart-page_summary {
+    padding: 1rem 0.85rem;
+  }
+
+  .cart-summary {
+    font-size: 0.9rem;
+  }
+
+  .cart-summary_total {
+    font-size: 1.05rem;
   }
 
   .size-select_btn {
