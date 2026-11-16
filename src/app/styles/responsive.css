@@ -334,6 +334,55 @@
     flex-wrap: wrap;
     gap: 0.35rem 0.75rem;
   }
+
+  .cart-page_lines .cart-line {
+    padding: 0.75rem 0.85rem;
+  }
+
+  .cart-line_row {
+    flex-wrap: wrap;
+    gap: 0.35rem 0.5rem;
+    min-width: 0;
+  }
+
+  .cart-line_name-wrap {
+    min-width: 0;
+    flex: 1;
+  }
+
+  .cart-line_meta {
+    min-width: 0;
+    word-break: break-word;
+  }
+
+  .cart-line_price {
+    margin-left: auto;
+    flex-shrink: 0;
+  }
+
+  .product-detail_actions {
+    flex-wrap: wrap;
+    gap: 0.75rem;
+  }
+
+  .combo-summary_total {
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+
+  .order-confirmation_item {
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+
+  .order-confirmation_item-total {
+    margin-left: auto;
+  }
+
+  .order-confirmation_details {
+    padding: 1rem;
+    gap: 1rem;
+  }
 }
 
 /* ---------- 480px ---------- */
@@ -541,6 +590,10 @@
 
 /* ---------- Small screens fine-tuning ---------- */
 @media (max-width: 479px) {
+  :root {
+    --page-padding: 16px;
+  }
+
   .site-logo {
     font-size: 1.15rem;
   }
@@ -563,6 +616,21 @@
     font-size: 0.92rem;
   }
 
+  .cart-page_lines .cart-line {
+    grid-template-columns: 56px 1fr;
+    gap: 0.65rem;
+    padding: 0.65rem;
+  }
+
+  .cart-line_img {
+    width: 56px;
+    height: 56px;
+  }
+
+  .cart-line_name {
+    font-size: 0.92rem;
+  }
+
   .cart-page_summary {
     padding: 1rem 0.85rem;
   }
@@ -573,6 +641,80 @@
 
   .cart-summary_total {
     font-size: 1.05rem;
+  }
+
+  .product-detail_title {
+    font-size: clamp(1.65rem, 5vw, 2.2rem);
+  }
+
+  .product-detail_price .price-current {
+    font-size: 1.6rem;
+  }
+
+  .product-detail_actions .btn,
+  .product-detail_actions .qty-stepper {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .product-detail_cart-link {
+    width: 100%;
+    text-align: center;
+    margin-top: 0.25rem;
+  }
+
+  .combo-tier-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.5rem;
+  }
+
+  .combo-tier {
+    padding: 0.65rem 0.35rem;
+  }
+
+  .combo-tier_count {
+    font-size: 0.68rem;
+  }
+
+  .combo-tier_price {
+    font-size: 1rem;
+  }
+
+  .combo-tier.is-active .combo-tier_price {
+    font-size: 1.05rem;
+  }
+
+  .combo-builder_list {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.5rem;
+  }
+
+  .combo-option_body {
+    padding: 0.65rem;
+  }
+
+  .combo-option_name {
+    font-size: 0.88rem;
+  }
+
+  .combo-summary {
+    padding: 1rem 0.85rem;
+  }
+
+  .combo-summary_total strong {
+    font-size: 1.35rem;
+  }
+
+  .track-order_panel {
+    padding: 1rem;
+  }
+
+  .contact-card {
+    padding: 1.15rem;
+  }
+
+  .enquiry-modal_dialog {
+    padding: 1.25rem;
   }
 
   .size-select_btn {

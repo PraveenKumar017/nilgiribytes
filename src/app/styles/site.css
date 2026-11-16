@@ -129,27 +129,34 @@
   gap: 1rem;
   padding: 1rem 1.25rem;
   border-bottom: 1px solid var(--color-border);
+  min-width: 0;
 }
 
-.order-confirmation_item:last-child {
-  border-bottom: none;
+.order-confirmation_item > div {
+  min-width: 0;
+  flex: 1;
 }
 
 .order-confirmation_item-name {
   font-weight: 600;
   color: var(--color-heading);
+  min-width: 0;
+  word-break: break-word;
 }
 
 .order-confirmation_item-meta {
   color: var(--color-muted);
   font-size: 0.86rem;
   margin-top: 0.15rem;
+  min-width: 0;
+  word-break: break-word;
 }
 
 .order-confirmation_item-total {
   font-weight: 600;
   color: var(--color-cocoa);
   white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .order-confirmation_badge {
