@@ -1,7 +1,6 @@
 import { AnnouncementBar } from "@/components/announcement-bar";
 import { CartBar } from "@/components/cart-bar";
 import { CartProvider } from "@/components/cart-provider";
-import { FloatingSocials } from "@/components/floating-socials";
 import { FloatingWhatsApp } from "@/components/floating-whatsapp";
 import { Footer } from "@/components/footer";
 import { Header } from "@/components/header";
@@ -20,7 +19,6 @@ export default function SiteLayout({
         <Footer />
       </div>
       <CartBar />
-      <FloatingSocials />
       <FloatingWhatsApp />
     </CartProvider>
   );

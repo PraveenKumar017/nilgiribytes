@@ -148,6 +148,25 @@ export function Header() {
                   Track order
                 </Link>
               </li>
+              <li className="site-nav_socials">
+                <div className="site-nav_social-links" aria-label="Social media links">
+                  {SOCIALS.map(({ href, label, path }) => (
+                    <a
+                      key={href}
+                      href={href}
+                      target="_blank"
+                      rel="noopener"
+                      aria-label={`Nilgiribytes on ${label}`}
+                      onClick={() => setNavOpen(false)}
+                    >
+                      <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                        <path d={path} />
+                      </svg>
+                      <span>{label}</span>
+                    </a>
+                  ))}
+                </div>
+              </li>
             </ul>
           </nav>
 
