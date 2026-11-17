@@ -65,6 +65,7 @@ export const MAPS_EMBED_URL =
   "https://maps.google.com/maps?q=Keradamattam%2C%20Kodanad%20Road%20Kotagiri%2C%20The%20Nilgiris%2C%20Tamil%20Nadu%20643217&t=&z=15&ie=UTF8&iwloc=&output=embed";
 
 export const INSTAGRAM_URL = "https://www.instagram.com/nilgiri_bytes";
+export const LINKEDIN_URL = "https://www.linkedin.com/company/nilgiri-bytes/";
 
 export function absoluteUrl(path = "/"): string {
   return `${SITE_URL}${path.startsWith("/") ? path : `/${path}`}`;
