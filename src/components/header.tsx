@@ -3,7 +3,21 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
+import { INSTAGRAM_URL, LINKEDIN_URL } from "@/lib/site";
 import { useCart } from "./cart-provider";
+
+const SOCIALS = [
+  {
+    href: INSTAGRAM_URL,
+    label: "Instagram",
+    path: "M7 2h10a5 5 0 0 1 5 5v10a5 5 0 0 1-5 5H7a5 5 0 0 1-5-5V7a5 5 0 0 1 5-5Zm0 2a3 3 0 0 0-3 3v10a3 3 0 0 0 3 3h10a3 3 0 0 0 3-3V7a3 3 0 0 0-3-3H7Zm5 3a4 4 0 1 1 0 8 4 4 0 0 1 0-8Zm0 2a2 2 0 1 0 0 4 2 2 0 0 0 0-4Zm5-3a1 1 0 1 1 0 2 1 1 0 0 1 0-2Z",
+  },
+  {
+    href: LINKEDIN_URL,
+    label: "LinkedIn",
+    path: "M4.98 3.5a2.5 2.5 0 1 1 0 5 2.5 2.5 0 0 1 0-5ZM3 9h4v12H3V9Zm6 0h4v1.7h.1c.6-1 2-2 3.4-2 3.5 0 4.5 2.3 4.5 5.3V21h-4v-6.3c0-1.5 0-3.3-2-3.3s-2.4 1.6-2.4 3.2V21H9V9Z",
+  },
+];
 
 const NAV = [
   { href: "/", label: "Home" },
@@ -138,6 +152,22 @@ export function Header() {
           </nav>
 
           <div className="header-actions">
+            <div className="header-socials" aria-label="Social media links">
+              {SOCIALS.map(({ href, label, path }) => (
+                <a
+                  key={href}
+                  href={href}
+                  target="_blank"
+                  rel="noopener"
+                  aria-label={`Nilgiribytes on ${label}`}
+                  onClick={() => setNavOpen(false)}
+                >
+                  <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                    <path d={path} />
+                  </svg>
+                </a>
+              ))}
+            </div>
             <Link
               className="icon-btn"
               href="/cart"
