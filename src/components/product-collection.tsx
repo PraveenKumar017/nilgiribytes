@@ -7,9 +7,11 @@ import { ProductCard } from "./product-card";
 export function ProductCollection({
   items,
   showDescription = false,
+  revealType,
 }: {
   items: StoreItem[];
   showDescription?: boolean;
+  revealType?: "fade-up" | "fade-in" | "slide-left" | "slide-right" | "zoom-in";
 }) {
   useEffect(() => {
     window.refreshReveals?.(document);
@@ -25,11 +27,13 @@ export function ProductCollection({
 
   return (
     <>
-      {items.map((item) => (
+      {items.map((item, index) => (
         <ProductCard
           key={item.id}
           item={item}
           showDescription={showDescription}
+          revealType={revealType}
+          staggerIndex={index}
         />
       ))}
     </>

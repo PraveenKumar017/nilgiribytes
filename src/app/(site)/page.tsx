@@ -4,6 +4,7 @@ import { IntroOverlay } from "@/components/intro-overlay";
 import { JsonLd } from "@/components/json-ld";
 import { PosterRail } from "@/components/poster-rail";
 import { ProductCollection } from "@/components/product-collection";
+import { NilgiriCanvasWrapper } from "@/three/canvas-wrapper";
 import {
   bakeryJsonLd,
   faqJsonLd,
@@ -86,6 +87,7 @@ export default async function HomePage() {
   return (
     <>
       <IntroOverlay />
+      <NilgiriCanvasWrapper />
       <main id="main-content">
         <section
           className="hero-story"
@@ -316,7 +318,11 @@ export default async function HomePage() {
               cart.
             </p>
             <div className="product-grid" id="bestsellers-grid">
-              <ProductCollection items={bestsellers} showDescription={true} />
+              <ProductCollection
+                items={bestsellers}
+                showDescription={true}
+                revealType="slide-left"
+              />
             </div>
             <p className="text-center reveal mt-2" data-reveal="fade-up">
               <Link

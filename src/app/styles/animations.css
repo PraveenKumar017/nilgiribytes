@@ -30,7 +30,9 @@ html.js [data-reveal="fade-in"] {
 }
 
 html.js [data-reveal="slide-left"] {
-  transform: translateX(-32px);
+  transform: translateX(-56px);
+  transition-duration: 0.65s;
+  transition-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 html.js [data-reveal="slide-right"] {

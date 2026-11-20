@@ -19,6 +19,8 @@ type ProductCardProps = {
   animate?: boolean;
   quick?: boolean;
   showDescription?: boolean;
+  revealType?: "fade-up" | "fade-in" | "slide-left" | "slide-right" | "zoom-in";
+  staggerIndex?: number;
 };
 
 export function ProductCard({
@@ -26,6 +28,8 @@ export function ProductCard({
   animate = true,
   quick = false,
   showDescription = false,
+  revealType = "fade-up",
+  staggerIndex,
 }: ProductCardProps) {
   const { add, changeQty, quantityOf } = useCart();
   const [sizeIndex, setSizeIndex] = useState(0);
@@ -45,7 +49,8 @@ export function ProductCard({
     <article
       className={`product-card${animate ? " reveal" : ""}${quick ? " is-quick" : ""}`}
       data-item-id={item.id}
-      data-reveal={animate ? "fade-up" : undefined}
+      data-reveal={animate ? revealType : undefined}
+      style={staggerIndex !== undefined ? ({ "--i": staggerIndex } as React.CSSProperties) : undefined}
     >
       <Link
         className="product-card_media"

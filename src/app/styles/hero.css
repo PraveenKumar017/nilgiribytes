@@ -65,12 +65,7 @@
   margin-left: max(8vw, 80px);
   padding: 24px 28px 24px 0;
   border-radius: 16px;
-  background: radial-gradient(
-    ellipse at 25% 45%,
-    rgba(10, 5, 2, 0.38) 0%,
-    rgba(10, 5, 2, 0.15) 60%,
-    transparent 100%
-  );
+  background: transparent;
   pointer-events: auto;
 }
 

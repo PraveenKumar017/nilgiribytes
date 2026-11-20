@@ -53,7 +53,10 @@ export function SiteEffects() {
         container.querySelectorAll<HTMLElement>("[data-reveal], .reveal")
       );
       nodes.forEach((node, index) => {
-        node.style.setProperty("--i", String(index % 8));
+        // Do not overwrite --i if already explicitly set on the element (e.g. for card staggering)
+        if (!node.style.getPropertyValue("--i")) {
+          node.style.setProperty("--i", String(index % 8));
+        }
         if (node.classList.contains("is-visible")) return;
         if (observer) observer.observe(node);
         else node.classList.add("is-visible");
