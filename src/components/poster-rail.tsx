@@ -12,7 +12,8 @@ type PosterStyle = CSSProperties & {
 
 const POSTER_BY_SLUG: Record<string, string> = {
   "special-varkey": "/assets/images/product_poster/Special_Varkey.jpeg",
-  "regular-varkey": "/assets/images/product_poster/Regular_Varkey.jpeg",
+  "premium-special-varkey": "/assets/images/product_poster/Premium_Varkey.jpeg",
+  "regular-varkey": "/assets/images/product_poster/Classic_Varkey.jpeg",
   "crispy-varkey": "/assets/images/product_poster/Crispy_Varkey.jpeg",
   "mini-varkey": "/assets/images/product_poster/Mini_Varkey.jpeg",
   "varkey-flakes": "/assets/images/product_poster/Varkey_Flakes.jpeg",

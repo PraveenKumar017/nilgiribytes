@@ -167,11 +167,11 @@ export default async function HomePage() {
               >
                 <div
                   className="category-card_media"
-                  style={{ flex: "0 0 auto", aspectRatio: "16 / 11", maxHeight: "260px" }}
+                  style={{ flex: "0 0 auto", aspectRatio: "16 / 10", maxHeight: "290px" }}
                 >
                   <img
                     className="category-card_texture"
-                    src="/assets/images/Categories/varkey.png"
+                    src="/assets/our_range_varkey.jpeg"
                     alt=""
                     aria-hidden="true"
                     loading="lazy"
@@ -181,9 +181,12 @@ export default async function HomePage() {
                   01
                 </span>
                 <div className="category-card_body">
-                  <h3 className="category-card_title">Classic Ooty Varkey</h3>
+                  <h3 className="category-card_title">Premium Ooty Varkey</h3>
                   <p className="category-card_text">
-                    Its crunchy texture slowly softens when enjoyed with hot tea or coffee, making every bite a delightful experience. A perfect companion for your favourite tea-time moments!
+                    Experience the finest taste of Ooty with our Premium Special Varkey! Crafted with carefully selected ingredients in just the right proportions, it delivers an exceptional taste, premium quality and an irresistible crunch.
+                  </p>
+                  <p className="category-card_text">
+                    Rich in flavour and wonderfully crunchy, every bite is a treat. Enjoy it as a snack or pair it with your favourite tea or coffee.
                   </p>
                   <span className="category-card_link">Shop varkey</span>
                 </div>
@@ -197,10 +200,10 @@ export default async function HomePage() {
                 <span className="category-card_index" aria-hidden="true">
                   02
                 </span>
-                <div className="category-card_media">
-                  <img
-                    className="category-card_texture"
-                    src="/assets/images/Categories/salt_biscuit.png"
+                  <div className="category-card_media category-card_media--biscuit">
+                    <img
+                      className="category-card_texture"
+                      src="/assets/images/products/Salt%20Biscuit/02_Salt.jpeg"
                     alt=""
                     aria-hidden="true"
                     loading="lazy"
@@ -225,10 +228,10 @@ export default async function HomePage() {
                 <span className="category-card_index" aria-hidden="true">
                   03
                 </span>
-                <div className="category-card_media">
-                  <img
-                    className="category-card_texture"
-                    src="/assets/images/Categories/sweet_biscuit.png"
+                  <div className="category-card_media category-card_media--biscuit">
+                    <img
+                      className="category-card_texture"
+                      src="/assets/images/products/Sweet%20Biscuit/02_Sweet.jpeg"
                     alt=""
                     aria-hidden="true"
                     loading="lazy"

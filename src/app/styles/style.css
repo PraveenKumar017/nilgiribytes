@@ -1198,6 +1198,10 @@ p {
   justify-content: center;
 }
 
+.category-card_media--biscuit {
+  min-height: 220px;
+}
+
 .category-card--light .category-card_texture {
   opacity: 1;
 }
