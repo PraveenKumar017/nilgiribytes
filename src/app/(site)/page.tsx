@@ -160,15 +160,11 @@ export default async function HomePage() {
 
             <div className="category-grid">
               <Link
-                className="category-card category-card--light reveal"
+                className="category-card category-card--light category-card--wide category-card--full-text reveal"
                 data-reveal="drop"
                 href="/shop?category=Varkey"
-                style={{ gridRow: "span 2" }}
               >
-                <div
-                  className="category-card_media"
-                  style={{ flex: "0 0 auto", aspectRatio: "16 / 10", maxHeight: "290px" }}
-                >
+                <div className="category-card_media">
                   <img
                     className="category-card_texture"
                     src="/assets/our_range_varkey.jpeg"
@@ -183,8 +179,8 @@ export default async function HomePage() {
                 <div className="category-card_body">
                   <h3 className="category-card_title">Premium Ooty Varkey</h3>
                   <p className="category-card_text">
-                    Experience the finest taste of Ooty with our Premium Special Varkey! Crafted with carefully selected ingredients in just the right proportions, it delivers an exceptional taste, premium quality and an irresistible crunch.
-                  </p>
+                    Experience the finest taste of Ooty with our Premium Special Varkey! Crafted with carefully selected ingredients in just the right proportions.
+                  </p><br></br>
                   <p className="category-card_text">
                     Rich in flavour and wonderfully crunchy, every bite is a treat. Enjoy it as a snack or pair it with your favourite tea or coffee.
                   </p>
@@ -249,7 +245,7 @@ export default async function HomePage() {
               </Link>
 
               <Link
-                className="category-card category-card--light category-card--wide reveal"
+                className="category-card category-card--light category-card--wide category-card--full-text reveal"
                 data-reveal="fade-up"
                 href="/shop/family-combo"
               >
