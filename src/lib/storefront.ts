@@ -7,6 +7,7 @@ import type {
   StoreCombo,
   StorePost,
   StoreProduct,
+  StoreReview,
   StoreSize,
 } from "./types";
 
@@ -116,6 +117,14 @@ type ComboRow = RowDataPacket & {
   rating: number;
 };
 
+type ProductReviewRow = RowDataPacket & {
+  itemSlug: string;
+  rating: number;
+  authorName: string;
+  location: string | null;
+  reviewText: string;
+};
+
 type BlogPostRow = RowDataPacket & {
   title: string;
   category: string;
@@ -208,6 +217,7 @@ function legacyProducts(): StoreProduct[] {
       imageAlt: `${product.name} \u2014 ${product.category} from Nilgiribytes`,
       sizes,
       rating: 4.3,
+      reviews: [],
       sortOrder: index,
     };
   });
@@ -242,6 +252,7 @@ function legacyCombos(): StoreCombo[] {
         quantity: item.quantity,
       })),
       rating: 4.3,
+      reviews: [],
       sortOrder: index,
     };
   });
@@ -358,7 +369,7 @@ export async function getCatalog(): Promise<Catalog> {
   }
 
   try {
-    const [productRows, comboRows] = await Promise.all([
+    const [productRows, comboRows, reviewRows] = await Promise.all([
       pool.query<ProductRow[]>(
         `SELECT p.id, p.slug, p.name, p.description, p.ingredients,
                 p.shelfLife, p.sizes, c.name AS categoryName, p.imageUrl,
@@ -372,7 +383,31 @@ export async function getCatalog(): Promise<Catalog> {
            FROM Combo
           ORDER BY sortOrder ASC, id ASC`
       ),
+      (async () => {
+        try {
+          const [rows] = await pool.query<ProductReviewRow[]>(
+            `SELECT itemSlug, rating, authorName, \`location\`, reviewText
+               FROM ProductReview
+              ORDER BY itemSlug ASC, sortOrder ASC, id ASC`
+          );
+          return rows;
+        } catch {
+          return [] as ProductReviewRow[];
+        }
+      })(),
     ]);
+
+    const reviewsBySlug = new Map<string, StoreReview[]>();
+    for (const row of reviewRows) {
+      const reviews = reviewsBySlug.get(row.itemSlug) ?? [];
+      reviews.push({
+        rating: Number(row.rating),
+        authorName: row.authorName,
+        location: row.location,
+        reviewText: row.reviewText,
+      });
+      reviewsBySlug.set(row.itemSlug, reviews);
+    }
 
     return {
       products: heroFirst(
@@ -429,6 +464,7 @@ export async function getCatalog(): Promise<Catalog> {
           videoUrl: product.videoUrl ? assetUrl(product.videoUrl) : null,
           sizes,
           rating: Number(product.rating ?? 4.3),
+          reviews: reviewsBySlug.get(product.slug) ?? [],
         };
         })
       ),
@@ -502,6 +538,7 @@ export async function getCatalog(): Promise<Catalog> {
             }))
           ),
           rating: Number(combo.rating ?? 4.3),
+          reviews: reviewsBySlug.get(combo.slug) ?? [],
         };
       }),
     };

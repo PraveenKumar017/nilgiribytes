@@ -1,3 +1,10 @@
+export type StoreReview = {
+  rating: number;
+  authorName: string;
+  location: string | null;
+  reviewText: string;
+};
+
 export type StoreSize = {
   label: string;
   grams: number | null;
@@ -25,6 +32,7 @@ export type StoreProduct = {
   videoUrl?: string | null;
   sizes: StoreSize[];
   rating: number;
+  reviews: StoreReview[];
   sortOrder?: number;
 };
 
@@ -54,6 +62,7 @@ export type StoreCombo = {
   discountPercent: number;
   includes: ComboInclude[];
   rating: number;
+  reviews: StoreReview[];
   sortOrder?: number;
 };
 

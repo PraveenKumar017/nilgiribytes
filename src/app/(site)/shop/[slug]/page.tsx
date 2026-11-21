@@ -251,6 +251,53 @@ export default async function ProductPage({ params }: ProductPageProps) {
         </section>
       ) : null}
 
+      {item.reviews.length ? (
+        <section className="section section--reviews" aria-labelledby="reviews-title">
+          <div className="container">
+            <span className="section-kicker reveal" data-reveal="fade-up">
+              Customer reviews
+            </span>
+            <h2
+              className="section-heading reveal"
+              data-reveal="fade-up"
+              id="reviews-title"
+            >
+              What our customers <em>say</em>
+            </h2>
+            <p className="section-intro reveal" data-reveal="fade-up">
+              Real words from people who have enjoyed this from our bakery.
+            </p>
+            <div className="reviews-grid">
+              {item.reviews.map((review, index) => (
+                <article
+                  className="review-card reveal"
+                  data-reveal="fade-up"
+                  key={`${review.authorName}-${index}`}
+                >
+                  <div className="review-card_top">
+                    <span
+                      className="review-card_stars"
+                      aria-label={`${review.rating} out of 5 stars`}
+                    >
+                      {"★".repeat(Math.round(review.rating))}
+                      {"☆".repeat(5 - Math.round(review.rating))}
+                    </span>
+                    <span className="review-card_verified">Verified buyer</span>
+                  </div>
+                  <p className="review-card_text">{review.reviewText}</p>
+                  <div className="review-card_author">
+                    <span className="review-card_name">{review.authorName}</span>
+                    {review.location ? (
+                      <span className="review-card_meta">{review.location}</span>
+                    ) : null}
+                  </div>
+                </article>
+              ))}
+            </div>
+          </div>
+        </section>
+      ) : null}
+
       <JsonLd data={productLd} />
       <JsonLd data={breadcrumbLd} />
     </main>

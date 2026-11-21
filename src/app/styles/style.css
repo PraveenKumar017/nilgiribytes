@@ -156,6 +156,85 @@ p {
   margin-bottom: clamp(1.5rem, 4vw, 3rem);
 }
 
+.section--reviews {
+  background: var(--color-cream);
+  border-top: 1px solid var(--color-border);
+}
+
+.section--reviews .section-heading {
+  margin-bottom: 0.75rem;
+}
+
+.section--reviews .section-intro {
+  margin-bottom: clamp(1.75rem, 4vw, 2.75rem);
+}
+
+.reviews-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1.25rem;
+}
+
+.review-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  padding: 1.5rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-card);
+}
+
+.review-card_top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.review-card_stars {
+  color: var(--color-gold);
+  font-size: 1rem;
+  letter-spacing: 0.12em;
+  white-space: nowrap;
+}
+
+.review-card_verified {
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--color-cinnamon);
+}
+
+.review-card_text {
+  margin: 0;
+  flex: 1 1 auto;
+  font-size: 0.86rem;
+  line-height: 1.65;
+  color: var(--color-muted);
+}
+
+.review-card_author {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--color-border);
+}
+
+.review-card_name {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--color-ink);
+}
+
+.review-card_meta {
+  font-size: 0.72rem;
+  color: var(--color-muted);
+}
+
 .section-heading {
   font-size: clamp(2.2rem, 5vw, 3.6rem);
   font-weight: 600;
@@ -3455,15 +3534,45 @@ body[data-page="cart"] .section {
 
 /* ---------- Testimonials ---------- */
 .testimonial-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 1.5rem;
+  overflow: hidden;
+  scrollbar-width: none;
+}
+
+.testimonial-grid::-webkit-scrollbar {
+  display: none;
+}
+
+.testimonial-track {
+  display: flex;
+  width: max-content;
+  animation: testimonial-scroll 45s linear infinite;
+}
+
+.testimonial-grid:hover .testimonial-track {
+  animation-play-state: paused;
+}
+
+@keyframes testimonial-scroll {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .testimonial-track {
+    animation: none;
+  }
 }
 
 .testimonial {
   position: relative;
   display: flex;
+  flex: 0 0 clamp(280px, 32vw, 390px);
   flex-direction: column;
+  margin-right: 1.5rem;
   background: var(--color-surface);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);

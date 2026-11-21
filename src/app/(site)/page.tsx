@@ -11,6 +11,7 @@ import {
   pageMetadata,
   websiteJsonLd,
 } from "@/lib/seo";
+import { pickDailyReviews } from "@/lib/daily-reviews";
 import { getCatalog } from "@/lib/storefront";
 
 export const dynamic = "force-dynamic";
@@ -67,6 +68,12 @@ export const metadata: Metadata = pageMetadata({
 export default async function HomePage() {
   const catalog = await getCatalog();
   const allItems = [...catalog.products, ...catalog.combos];
+  const testimonials = pickDailyReviews(
+    allItems.flatMap((item) =>
+      item.reviews.map((review) => ({ ...review, itemName: item.name }))
+    ),
+    "home-testimonials"
+  );
   const featuredBestsellerSlugs = [
     "special-varkey",
     "mini-varkey",
@@ -456,54 +463,27 @@ export default async function HomePage() {
             </h2>
             <hr className="divider reveal" data-reveal="fade-in" />
             <div className="testimonial-grid">
-              <figure
-                className="testimonial reveal"
-                data-reveal="fade-up"
-              >
-                <blockquote className="testimonial_quote">
-                  &ldquo;The Special Varkey tastes exactly like the one my
-                  grandmother used to bring back from Ooty - light, flaky, and
-                  not overly sweet. It disappeared before the tea got cold.&rdquo;
-                </blockquote>
-                <figcaption className="testimonial_author">
-                  Priya Raghavan
-                </figcaption>
-                <p className="testimonial_meta">
-                  Coimbatore &middot; Special Varkey
-                </p>
-              </figure>
-              <figure
-                className="testimonial reveal"
-                data-reveal="fade-up"
-              >
-                <blockquote className="testimonial_quote">
-                  &ldquo;I ordered the Salt Biscuits and Mini Varkey for a family
-                  gathering, and everyone asked where they were from. Fresh,
-                  crisp, and packed carefully - not a single broken
-                  piece.&rdquo;
-                </blockquote>
-                <figcaption className="testimonial_author">
-                  Arjun Menon
-                </figcaption>
-                <p className="testimonial_meta">
-                  Bengaluru &middot; Salt Biscuit &amp; Mini Varkey
-                </p>
-              </figure>
-              <figure
-                className="testimonial reveal"
-                data-reveal="fade-up"
-              >
-                <blockquote className="testimonial_quote">
-                  &ldquo;We have been buying their varkey for our morning tea for
-                  months now. The quality is consistent every time, and you can
-                  taste the butter. It is the closest thing to home baking I have
-                  found online.&rdquo;
-                </blockquote>
-                <figcaption className="testimonial_author">
-                  Meera Krishnan
-                </figcaption>
-                <p className="testimonial_meta">Ooty &middot; Regular Varkey</p>
-              </figure>
+              <div className="testimonial-track">
+                {[...testimonials, ...testimonials].map((review, index) => (
+                  <figure
+                    className="testimonial reveal"
+                    data-reveal="fade-up"
+                    aria-hidden={index >= testimonials.length}
+                    key={`${review.itemName}-${review.authorName}-${index}`}
+                  >
+                    <blockquote className="testimonial_quote">
+                      &ldquo;{review.reviewText}&rdquo;
+                    </blockquote>
+                    <figcaption className="testimonial_author">
+                      {review.authorName}
+                    </figcaption>
+                    <p className="testimonial_meta">
+                      {review.location ? `${review.location} · ` : ""}
+                      {review.itemName}
+                    </p>
+                  </figure>
+                ))}
+              </div>
             </div>
           </div>
         </section>

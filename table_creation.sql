@@ -37,6 +37,22 @@ CREATE TABLE IF NOT EXISTS `Product` (
         REFERENCES `Category`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
+CREATE TABLE IF NOT EXISTS `ProductReview` (
+    `id` INTEGER NOT NULL AUTO_INCREMENT,
+    `itemSlug` VARCHAR(200) NOT NULL,
+    `rating` DECIMAL(2,1) NOT NULL,
+    `authorName` VARCHAR(160) NOT NULL,
+    `location` VARCHAR(160) NULL,
+    `reviewText` TEXT NOT NULL,
+    `sortOrder` INTEGER NOT NULL DEFAULT 0,
+    `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+    `updatedAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3) ON UPDATE CURRENT_TIMESTAMP(3),
+
+    UNIQUE INDEX `ProductReview_item_author_key`(`itemSlug`, `authorName`),
+    INDEX `ProductReview_item_sort_idx`(`itemSlug`, `sortOrder`, `id`),
+    PRIMARY KEY (`id`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
 CREATE TABLE IF NOT EXISTS `Combo` (
     `id` INTEGER NOT NULL AUTO_INCREMENT,
     `slug` VARCHAR(200) NOT NULL,
