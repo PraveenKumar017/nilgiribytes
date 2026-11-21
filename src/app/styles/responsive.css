@@ -302,8 +302,9 @@
 
   .page-hero--shop,
   .page-hero--about {
-    min-height: 100vh;
-    min-height: 100svh;
+    min-height: calc(100vh - var(--announcement-height, 36px) - var(--header-height, 76px));
+    min-height: calc(100svh - var(--announcement-height, 36px) - var(--header-height, 76px));
+    min-height: calc(100dvh - var(--announcement-height, 36px) - var(--header-height, 76px));
     display: flex;
     flex-direction: column;
     justify-content: center;

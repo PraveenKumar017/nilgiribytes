@@ -43,6 +43,7 @@
   --page-padding: 24px;
   --section-space: clamp(96px, 10vw, 140px);
   --header-height: 76px;   /* sticky header height — used for scroll-margin-top */
+  --announcement-height: 36px;
 
   /* ----- Shape ----- */
   --radius-sm: 6px;
