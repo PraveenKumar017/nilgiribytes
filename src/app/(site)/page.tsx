@@ -101,26 +101,41 @@ export default async function HomePage() {
           <div className="hero-stage">
             <div className="hero-vignette" aria-hidden="true" />
             <div className="hero-copy">
-              <p className="hero-eyebrow">CRUNCHY QUEEN OF HILLS</p>
+              <p className="hero-eyebrow" data-hero-step="1">
+                CRUNCHY QUEEN OF HILLS
+              </p>
               <h1 className="hero-heading" id="hero-title">
-                A Little Taste of the Nilgiris,
-                <br />
-                <span className="highlight">Wherever You Are!</span>
+                <span className="hero-line" data-hero-step="2">
+                  A Little Taste of the Nilgiris,
+                </span>
+                <span className="hero-line" data-hero-step="3">
+                  <span className="highlight">Wherever You Are!</span>
+                </span>
               </h1>
               <p className="hero-desc">
-                Rooted in a family baking tradition dating back to 1980,
-                NilgiriBytes brings you the delightful taste of authentic Ooty
-                Varkey and traditional biscuits.
-                <br />
-                <br />
-                Every bite brings a crunch and happiness from the hills to your
-                home.
+                <span className="hero-line" data-hero-step="4">
+                  Rooted in a family baking tradition dating back to 1980,
+                  NilgiriBytes brings you the delightful taste of authentic Ooty
+                  Varkey and traditional biscuits.
+                </span>
+                <span className="hero-line" data-hero-step="5">
+                  Every bite brings a crunch and happiness from the hills to your
+                  home.
+                </span>
               </p>
               <div className="hero-cta-group">
-                <Link className="btn btn--primary" href="/shop">
+                <Link
+                  className="btn btn--primary"
+                  href="/shop"
+                  data-hero-step="6"
+                >
                   Shop Fresh Varkey
                 </Link>
-                <a className="btn btn--outline" href="#categories-title">
+                <a
+                  className="btn btn--outline"
+                  href="#categories-title"
+                  data-hero-step="7"
+                >
                   Explore Bakery &darr;
                 </a>
               </div>
