@@ -19,7 +19,7 @@
       rgba(8, 4, 2, 0.1) 68%,
       rgba(8, 4, 2, 0.22) 100%
     ),
-    url("/assets/hero_image_bg.png");
+    url("/assets/hero_bg.png");
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
