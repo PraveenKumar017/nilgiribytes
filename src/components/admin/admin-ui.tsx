@@ -824,15 +824,17 @@ export function ImagesField({
   name,
   label,
   defaultImages = [],
+  max = 3,
 }: {
   name: string;
   label: string;
   defaultImages?: (string | null)[] | null;
+  max?: number;
 }) {
   const [images, setImages] = useState<string[]>(() =>
     (defaultImages ?? [])
       .filter((image): image is string => typeof image === "string" && image !== "")
-      .slice(0, 3)
+      .slice(0, max)
   );
   const [open, setOpen] = useState(false);
   const [uploading, setUploading] = useState(false);
@@ -882,7 +884,7 @@ export function ImagesField({
       setImages((current) => {
         const next = [...current];
         next[index] = result.url as string;
-        return next.filter(Boolean).slice(0, 3);
+        return next.filter(Boolean).slice(0, max);
       });
     } catch {
       setError("Could not upload the image.");
@@ -914,7 +916,7 @@ export function ImagesField({
           setOpen(true);
         }}
       >
-        Images ({images.length}/3)
+        Images ({images.length}/{max})
       </button>
 
       {open ? (
@@ -931,7 +933,7 @@ export function ImagesField({
             <div className="admin-image-modal_head">
               <div>
                 <h2 id="admin-gallery-modal-title">{label}</h2>
-                <p>Add, replace or delete up to three images.</p>
+                <p>Add, replace or delete up to {max} images.</p>
               </div>
               <button
                 type="button"
@@ -950,7 +952,7 @@ export function ImagesField({
             ) : null}
 
             <div className="admin-image-modal_grid">
-              {[0, 1, 2].map((index) => {
+              {Array.from({ length: max }, (_, index) => {
                 const image = images[index] ?? "";
                 const inputId = `gallery-image-${name}-${index}`;
 
@@ -1013,7 +1015,7 @@ export function ImagesField({
             </div>
 
             <div className="admin-image-modal_foot">
-              <span>{images.length} of 3 images</span>
+              <span>{images.length} of {max} images</span>
               <button
                 type="button"
                 className="admin-btn admin-btn--primary"
@@ -1038,7 +1040,6 @@ export type SizeDraft = {
   grams: number | null;
   mrpPaise: number;
   pricePaise: number;
-  images: string[];
 };
 
 type SizeRow = {
@@ -1048,7 +1049,6 @@ type SizeRow = {
   mrp: string;
   price: string;
   discount: string;
-  images: string[];
 };
 
 function toPaise(value: string): number {
@@ -1080,7 +1080,6 @@ function sizeToRow(size: SizeDraft, index: number): SizeRow {
     mrp: String(size.mrpPaise / 100),
     price: String(size.pricePaise / 100),
     discount: String(discountPercent(size.mrpPaise, size.pricePaise)),
-    images: size.images,
   };
 }
 
@@ -1088,21 +1087,6 @@ export function SizesEditor({ defaultSizes }: { defaultSizes: SizeDraft[] }) {
   const [rows, setRows] = useState<SizeRow[]>(() =>
     defaultSizes.map((size, index) => sizeToRow(size, index))
   );
-  const [imageRowKey, setImageRowKey] = useState<string | null>(null);
-  const [uploading, setUploading] = useState(false);
-  const [uploadError, setUploadError] = useState<string | null>(null);
-  const imageRow = rows.find((row) => row.key === imageRowKey) ?? null;
-
-  useEffect(() => {
-    if (!imageRowKey) return;
-
-    function onKeyDown(event: KeyboardEvent) {
-      if (event.key === "Escape") setImageRowKey(null);
-    }
-
-    document.addEventListener("keydown", onKeyDown);
-    return () => document.removeEventListener("keydown", onKeyDown);
-  }, [imageRowKey]);
 
   const payload = useMemo(
     () =>
@@ -1116,8 +1100,6 @@ export function SizesEditor({ defaultSizes }: { defaultSizes: SizeDraft[] }) {
             mrpPaise,
             discountPercent: discountPercent(mrpPaise, pricePaise),
             pricePaise,
-            images: row.images,
-            imageUrl: row.images[0] ?? null,
           };
         })
       ),
@@ -1152,67 +1134,6 @@ export function SizesEditor({ defaultSizes }: { defaultSizes: SizeDraft[] }) {
     );
   }
 
-  async function uploadImage(key: string, index: number, file: File) {
-    if (file.size > 2 * 1024 * 1024) {
-      setUploadError("Each image must be 2 MB or smaller.");
-      return;
-    }
-
-    setUploading(true);
-    setUploadError(null);
-
-    try {
-      const body = new FormData();
-      body.append("file", file);
-
-      const response = await fetch("/api/admin/upload", {
-        method: "POST",
-        body,
-      });
-      const result = (await response.json().catch(() => null)) as
-        | { url?: unknown; error?: unknown }
-        | null;
-
-      if (!response.ok || typeof result?.url !== "string") {
-        setUploadError(
-          typeof result?.error === "string"
-            ? result.error
-            : "Could not upload the image."
-        );
-        return;
-      }
-
-      setRows((current) =>
-        current.map((row) => {
-          if (row.key !== key) return row;
-          const images = [...row.images];
-          images[index] = result.url as string;
-          return {
-            ...row,
-            images: images.filter(Boolean).slice(0, 3),
-          };
-        })
-      );
-    } catch {
-      setUploadError("Could not upload the image.");
-    } finally {
-      setUploading(false);
-    }
-  }
-
-  function removeImage(key: string, index: number) {
-    setRows((current) =>
-      current.map((row) =>
-        row.key === key
-          ? {
-              ...row,
-              images: row.images.filter((_, imageIndex) => imageIndex !== index),
-            }
-          : row
-      )
-    );
-  }
-
   return (
     <div className="admin-sizes">
       <input type="hidden" name="sizes" value={payload} />
@@ -1223,7 +1144,6 @@ export function SizesEditor({ defaultSizes }: { defaultSizes: SizeDraft[] }) {
         <span>MRP (₹)</span>
         <span>Discount</span>
         <span>Price (₹)</span>
-        <span>Images</span>
         <span />
       </div>
 
@@ -1275,16 +1195,6 @@ export function SizesEditor({ defaultSizes }: { defaultSizes: SizeDraft[] }) {
             />
             <button
               type="button"
-              className="admin-btn admin-btn--small"
-              onClick={() => {
-                setUploadError(null);
-                setImageRowKey(row.key);
-              }}
-            >
-              Images ({row.images.length}/3)
-            </button>
-            <button
-              type="button"
               className="admin-btn admin-btn--small admin-btn--ghost"
               onClick={() =>
                 setRows((current) => current.filter((entry) => entry.key !== row.key))
@@ -1310,7 +1220,6 @@ export function SizesEditor({ defaultSizes }: { defaultSizes: SizeDraft[] }) {
               mrp: "0",
               price: "0",
               discount: "0",
-              images: [],
             },
           ])
         }
@@ -1318,112 +1227,6 @@ export function SizesEditor({ defaultSizes }: { defaultSizes: SizeDraft[] }) {
         Add size
       </button>
 
-      {imageRow ? (
-        <div
-          className="admin-image-modal"
-          role="dialog"
-          aria-modal="true"
-          aria-labelledby="admin-image-modal-title"
-          onClick={(event) => {
-            if (event.target === event.currentTarget) setImageRowKey(null);
-          }}
-        >
-          <div className="admin-image-modal_panel">
-            <div className="admin-image-modal_head">
-              <div>
-                <h2 id="admin-image-modal-title">
-                  Images for {imageRow.label.trim() || "this size"}
-                </h2>
-                <p>Add, replace or delete up to three images.</p>
-              </div>
-              <button
-                type="button"
-                className="admin-btn admin-btn--small admin-btn--ghost"
-                onClick={() => setImageRowKey(null)}
-                aria-label="Close image manager"
-              >
-                Close
-              </button>
-            </div>
-
-            {uploadError ? (
-              <p className="admin-alert admin-alert--error" role="alert">
-                {uploadError}
-              </p>
-            ) : null}
-
-            <div className="admin-image-modal_grid">
-              {[0, 1, 2].map((index) => {
-                const image = imageRow.images[index] ?? "";
-                const inputId = `size-image-${imageRow.key}-${index}`;
-
-                return (
-                  <div
-                    className={`admin-image-slot${image ? " has-image" : ""}`}
-                    key={index}
-                  >
-                    <span className="admin-image-slot_label">
-                      Image {index + 1}
-                    </span>
-
-                    {image ? (
-                      <img
-                        className="admin-image-slot_preview"
-                        src={imageSrc(image)}
-                        alt=""
-                      />
-                    ) : (
-                      <span className="admin-image-slot_empty">No image</span>
-                    )}
-
-                    <div className="admin-image-slot_actions">
-                      <label
-                        className="admin-btn admin-btn--small"
-                        htmlFor={inputId}
-                      >
-                        {image ? "Edit" : "Add"}
-                      </label>
-                      <input
-                        id={inputId}
-                        className="admin-image-file"
-                        type="file"
-                        accept="image/jpeg,image/png,image/webp,image/avif"
-                        disabled={uploading}
-                        onChange={(event) => {
-                          const file = event.target.files?.[0];
-                          event.currentTarget.value = "";
-                          if (file) void uploadImage(imageRow.key, index, file);
-                        }}
-                      />
-                      {image ? (
-                        <button
-                          type="button"
-                          className="admin-btn admin-btn--small admin-btn--danger"
-                          onClick={() => removeImage(imageRow.key, index)}
-                          disabled={uploading}
-                        >
-                          Delete
-                        </button>
-                      ) : null}
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-
-            <div className="admin-image-modal_foot">
-              <span>{imageRow.images.length} of 3 images</span>
-              <button
-                type="button"
-                className="admin-btn admin-btn--primary"
-                onClick={() => setImageRowKey(null)}
-              >
-                Done
-              </button>
-            </div>
-          </div>
-        </div>
-      ) : null}
     </div>
   );
 }

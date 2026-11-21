@@ -92,11 +92,6 @@ export const productSizeSchema = z
     grams: z.number().int().positive().nullable(),
     mrpPaise: z.number().int().min(0),
     pricePaise: z.number().int().min(0),
-    images: z
-      .array(z.string().trim().min(1).max(500))
-      .max(3, "Add up to three images per size.")
-      .default([]),
-    imageUrl: optionalString(500),
   })
   .refine((size) => size.mrpPaise >= size.pricePaise, {
     message: "MRP must be greater than or equal to the selling price.",
@@ -113,7 +108,7 @@ export const productSchema = z.object({
   sizes: z.array(productSizeSchema).min(1, "Add at least one size."),
   images: z
     .array(z.string().trim().min(1).max(500))
-    .max(3, "Add up to three images.")
+    .max(6, "Add up to six images.")
     .default([]),
   videoUrl: optionalString(500),
   sortOrder: z.number().int().min(0),

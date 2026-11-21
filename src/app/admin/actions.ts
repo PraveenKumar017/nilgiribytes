@@ -255,8 +255,6 @@ type RawSize = {
   grams?: unknown;
   mrpPaise?: unknown;
   pricePaise?: unknown;
-  images?: unknown;
-  imageUrl?: unknown;
 };
 
 function slugifyName(value: string): string {
@@ -323,31 +321,14 @@ function readProduct(formData: FormData) {
     ingredients: formText(formData, "ingredients") || null,
     shelfLife: formText(formData, "shelfLife") || null,
     categoryId: formInt(formData, "categoryId"),
-    sizes: rawSizes.map((size) => {
-      const sizeImages = Array.isArray(size.images)
-        ? size.images.filter(
-            (image): image is string =>
-              typeof image === "string" && image.trim() !== ""
-          )
-        : [];
-      const legacyImage =
-        typeof size.imageUrl === "string" && size.imageUrl.trim() !== ""
-          ? size.imageUrl
-          : null;
-
-      if (!sizeImages.length && legacyImage) sizeImages.push(legacyImage);
-
-      return {
-        label: typeof size.label === "string" ? size.label : "",
-        grams:
-          size.grams == null || size.grams === "" ? null : Number(size.grams),
-        mrpPaise: Number(size.mrpPaise ?? 0),
-        pricePaise: Number(size.pricePaise ?? 0),
-        images: sizeImages.slice(0, 3),
-        imageUrl: sizeImages[0] ?? null,
-      };
-    }),
-    images,
+    sizes: rawSizes.map((size) => ({
+      label: typeof size.label === "string" ? size.label : "",
+      grams:
+        size.grams == null || size.grams === "" ? null : Number(size.grams),
+      mrpPaise: Number(size.mrpPaise ?? 0),
+      pricePaise: Number(size.pricePaise ?? 0),
+    })),
+    images: images.slice(0, 6),
     videoUrl: formText(formData, "videoUrl") || null,
     sortOrder: formInt(formData, "sortOrder"),
     rating: Number.isFinite(rating) ? rating : 4.3,
@@ -364,8 +345,6 @@ function sizesForStorage(data: ProductInput) {
         ? Math.round(((size.mrpPaise - size.pricePaise) / size.mrpPaise) * 100)
         : 0,
     pricePaise: size.pricePaise,
-    images: size.images,
-    imageUrl: size.images[0] ?? null,
   }));
 }
 

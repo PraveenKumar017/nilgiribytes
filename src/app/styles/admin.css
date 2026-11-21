@@ -767,7 +767,7 @@
 .admin-sizes_head,
 .admin-sizes_row {
   display: grid;
-  grid-template-columns: 0.9fr 0.7fr 0.8fr 0.55fr 0.8fr 1.6fr auto;
+  grid-template-columns: 0.9fr 0.7fr 0.8fr 0.55fr 0.8fr auto;
   gap: 0.5rem;
   align-items: center;
 }

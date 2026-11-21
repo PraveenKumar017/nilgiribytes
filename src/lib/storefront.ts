@@ -377,17 +377,27 @@ export async function getCatalog(): Promise<Catalog> {
     return {
       products: heroFirst(
         productRows[0].map((product, index) => {
+        const productImages = parseJsonArray<string>(product.imageUrl)
+          .filter(
+            (image): image is string =>
+              typeof image === "string" && image.trim() !== ""
+          )
+          .map(assetUrl)
+          .slice(0, 6);
+
         const sizes = parseJsonArray<SizeJson>(product.sizes).map((size) => {
-          const images = (size.images ?? [])
+          const legacyImages = (size.images ?? [])
             .filter(
               (image): image is string =>
                 typeof image === "string" && image.trim() !== ""
             )
             .map(assetUrl);
 
-          if (!images.length && size.imageUrl) {
-            images.push(assetUrl(size.imageUrl));
+          if (!legacyImages.length && size.imageUrl) {
+            legacyImages.push(assetUrl(size.imageUrl));
           }
+
+          const images = productImages.length ? productImages : legacyImages;
 
           return {
             label: size.label,
@@ -400,12 +410,6 @@ export async function getCatalog(): Promise<Catalog> {
           };
         });
 
-        const productImages = parseJsonArray<string>(product.imageUrl)
-          .filter(
-            (image): image is string =>
-              typeof image === "string" && image.trim() !== ""
-          )
-          .map(assetUrl);
         const image = productImages[0] ?? sizes[0]?.imageUrl ?? IMAGE_FALLBACK;
 
         return {

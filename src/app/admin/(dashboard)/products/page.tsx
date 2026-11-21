@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import {
   ActionForm,
   ConfirmSubmit,
+  ImagesField,
   SizesEditor,
   VideoField,
   type SizeDraft,
@@ -48,13 +49,11 @@ function ProductForm({
       grams: size.grams,
       mrpPaise: size.mrpPaise,
       pricePaise: size.pricePaise,
-      images: size.images,
     })) ?? [250, 400, 500].map((grams) => ({
       label: `${grams}g`,
       grams,
       mrpPaise: 0,
       pricePaise: 0,
-      images: [],
     }));
 
   return (
@@ -64,7 +63,6 @@ function ProductForm({
     >
       {product ? <input type="hidden" name="id" value={product.id} /> : null}
       <input type="hidden" name="slug" value={product?.slug ?? ""} />
-      <input type="hidden" name="images" value={JSON.stringify(product?.images ?? [])} />
       <input type="hidden" name="sortOrder" value={product?.sortOrder ?? 0} />
 
       <div className="admin-form_grid">
@@ -129,6 +127,19 @@ function ProductForm({
           required
         />
       </label>
+
+      <div className="admin-form_section">
+        <div className="admin-form_section-head">
+          <h2>Product images</h2>
+          <p>Upload up to six images. They are shared by every size of this product.</p>
+        </div>
+        <ImagesField
+          name="images"
+          label="Product images"
+          defaultImages={product?.images ?? []}
+          max={6}
+        />
+      </div>
 
       <div className="admin-form_section">
         <div className="admin-form_section-head">
