@@ -31,7 +31,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       lastModified: now,
       changeFrequency: "weekly",
       priority: 0.9,
-      images: [absoluteUrl("/assets/Fresh_Pastries.png")],
+      images: [absoluteUrl("/assets/shop_page_bg.jpg")],
     },
     {
       url: absoluteUrl("/build-your-own-combo"),
@@ -45,7 +45,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       lastModified: now,
       changeFrequency: "monthly",
       priority: 0.6,
-      images: [absoluteUrl("/assets/our_story.png")],
+      images: [absoluteUrl("/assets/about_bg.jpg")],
     },
     {
       url: absoluteUrl("/wholesale"),

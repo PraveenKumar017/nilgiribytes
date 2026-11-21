@@ -352,7 +352,7 @@ export default async function HomePage() {
               data-parallax="0.35"
             >
               <img
-                src="/assets/our_story.png"
+                src="/assets/our_story.jpeg"
                 alt="Baker preparing dough by hand at Nilgiribytes"
                 width={1078}
                 height={1042}

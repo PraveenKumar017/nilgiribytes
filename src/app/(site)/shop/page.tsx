@@ -71,7 +71,7 @@ export default async function ShopPage({ searchParams }: ShopPageProps) {
       <section className="page-hero page-hero--shop" aria-labelledby="shop-title">
         <div className="page-hero_media" aria-hidden="true">
           <img
-            src="/assets/Fresh_Pastries.png"
+            src="/assets/shop_page_bg.jpg"
             alt=""
             width={2000}
             height={1500}

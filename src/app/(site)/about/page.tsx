@@ -23,7 +23,7 @@ export const metadata: Metadata = pageMetadata({
     "freshly baked biscuits",
   ],
   path: "/about",
-  image: "/assets/our_story.png",
+  image: "/assets/about_bg.jpg",
 });
 
 
@@ -33,7 +33,7 @@ export default function AboutPage() {
       <section className="page-hero page-hero--about" aria-labelledby="about-title">
         <div className="page-hero_media" aria-hidden="true">
           <img
-            src="/assets/our_story.png"
+            src="/assets/about_bg.jpg"
             alt=""
             width={2000}
             height={1500}
