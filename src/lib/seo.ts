@@ -28,7 +28,7 @@ export function pageMetadata({
   description = SITE_DESCRIPTION,
   keywords = SITE_KEYWORDS,
   path,
-  image = "/assets/og-image.jpg",
+  image = "/assets/share_preview.jpg",
   imageWidth,
   imageHeight,
   noIndex = false,

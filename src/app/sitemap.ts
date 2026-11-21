@@ -38,7 +38,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       lastModified: now,
       changeFrequency: "weekly",
       priority: 0.8,
-      images: [absoluteUrl("/assets/Fresh_Pastries.png")],
+      images: [absoluteUrl("/assets/hero_image_bg.png")],
     },
     {
       url: absoluteUrl("/about"),
@@ -52,7 +52,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       lastModified: now,
       changeFrequency: "monthly",
       priority: 0.8,
-      images: [absoluteUrl("/assets/Fresh_Pastries.png")],
+      images: [absoluteUrl("/assets/wholesale_bg.png")],
     },
     {
       url: absoluteUrl("/blog"),
