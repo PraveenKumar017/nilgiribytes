@@ -92,6 +92,22 @@ export default async function HomePage() {
 
   return (
     <>
+      <link
+        rel="preload"
+        as="image"
+        href="/assets/hero_bg.png"
+        type="image/png"
+        media="(min-width: 769px)"
+        fetchPriority="high"
+      />
+      <link
+        rel="preload"
+        as="image"
+        href="/assets/hero_bg_mobile.jpg"
+        type="image/jpeg"
+        media="(max-width: 768px)"
+        fetchPriority="high"
+      />
       <IntroOverlay />
       <main id="main-content">
         <section
@@ -179,6 +195,20 @@ export default async function HomePage() {
             </div>
 
             <style>{`
+              @media (max-width: 768px) {
+                .hero-story {
+                  background-image:
+                    linear-gradient(
+                      180deg,
+                      rgba(8, 4, 2, 0.82) 0%,
+                      rgba(8, 4, 2, 0.62) 45%,
+                      rgba(8, 4, 2, 0.15) 75%,
+                      transparent 100%
+                    ),
+                    url("/assets/hero_bg_mobile.jpg");
+                }
+              }
+
               .category-collection .category-card_text {
                 -webkit-line-clamp: 3;
                 line-clamp: 3;

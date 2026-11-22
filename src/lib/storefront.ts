@@ -496,11 +496,17 @@ export async function getCatalog(): Promise<Catalog> {
         const parsedImages = parseJsonArray<string>(product.imageUrl)
           .filter(
             (image): image is string =>
-              typeof image === "string" && image.trim() !== ""
+              typeof image === "string" &&
+              image.trim() !== "" &&
+              !image.includes("placeholder")
           )
           .map(assetUrl)
           .slice(0, 6);
-        const productImages = gallery.length ? gallery : parsedImages;
+
+        // If admin uploaded custom images in the database (/uploads/...), use them.
+        // Otherwise, fall back to the high-res gallery in /assets/images/products/
+        const hasAdminUploads = parsedImages.some((img) => img.startsWith("/uploads/"));
+        const productImages = hasAdminUploads ? parsedImages : (gallery.length ? gallery : parsedImages);
 
         const sizes = parseJsonArray<SizeJson>(product.sizes).map((size) => {
           const legacyImages = (size.images ?? [])
