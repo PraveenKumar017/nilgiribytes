@@ -1754,6 +1754,11 @@ p {
   pointer-events: none;
 }
 
+.product-card.has-hero-badge .product-card_badge {
+  top: 1.45rem;
+  right: 0.7rem;
+}
+
 .product-card_hero-badge {
   position: absolute;
   top: 0;

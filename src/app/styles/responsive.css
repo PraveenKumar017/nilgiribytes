@@ -13,7 +13,9 @@
 
 .product-grid {
   grid-template-columns: repeat(2, 1fr);
-  gap: 0.75rem;
+  column-gap: 0.75rem;
+  row-gap: 1.75rem;
+  padding-top: 1rem;
 }
 
 .category-grid {
@@ -359,6 +361,18 @@
     background-size: cover;
   }
 
+  .product-card_hero-badge {
+    left: 0.6rem;
+    padding: 0.28rem 0.65rem;
+    font-size: 0.54rem;
+    letter-spacing: 0.08em;
+  }
+
+  .product-card.has-hero-badge .product-card_badge {
+    top: 1.45rem;
+    right: 0.55rem;
+  }
+
   .product-card_top {
     flex-direction: column;
     align-items: flex-start;
@@ -460,7 +474,8 @@
 @media (min-width: 480px) {
   .product-grid {
     grid-template-columns: repeat(2, 1fr);
-    gap: 1.25rem;
+    column-gap: 1.25rem;
+    row-gap: 1.75rem;
   }
 
   .values-grid {
@@ -477,7 +492,8 @@
 
   .product-grid {
     grid-template-columns: repeat(2, 1fr);
-    gap: 1.25rem;
+    column-gap: 1.25rem;
+    row-gap: 1.75rem;
   }
 
   .category-grid {
