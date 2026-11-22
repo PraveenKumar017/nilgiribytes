@@ -100,10 +100,10 @@ export function ProductDetail({ item }: ProductDetailProps) {
   return (
     <article className="product-detail">
       <div className="product-detail_media">
-        {isHero ? (
-          <span className="product-detail_hero-badge">Hero Product</span>
-        ) : null}
         <div className="product-detail_stage">
+          {isHero ? (
+            <span className="product-detail_hero-badge">Hero Product</span>
+          ) : null}
           {hasDiscount ? (
             <span className="product-detail_badge">{discount}% OFF</span>
           ) : null}

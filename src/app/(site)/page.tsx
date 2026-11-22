@@ -5,6 +5,7 @@ import { IntroOverlay } from "@/components/intro-overlay";
 import { JsonLd } from "@/components/json-ld";
 import { PosterRail } from "@/components/poster-rail";
 import { ProductCollection } from "@/components/product-collection";
+import { TestimonialMarquee } from "@/components/testimonial-marquee";
 import {
   bakeryJsonLd,
   faqJsonLd,
@@ -534,7 +535,7 @@ export default async function HomePage() {
               What Our Customers Say
             </h2>
             <hr className="divider reveal" data-reveal="fade-in" />
-            <div className="testimonial-grid">
+            <TestimonialMarquee>
               <div className="testimonial-track">
                 {[...testimonials, ...testimonials].map((review, index) => (
                   <figure
@@ -556,7 +557,7 @@ export default async function HomePage() {
                   </figure>
                 ))}
               </div>
-            </div>
+            </TestimonialMarquee>
           </div>
         </section>
 

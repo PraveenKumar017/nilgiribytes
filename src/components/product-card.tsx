@@ -56,9 +56,6 @@ export function ProductCard({
       data-reveal={animate ? revealType : undefined}
       style={staggerIndex !== undefined ? ({ "--i": staggerIndex } as React.CSSProperties) : undefined}
     >
-      {isHero ? (
-        <span className="product-card_hero-badge">Hero Product</span>
-      ) : null}
       <Link
         className="product-card_media"
         href={href}
@@ -71,6 +68,9 @@ export function ProductCard({
           height={360}
           loading="lazy"
         />
+        {isHero ? (
+          <span className="product-card_hero-badge">Hero Product</span>
+        ) : null}
         {hasDiscount ? (
           <span className="product-card_badge">{discount}% OFF</span>
         ) : null}
