@@ -75,6 +75,16 @@ export function ProductDetail({ item }: ProductDetailProps) {
     };
   }, [lightboxOpen]);
 
+  useEffect(() => {
+    if (mediaCount <= 1 || lightboxOpen || isVideoActive) return;
+
+    const timer = setInterval(() => {
+      setImageIndex((current) => (current + 1) % mediaCount);
+    }, 3000);
+
+    return () => clearInterval(timer);
+  }, [mediaCount, lightboxOpen, isVideoActive, activeIndex]);
+
   function moveImage(delta: number) {
     setImageIndex((current) => {
       const next = current + delta;
@@ -209,15 +219,15 @@ export function ProductDetail({ item }: ProductDetailProps) {
             {hasDiscount ? (
               <s className="price-mrp">{formatINR(mrp)}</s>
             ) : null}
+            {hasDiscount ? (
+              <span className="product-detail_saving">
+                You save {formatINR(mrp - price)}
+              </span>
+            ) : null}
             {item.kind === "combo" ? (
               <span className="product-detail_price-meta">{item.weight}</span>
             ) : null}
           </p>
-          {hasDiscount ? (
-            <p className="product-detail_saving">
-              You save {formatINR(mrp - price)}
-            </p>
-          ) : null}
         </div>
 
         {item.description.startsWith("TODO") ? (

@@ -23,6 +23,7 @@ export default async function AdminDashboardPage() {
       hint: `${data.drafts} draft${data.drafts === 1 ? "" : "s"}`,
     },
     { label: "Ordered", value: data.newOrders, href: "/admin/orders" },
+    { label: "Reviews", value: data.reviews, href: "/admin/reviews" },
   ];
 
   return (

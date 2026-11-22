@@ -21,6 +21,7 @@ import {
   postSchema,
   postStatusSchema,
   productSchema,
+  reviewSchema,
   revalidateStorefront,
   requireAdmin,
   settingsSchema,
@@ -837,6 +838,156 @@ export async function updateSettingsAction(
   revalidatePath("/cart");
   revalidatePath("/policies/store");
   redirect("/admin/settings?saved=1");
+}
+
+/* -------------------------------------------------------------------------- */
+/* Reviews                                                                    */
+/* -------------------------------------------------------------------------- */
+
+function readReview(formData: FormData) {
+  const ratingRaw = formText(formData, "rating");
+
+  return {
+    itemSlug: formText(formData, "itemSlug"),
+    rating: ratingRaw === "" ? 0 : Number(ratingRaw),
+    authorName: formText(formData, "authorName"),
+    location: formText(formData, "location") || null,
+    reviewText: formText(formData, "reviewText"),
+    isVisible: formBool(formData, "isVisible"),
+  };
+}
+
+export async function createReviewAction(
+  _previous: ActionState,
+  formData: FormData
+): Promise<ActionState> {
+  await requireAdmin();
+
+  const parsed = reviewSchema.safeParse(readReview(formData));
+  if (!parsed.success) return { error: firstIssue(parsed.error) };
+
+  const pool = getPool();
+  if (!pool) return { error: "Database is not configured." };
+
+  const review = parsed.data;
+  const [sortRows] = await pool.query<RowDataPacket[]>(
+    "SELECT COALESCE(MIN(sortOrder), 0) AS minSortOrder FROM ProductReview"
+  );
+  const sortOrder = Number(sortRows[0]?.minSortOrder ?? 0) - 1;
+
+  try {
+    await pool.execute(
+      `INSERT INTO ProductReview
+         (itemSlug, rating, authorName, location, reviewText, isVisible, sortOrder, updatedAt)
+       VALUES (?, ?, ?, ?, ?, ?, ?, NOW(3))`,
+      [
+        review.itemSlug,
+        review.rating,
+        review.authorName,
+        review.location,
+        review.reviewText,
+        review.isVisible,
+        sortOrder,
+      ]
+    );
+  } catch (error) {
+    if (errorCode(error) === "ER_DUP_ENTRY") {
+      return {
+        error: "A review by this author already exists for the selected item.",
+      };
+    }
+    throw error;
+  }
+
+  revalidatePath("/admin/reviews");
+  revalidateStorefront();
+  redirect("/admin/reviews?created=1");
+}
+
+export async function updateReviewAction(
+  _previous: ActionState,
+  formData: FormData
+): Promise<ActionState> {
+  await requireAdmin();
+
+  const id = formInt(formData, "id");
+  if (!id) return { error: "Review not found." };
+
+  const parsed = reviewSchema.safeParse(readReview(formData));
+  if (!parsed.success) return { error: firstIssue(parsed.error) };
+
+  const pool = getPool();
+  if (!pool) return { error: "Database is not configured." };
+
+  const review = parsed.data;
+  try {
+    await pool.execute(
+      `UPDATE ProductReview
+          SET itemSlug = ?, rating = ?, authorName = ?, location = ?,
+              reviewText = ?, isVisible = ?, updatedAt = NOW(3)
+        WHERE id = ?`,
+      [
+        review.itemSlug,
+        review.rating,
+        review.authorName,
+        review.location,
+        review.reviewText,
+        review.isVisible,
+        id,
+      ]
+    );
+  } catch (error) {
+    if (errorCode(error) === "ER_DUP_ENTRY") {
+      return {
+        error: "A review by this author already exists for the selected item.",
+      };
+    }
+    throw error;
+  }
+
+  revalidatePath("/admin/reviews");
+  revalidateStorefront();
+  redirect(`/admin/reviews?id=${id}&updated=1`);
+}
+
+export async function deleteReviewAction(formData: FormData): Promise<void> {
+  await requireAdmin();
+
+  const id = Number(formData.get("id"));
+  const pool = getPool();
+  if (!pool || !Number.isFinite(id) || id <= 0) {
+    redirect("/admin/reviews?error=not-found");
+  }
+
+  await pool.execute("DELETE FROM ProductReview WHERE id = ?", [id]);
+
+  revalidatePath("/admin/reviews");
+  revalidateStorefront();
+  redirect("/admin/reviews?deleted=1");
+}
+
+export async function toggleReviewVisibilityAction(
+  formData: FormData
+): Promise<void> {
+  await requireAdmin();
+
+  const id = formInt(formData, "id");
+  const pool = getPool();
+  if (!pool || !id) redirect("/admin/reviews?error=not-found");
+
+  await pool.execute(
+    "UPDATE ProductReview SET isVisible = ?, updatedAt = NOW(3) WHERE id = ?",
+    [formBool(formData, "isVisible"), id]
+  );
+
+  revalidatePath("/admin/reviews");
+  revalidateStorefront();
+
+  const returnTo = formText(formData, "returnTo");
+  if (!returnTo.startsWith("/admin/reviews")) {
+    redirect("/admin/reviews?saved=1");
+  }
+  redirect(`${returnTo}${returnTo.includes("?") ? "&" : "?"}saved=1`);
 }
 
 /* -------------------------------------------------------------------------- */

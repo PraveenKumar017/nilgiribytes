@@ -51,9 +51,7 @@ export default async function BuildYourOwnComboPage() {
             Build Your Own Combo
           </h1>
           <p className="page-hero_text">
-            Choose your favourite 4 to 8 varieties of Ooty Varkey and traditional
-            biscuits. Create your own combo with a minimum of 1kg and enjoy a
-            personalised NilgiriBytes experience!
+            Create your own crunchy collection! Choose your favourite 4 to 8 varieties of Ooty Varkey and traditional biscuits to build a combo that&apos;s uniquely yours.
           </p>
           <ul className="page-hero_pills">
             <li>4 to 8 varieties</li>

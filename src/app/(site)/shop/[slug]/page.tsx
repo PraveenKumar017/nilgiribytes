@@ -110,15 +110,11 @@ export default async function ProductPage({ params }: ProductPageProps) {
   if (!item) notFound();
 
   const allItems = [...catalog.products, ...catalog.combos];
-  const sameCategory = allItems.filter(
-    (entry) => entry.id !== item.id && entry.category === item.category
-  );
   const maxRelated = item.kind === "combo" ? 3 : 4;
-  const related = (
-    sameCategory.length
-      ? sameCategory
-      : allItems.filter((entry) => entry.id !== item.id)
-  ).slice(0, maxRelated);
+  const relatedPool = item.kind === "combo" ? catalog.combos : allItems;
+  const related = relatedPool
+    .filter((entry) => entry.id !== item.id)
+    .slice(0, maxRelated);
 
   const price = itemPrice(item, 0);
   const mrp = itemMrp(item, 0);
@@ -241,7 +237,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
               data-reveal="fade-up"
               id="related-title"
             >
-              More from {item.category}
+              {item.kind === "combo" ? "More from Combo" : "More from shop"}
             </h2>
             <div className="product-grid">
               <ProductCollection items={related} />

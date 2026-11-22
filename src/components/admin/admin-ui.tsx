@@ -19,6 +19,7 @@ const LINKS = [
   { href: "/admin", label: "Dashboard", exact: true },
   { href: "/admin/products", label: "Products" },
   { href: "/admin/combos", label: "Combos" },
+  { href: "/admin/reviews", label: "Reviews" },
   { href: "/admin/coupons", label: "Coupons" },
   { href: "/admin/blog", label: "Blog" },
   { href: "/admin/orders", label: "Orders" },

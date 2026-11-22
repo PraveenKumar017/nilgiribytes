@@ -468,6 +468,7 @@ export async function getCatalog(): Promise<Catalog> {
           const [rows] = await pool.query<ProductReviewRow[]>(
             `SELECT itemSlug, rating, authorName, \`location\`, reviewText
                FROM ProductReview
+              WHERE isVisible = TRUE
               ORDER BY itemSlug ASC, sortOrder ASC, id ASC`
           );
           return rows;

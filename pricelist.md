@@ -26,6 +26,11 @@ Biscuits:
 8. Sweet Biscuit
    250g: ₹179 | 400g: ₹289 | 500g: ₹349
 
+For all products mrp 
+
+250g- 249
+400g- 349
+500g - 399
 ----------------------------------------
 
 NILGIRIBYTES COMBO LIST

@@ -7,7 +7,7 @@ import { redirect } from "next/navigation";
 import { z } from "zod";
 import { getPool } from "./db";
 import { ensureOrderShippingColumns } from "./order-shipping";
-import type { BlogBlock } from "./types";
+import { CUSTOM_COMBO_SLUG, type BlogBlock } from "./types";
 
 /* -------------------------------------------------------------------------- */
 /* Shared helpers                                                             */
@@ -196,6 +196,15 @@ export const orderStatusSchema = z.enum([
   "DELIVERED",
   "CANCELLED",
 ]);
+
+export const reviewSchema = z.object({
+  itemSlug: z.string().trim().min(1, "Choose an item.").max(200),
+  rating: z.number().min(0.5, "Rating must be at least 0.5.").max(5),
+  authorName: z.string().trim().min(1, "Author name is required.").max(160),
+  location: optionalString(160),
+  reviewText: z.string().trim().min(1, "Review text is required.").max(5000),
+  isVisible: z.boolean(),
+});
 
 export type CategoryInput = z.infer<typeof categorySchema>;
 export type ProductInput = z.infer<typeof productSchema>;
@@ -509,6 +518,7 @@ export type AdminDashboard = {
   posts: number;
   drafts: number;
   newOrders: number;
+  reviews: number;
   recentOrders: AdminOrderRow[];
 };
 
@@ -523,6 +533,26 @@ export type AdminCoupon = {
   isActive: boolean;
   createdAt: string;
   updatedAt: string;
+};
+
+export type AdminReview = {
+  id: number;
+  itemSlug: string;
+  itemName: string;
+  rating: number;
+  authorName: string;
+  location: string | null;
+  reviewText: string;
+  isVisible: boolean;
+  sortOrder: number;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type AdminReviewItem = {
+  slug: string;
+  name: string;
+  type: "Product" | "Combo";
 };
 
 function dateOnly(value: Date | string): string {
@@ -540,8 +570,9 @@ export async function getDashboard(): Promise<AdminDashboard> {
        (SELECT COUNT(*) FROM Coupon) AS coupons,
        (SELECT COUNT(*) FROM Coupon WHERE isActive = TRUE) AS activeCoupons,
        (SELECT COUNT(*) FROM BlogPost) AS posts,
-       (SELECT COUNT(*) FROM BlogPost WHERE status = 'DRAFT') AS drafts,
-       (SELECT COUNT(*) FROM \`Order\` WHERE status IN ('NEW', 'CONFIRMED')) AS newOrders`
+        (SELECT COUNT(*) FROM BlogPost WHERE status = 'DRAFT') AS drafts,
+        (SELECT COUNT(*) FROM ProductReview) AS reviews,
+        (SELECT COUNT(*) FROM \`Order\` WHERE status IN ('NEW', 'CONFIRMED')) AS newOrders`
   );
 
   const counts = countRows[0] ?? {};
@@ -554,6 +585,7 @@ export async function getDashboard(): Promise<AdminDashboard> {
     posts: Number(counts.posts ?? 0),
     drafts: Number(counts.drafts ?? 0),
     newOrders: Number(counts.newOrders ?? 0),
+    reviews: Number(counts.reviews ?? 0),
     recentOrders: await listOrders(5),
   };
 }
@@ -599,6 +631,136 @@ export async function listCoupons(): Promise<AdminCoupon[]> {
     createdAt: dateOnly(row.createdAt),
     updatedAt: dateOnly(row.updatedAt),
   }));
+}
+
+export async function listReviewItems(): Promise<AdminReviewItem[]> {
+  const [rows] = await pool().query<RowDataPacket[]>(
+    `SELECT slug, name, type
+       FROM (
+         SELECT slug, name, 'Product' AS type FROM Product
+         UNION ALL
+         SELECT slug, name, 'Combo' AS type FROM Combo
+       ) AS items
+      ORDER BY name ASC, slug ASC`
+  );
+
+  const items: AdminReviewItem[] = rows.map((row) => ({
+    slug: String(row.slug),
+    name: String(row.name),
+    type: row.type === "Combo" ? "Combo" : "Product",
+  }));
+
+  if (!items.some((item) => item.slug === CUSTOM_COMBO_SLUG)) {
+    items.push({
+      slug: CUSTOM_COMBO_SLUG,
+      name: "Build Your Own Combo",
+      type: "Combo",
+    });
+  }
+
+  return items.sort((a, b) => a.name.localeCompare(b.name));
+}
+
+function reviewItemName(itemName: unknown, itemSlug: string): string {
+  if (itemSlug === CUSTOM_COMBO_SLUG) return "Build Your Own Combo";
+  return String(itemName ?? itemSlug);
+}
+
+export async function listReviews(
+  query = "",
+  itemSlug = "",
+  page = 1,
+  pageSize = 10
+): Promise<{ rows: AdminReview[]; total: number }> {
+  const clauses: string[] = [];
+  const params: string[] = [];
+
+  if (query) {
+    const like = `%${query}%`;
+    clauses.push(
+      `(r.itemSlug LIKE ? OR r.authorName LIKE ? OR r.reviewText LIKE ? OR COALESCE(p.name, c.name, '') LIKE ?)`
+    );
+    params.push(like, like, like, like);
+  }
+
+  if (itemSlug) {
+    clauses.push("r.itemSlug = ?");
+    params.push(itemSlug);
+  }
+
+  const where = clauses.length ? `WHERE ${clauses.join(" AND ")}` : "";
+  const [countRows] = await pool().query<RowDataPacket[]>(
+    `SELECT COUNT(*) AS total
+       FROM ProductReview r
+       LEFT JOIN Product p ON p.slug = r.itemSlug
+       LEFT JOIN Combo c ON c.slug = r.itemSlug
+       ${where}`,
+    params
+  );
+  const total = Number(countRows[0]?.total ?? 0);
+
+  const limit = Math.min(100, Math.max(1, Math.floor(pageSize) || 10));
+  const offset = (Math.max(1, Math.floor(page) || 1) - 1) * limit;
+  const [rows] = await pool().query<RowDataPacket[]>(
+    `SELECT r.id, r.itemSlug, r.rating, r.authorName, r.location, r.reviewText,
+            r.isVisible, r.sortOrder, r.createdAt, r.updatedAt,
+            COALESCE(p.name, c.name, r.itemSlug) AS itemName
+       FROM ProductReview r
+       LEFT JOIN Product p ON p.slug = r.itemSlug
+       LEFT JOIN Combo c ON c.slug = r.itemSlug
+       ${where}
+      ORDER BY r.sortOrder ASC, r.id DESC
+      LIMIT ? OFFSET ?`,
+    [...params, limit, offset]
+  );
+
+  return {
+    rows: rows.map((row) => ({
+      id: Number(row.id),
+      itemSlug: String(row.itemSlug),
+      itemName: reviewItemName(row.itemName, String(row.itemSlug)),
+      rating: Number(row.rating),
+      authorName: String(row.authorName),
+      location: row.location ? String(row.location) : null,
+      reviewText: String(row.reviewText),
+      isVisible: Boolean(row.isVisible),
+      sortOrder: Number(row.sortOrder),
+      createdAt: dateOnly(row.createdAt),
+      updatedAt: dateOnly(row.updatedAt),
+    })),
+    total,
+  };
+}
+
+export async function getReview(id: number): Promise<AdminReview | null> {
+  const [rows] = await pool().query<RowDataPacket[]>(
+    `SELECT r.id, r.itemSlug, r.rating, r.authorName, r.location, r.reviewText,
+            r.isVisible, r.sortOrder, r.createdAt, r.updatedAt,
+            COALESCE(p.name, c.name, r.itemSlug) AS itemName
+       FROM ProductReview r
+       LEFT JOIN Product p ON p.slug = r.itemSlug
+       LEFT JOIN Combo c ON c.slug = r.itemSlug
+      WHERE r.id = ?
+      LIMIT 1`,
+    [id]
+  );
+
+  const row = rows[0];
+  if (!row) return null;
+
+  return {
+    id: Number(row.id),
+    itemSlug: String(row.itemSlug),
+    itemName: reviewItemName(row.itemName, String(row.itemSlug)),
+    rating: Number(row.rating),
+    authorName: String(row.authorName),
+    location: row.location ? String(row.location) : null,
+    reviewText: String(row.reviewText),
+    isVisible: Boolean(row.isVisible),
+    sortOrder: Number(row.sortOrder),
+    createdAt: dateOnly(row.createdAt),
+    updatedAt: dateOnly(row.updatedAt),
+  };
 }
 
 export async function listCategories(): Promise<AdminCategory[]> {

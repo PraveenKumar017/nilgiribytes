@@ -93,9 +93,9 @@ export default async function HomePage() {
     "home-testimonials"
   );
   const featuredBestsellerSlugs = [
+    "premium-special-varkey",
     "special-varkey",
-    "mini-varkey",
-    "trial-combo",
+    "sweet-biscuit",
     "family-combo",
   ];
   const bestsellers = featuredBestsellerSlugs
