@@ -49,37 +49,31 @@ const { props: heroDesktopProps } = getImageProps({
 });
 
 const CARD_TYPE_TO_FORM_TYPE: Record<string, string> = {
-  "Wholesale supply": "Wholesale supply",
-  "Distributor partnership": "Distributor partnership",
-  "Cafes & restaurants": "Cafe / restaurant supply",
-  "Bulk orders": "Bulk order",
-  "Corporate gifting": "Corporate gifting",
+  "Become a Distributor": "Distributor partnership",
+  "Wholesale Orders": "Wholesale supply",
+  "Hotels, Cafés & Restaurants": "Cafe / restaurant supply",
+  "Gifting, Events & Celebrations": "Corporate gifting",
 };
 
 const ENQUIRY_TYPES = [
   {
-    title: "Distributor partnership",
-    text: "Discuss territory, repeat supply and distribution for your market.",
+    title: "Become a Distributor",
+    text: "Partner with NilgiriBytes to bring authentic Ooty Varkey and biscuits to more customers. Explore distribution opportunities and grow with us across India.",
     icon: "distribution",
   },
   {
-    title: "Wholesale supply",
-    text: "Retail-ready varkey and biscuits for shops, supermarkets and stores.",
+    title: "Wholesale Orders",
+    text: "Bulk supply of Ooty Varkey and biscuits for retailers, supermarkets, resellers and businesses looking to stock our products.",
     icon: "package",
   },
   {
-    title: "Cafes & restaurants",
-    text: "Tea-time bakes and biscuits for cafes, bakeries and hospitality menus.",
+    title: "Hotels, Cafés & Restaurants",
+    text: "Supply of Varkey and biscuits for hotels, cafés, restaurants, tea shops and hospitality businesses.",
     icon: "cafe",
   },
   {
-    title: "Bulk orders",
-    text: "Larger quantities for events, festivals, resale or community orders.",
-    icon: "bulk",
-  },
-  {
-    title: "Corporate gifting",
-    text: "Thoughtful Nilgiri bakery gifts for employees, clients and occasions.",
+    title: "Gifting, Events & Celebrations",
+    text: "Orders for weddings, events, corporate gifts, Custom giftings, Institutional Orders, Celebrations & special occasions.",
     icon: "gift",
   },
 ] as const;
@@ -223,7 +217,7 @@ export default function WholesalePage() {
 
           <PartnersMarquee>
             <div className="wholesale-partners_grid">
-              {[0, 1].map((group) => (
+              {[0].map((group) => (
                 <div
                   className="wholesale-partners_group"
                   key={group}
@@ -231,7 +225,9 @@ export default function WholesalePage() {
                 >
                   {ENQUIRY_TYPES.map((item, index) => (
                     <article
-                      className="wholesale-partner-card"
+                      className={`wholesale-partner-card${
+                        item.title === "Wholesale Orders" ? " has-badge" : ""
+                      }`}
                       key={item.title}
                     >
                       <span
@@ -240,7 +236,7 @@ export default function WholesalePage() {
                       >
                         {String(index + 1).padStart(2, "0")}
                       </span>
-                      {item.title === "Wholesale supply" && (
+                      {item.title === "Wholesale Orders" && (
                         <span className="wholesale-partner_badge">
                           Most requested
                         </span>

@@ -92,9 +92,17 @@ export function ProductDetail({ item }: ProductDetailProps) {
     });
   }
 
+  const isHero =
+    item.slug === "premium-special-varkey" ||
+    (item.name.toLowerCase().includes("premium") &&
+      item.name.toLowerCase().includes("varkey"));
+
   return (
     <article className="product-detail">
       <div className="product-detail_media">
+        {isHero ? (
+          <span className="product-detail_hero-badge">Hero Product</span>
+        ) : null}
         <div className="product-detail_stage">
           {hasDiscount ? (
             <span className="product-detail_badge">{discount}% OFF</span>
@@ -190,7 +198,12 @@ export function ProductDetail({ item }: ProductDetailProps) {
       </div>
 
       <div className="product-detail_body">
-        <span className="product-detail_category">{item.category}</span>
+        <div className="product-detail_kicker-row">
+          <span className="product-detail_category">{item.category}</span>
+          {isHero ? (
+            <span className="product-detail_hero-tag">★ Hero Product</span>
+          ) : null}
+        </div>
         <h1 className="product-detail_title">{item.name}</h1>
 
         <div className="product-detail_reviews">
@@ -212,6 +225,35 @@ export function ProductDetail({ item }: ProductDetailProps) {
           </div>
           <span className="product-detail_rating">{item.rating.toFixed(1)}</span>
         </div>
+
+        {item.kind === "product" && item.sizes.length > 1 ? (
+          <div className="product-detail_size-row">
+            <span className="product-detail_label">Size</span>
+            <div className="product-detail_size-pills" role="group" aria-label="Choose size">
+              {item.sizes.map((size, index) => (
+                <button
+                  key={size.label}
+                  type="button"
+                  className="size-select_btn"
+                  aria-pressed={sizeIndex === index}
+                  onClick={() => {
+                    setSizeIndex(index);
+                    setImageIndex(0);
+                  }}
+                >
+                  {size.label}
+                </button>
+              ))}
+            </div>
+          </div>
+        ) : item.kind === "product" && item.sizes.length === 1 ? (
+          <div className="product-detail_size-row">
+            <p className="product-detail_label">Size</p>
+            <div className="size-select_static">
+              {item.sizes[0].label} · {formatINR(item.sizes[0].pricePaise)}
+            </div>
+          </div>
+        ) : null}
 
         <div className="product-detail_pricing">
           <p className="product-detail_price">
@@ -241,22 +283,68 @@ export function ProductDetail({ item }: ProductDetailProps) {
           </p>
         )}
 
-        {item.ingredients || item.shelfLife ? (
-          <dl className="product-detail_facts">
-            {item.ingredients ? (
-              <>
-                <dt>Ingredients</dt>
-                <dd>{item.ingredients}</dd>
-              </>
-            ) : null}
-            {item.shelfLife ? (
-              <>
-                <dt>Shelf life</dt>
-                <dd>{item.shelfLife}</dd>
-              </>
-            ) : null}
-          </dl>
+        <details className="product-detail_facts-toggle">
+          <summary className="product-detail_facts-summary">About</summary>
+          <div className="product-detail_about-list">
+            <p>Made in Ooty, The Nilgiris</p>
+            <p>Made by Hand, Baked the Traditional Way</p>
+            <p>Freshly Baked</p>
+            <p>100% Vegetarian</p>
+          </div>
+        </details>
+
+        {item.ingredients ? (
+          <details className="product-detail_facts-toggle">
+            <summary className="product-detail_facts-summary">Ingredients</summary>
+            <dl className="product-detail_facts">
+              <dd>{item.ingredients}</dd>
+            </dl>
+            <p className="product-detail_allergen">
+              <strong>Allergen Information:-</strong> Contains Wheat (Gluten).
+            </p>
+          </details>
         ) : null}
+
+        {item.shelfLife ? (
+          <details className="product-detail_facts-toggle">
+            <summary className="product-detail_facts-summary">Shelf life</summary>
+            <div className="product-detail_about-list">
+              <p>
+                <strong>Shelf Life &amp; Storage:-</strong>
+              </p>
+              <p>Shelf life: {item.shelfLife} from date of manufacture.</p>
+              <p>Store in a cool, dry place,away from direct sunlight.</p>
+              <p>
+                Once opened, keep in an airtight container to retain freshness and crunch.
+              </p>
+            </div>
+          </details>
+        ) : null}
+
+        <details className="product-detail_facts-toggle">
+          <summary className="product-detail_facts-summary">Shipping &amp; Delivery</summary>
+          <div className="product-detail_about-list">
+            <p>Carefully packed to protect products during transit.</p>
+            <p>Dispatched from Kotagiri, in the Nilgiri hills.</p>
+            <p>Delivery available across India.</p>
+            <p>Estimated delivery time: 4&ndash;5 business days.</p>
+            <p>
+              Delivery timelines may vary depending on the destination and courier service.
+            </p>
+          </div>
+        </details>
+
+        <details className="product-detail_facts-toggle">
+          <summary className="product-detail_facts-summary">Product Information</summary>
+          <div className="product-detail_about-list">
+            <p>Brand: NilgiriBytes</p>
+            <p>Manufactured by: Vasu Ettan Bakery</p>
+            <p>
+              Manufacturing Location: Kotagiri, The Nilgiris, Tamil Nadu - 643217, India
+            </p>
+            <p>FSSAI License No: 22423223000163</p>
+          </div>
+        </details>
 
         {item.kind === "combo" ? (
           <div>
@@ -276,37 +364,6 @@ export function ProductDetail({ item }: ProductDetailProps) {
         <p className="product-detail_availability">
           &#10003; In stock &mdash; baked fresh daily
         </p>
-
-        {item.kind === "product" && item.sizes.length > 1 ? (
-          <div>
-            <label className="product-detail_label" htmlFor="detail-size-select">
-              Choose size
-            </label>
-            <select
-              id="detail-size-select"
-              className="size-select"
-              aria-label="Choose size"
-              value={sizeIndex}
-              onChange={(event) => {
-                setSizeIndex(Number(event.target.value));
-                setImageIndex(0);
-              }}
-            >
-              {item.sizes.map((size, index) => (
-                <option key={size.label} value={index}>
-                  {size.label} · {formatINR(size.pricePaise)}
-                </option>
-              ))}
-            </select>
-          </div>
-        ) : item.kind === "product" && item.sizes.length === 1 ? (
-          <div>
-            <p className="product-detail_label">Size</p>
-            <div className="size-select_static">
-              {item.sizes[0].label} · {formatINR(item.sizes[0].pricePaise)}
-            </div>
-          </div>
-        ) : null}
 
         <div className="product-detail_actions">
           {qty < 1 ? (

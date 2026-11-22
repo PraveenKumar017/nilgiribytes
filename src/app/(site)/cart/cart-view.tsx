@@ -677,6 +677,30 @@ export function CartView({
         </Link>
       </div>
 
+      <div className="cart-page_buy-more">
+        <div className="cart-page_buy-more_left">
+          <div className="cart-page_buy-more_icon" aria-hidden="true">
+            <svg
+              viewBox="0 0 24 24"
+              width="18"
+              height="18"
+              fill="currentColor"
+            >
+              <path d="M12 2l2.4 7.2L22 12l-7.6 2.8L12 22l-2.4-7.2L2 12l7.6-2.8z" />
+            </svg>
+          </div>
+          <div className="cart-page_buy-more_text">
+            <span className="cart-page_buy-more_title">Buy More, Save More</span>
+            <span className="cart-page_buy-more_subtitle">
+              Add more favorites or curated combos to unlock extra savings!
+            </span>
+          </div>
+        </div>
+        <Link className="cart-page_buy-more_link" href="/shop">
+          Explore items &rarr;
+        </Link>
+      </div>
+
       {offerBannerEnabled && showComboSample && (
         <div className="cart-page_sample-note">
           <span className="cart-page_sample-note-title">

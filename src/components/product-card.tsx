@@ -43,6 +43,10 @@ export function ProductCard({
   const discount = hasDiscount
     ? Math.round(((mrp - price) / mrp) * 100)
     : 0;
+  const isHero =
+    item.slug === "premium-special-varkey" ||
+    (item.name.toLowerCase().includes("premium") &&
+      item.name.toLowerCase().includes("varkey"));
   const href = `/shop/${item.slug}`;
 
   return (
@@ -52,6 +56,9 @@ export function ProductCard({
       data-reveal={animate ? revealType : undefined}
       style={staggerIndex !== undefined ? ({ "--i": staggerIndex } as React.CSSProperties) : undefined}
     >
+      {isHero ? (
+        <span className="product-card_hero-badge">Hero Product</span>
+      ) : null}
       <Link
         className="product-card_media"
         href={href}
