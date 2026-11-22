@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 import Link from "next/link";
 import { JsonLd } from "@/components/json-ld";
 import { ShopBrowser } from "@/components/shop-browser";
@@ -70,12 +71,12 @@ export default async function ShopPage({ searchParams }: ShopPageProps) {
     <main id="main-content">
       <section className="page-hero page-hero--shop" aria-labelledby="shop-title">
         <div className="page-hero_media" aria-hidden="true">
-          <img
+          <Image
             src="/assets/shop_page_bg.jpg"
             alt=""
-            width={2000}
-            height={1500}
-            fetchPriority="high"
+            fill
+            sizes="100vw"
+            preload
           />
         </div>
         <div className="page-hero_overlay" aria-hidden="true" />

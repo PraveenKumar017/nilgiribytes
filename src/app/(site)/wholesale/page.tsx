@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { getImageProps } from "next/image";
 import { JsonLd } from "@/components/json-ld";
 import { pageMetadata } from "@/lib/seo";
 import {
@@ -27,6 +28,24 @@ export const metadata: Metadata = pageMetadata({
   ],
   path: "/wholesale",
   image: "/assets/wholesale_bg.png",
+});
+
+const heroImageCommon = { alt: "", sizes: "100vw" };
+
+const {
+  props: { srcSet: heroMobileSrcSet },
+} = getImageProps({
+  ...heroImageCommon,
+  src: "/assets/wholesale_mobile_bg.png",
+  width: 725,
+  height: 575,
+});
+
+const { props: heroDesktopProps } = getImageProps({
+  ...heroImageCommon,
+  src: "/assets/wholesale_bg.png",
+  width: 1376,
+  height: 646,
 });
 
 const CARD_TYPE_TO_FORM_TYPE: Record<string, string> = {
@@ -171,17 +190,9 @@ export default function WholesalePage() {
           <picture>
             <source
               media="(max-width: 767.98px)"
-              srcSet="/assets/wholesale_mobile_bg.png"
-              width={768}
-              height={1090}
+              srcSet={heroMobileSrcSet}
             />
-            <img
-              src="/assets/wholesale_bg.png"
-              alt=""
-              width={1376}
-              height={768}
-              fetchPriority="high"
-            />
+            <img {...heroDesktopProps} fetchPriority="high" />
           </picture>
         </div>
         <h1 className="sr-only" id="wholesale-title">

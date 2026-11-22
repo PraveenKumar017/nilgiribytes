@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 import { pageMetadata } from "@/lib/seo";
 import { getPublishedPosts } from "@/lib/storefront";
 import { BlogList } from "./blog-list";
@@ -28,12 +29,12 @@ export default async function BlogPage() {
     <main id="main-content">
       <section className="page-hero page-hero--blog" aria-labelledby="blog-title">
         <div className="page-hero_media" aria-hidden="true">
-          <img
+          <Image
             src="/assets/Craftsmanship.png"
             alt=""
-            width={2000}
-            height={1500}
-            fetchPriority="high"
+            fill
+            sizes="100vw"
+            preload
           />
         </div>
         <div className="page-hero_overlay" aria-hidden="true" />

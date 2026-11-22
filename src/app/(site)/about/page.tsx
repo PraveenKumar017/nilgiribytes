@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 import Link from "next/link";
 import { pageMetadata } from "@/lib/seo";
 import {
@@ -32,12 +33,12 @@ export default function AboutPage() {
     <main id="main-content">
       <section className="page-hero page-hero--about" aria-labelledby="about-title">
         <div className="page-hero_media" aria-hidden="true">
-          <img
+          <Image
             src="/assets/about_bg.jpg"
             alt=""
-            width={2000}
-            height={1500}
-            fetchPriority="high"
+            fill
+            sizes="100vw"
+            preload
           />
         </div>
         <div className="page-hero_overlay" aria-hidden="true" />

@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { getImageProps } from "next/image";
 import { IntroOverlay } from "@/components/intro-overlay";
 import { JsonLd } from "@/components/json-ld";
 import { PosterRail } from "@/components/poster-rail";
@@ -64,6 +65,24 @@ export const metadata: Metadata = pageMetadata({
   imageHeight: 1257,
 });
 
+const heroImageCommon = { alt: "", sizes: "100vw" };
+
+const {
+  props: { srcSet: heroMobileSrcSet },
+} = getImageProps({
+  ...heroImageCommon,
+  src: "/assets/hero_bg_mobile.jpg",
+  width: 768,
+  height: 1010,
+});
+
+const { props: heroDesktopProps } = getImageProps({
+  ...heroImageCommon,
+  src: "/assets/hero_bg.png",
+  width: 2560,
+  height: 1536,
+});
+
 export default async function HomePage() {
   const catalog = await getCatalog();
   const allItems = [...catalog.products, ...catalog.combos];
@@ -92,28 +111,16 @@ export default async function HomePage() {
 
   return (
     <>
-      <link
-        rel="preload"
-        as="image"
-        href="/assets/hero_bg.png"
-        type="image/png"
-        media="(min-width: 769px)"
-        fetchPriority="high"
-      />
-      <link
-        rel="preload"
-        as="image"
-        href="/assets/hero_bg_mobile.jpg"
-        type="image/jpeg"
-        media="(max-width: 768px)"
-        fetchPriority="high"
-      />
       <IntroOverlay />
       <main id="main-content">
         <section
           className="hero-story"
           aria-label="NilgiriBytes Artisan Baking Kitchen & Authentic Varkey Experience"
         >
+          <picture className="hero-background" aria-hidden="true">
+            <source media="(max-width: 768px)" srcSet={heroMobileSrcSet} />
+            <img {...heroDesktopProps} fetchPriority="high" />
+          </picture>
           <div className="hero-stage">
             <div className="hero-vignette" aria-hidden="true" />
             <div className="hero-copy">
@@ -195,17 +202,28 @@ export default async function HomePage() {
             </div>
 
             <style>{`
+              .hero-story {
+                background-image: none;
+              }
+
+              .hero-background {
+                position: absolute;
+                inset: 0;
+                display: block;
+                z-index: 0;
+              }
+
+              .hero-background img {
+                display: block;
+                width: 100%;
+                height: 100%;
+                object-fit: cover;
+                object-position: center;
+              }
+
               @media (max-width: 768px) {
-                .hero-story {
-                  background-image:
-                    linear-gradient(
-                      180deg,
-                      rgba(8, 4, 2, 0.82) 0%,
-                      rgba(8, 4, 2, 0.62) 45%,
-                      rgba(8, 4, 2, 0.15) 75%,
-                      transparent 100%
-                    ),
-                    url("/assets/hero_bg_mobile.jpg");
+                .hero-background img {
+                  object-position: center top;
                 }
               }
 

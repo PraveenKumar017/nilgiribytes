@@ -61,8 +61,8 @@
 .hero-stage .hero-copy {
   position: relative;
   z-index: 15;
-  width: min(58%, 720px);
-  margin-left: max(8vw, 80px);
+  width: min(72%, 960px);
+  margin-left: max(6vw, 64px);
   padding: 24px 28px 24px 0;
   border-radius: 16px;
   background: transparent;
@@ -88,12 +88,22 @@
 
 .hero-stage .hero-heading {
   font-family: var(--font-display);
-  font-size: clamp(2.4rem, 4.4vw, 5.0rem);
-  line-height: 1.05;
-  letter-spacing: -0.025em;
+  font-size: clamp(2.2rem, 3.5vw, 4.2rem);
+  line-height: 1.1;
+  letter-spacing: -0.02em;
   color: #ffffff;
   margin: 0 0 1.25rem;
   text-shadow: 0 2px 10px rgba(0, 0, 0, 0.95), 0 4px 25px rgba(0, 0, 0, 0.9);
+}
+
+.hero-stage .hero-heading .hero-line {
+  display: block;
+}
+
+@media (min-width: 993px) {
+  .hero-stage .hero-heading .hero-line:first-child {
+    white-space: nowrap;
+  }
 }
 
 .hero-stage .hero-heading span.highlight {
@@ -151,15 +161,15 @@
 
 @media (max-width: 1200px) {
   .hero-stage .hero-copy {
-    width: min(62%, 640px);
-    margin-left: max(6vw, 56px);
+    width: min(76%, 860px);
+    margin-left: max(5vw, 48px);
   }
 }
 
 @media (max-width: 992px) {
   .hero-stage .hero-copy {
-    width: min(66%, 560px);
-    margin-left: max(5vw, 40px);
+    width: min(80%, 720px);
+    margin-left: max(4vw, 32px);
   }
 }
 
