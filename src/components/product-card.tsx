@@ -51,11 +51,14 @@ export function ProductCard({
 
   return (
     <article
-      className={`product-card${animate ? " reveal" : ""}${quick ? " is-quick" : ""}`}
+      className={`product-card${animate ? " reveal" : ""}${quick ? " is-quick" : ""}${isHero ? " has-hero-badge" : ""}`}
       data-item-id={item.id}
       data-reveal={animate ? revealType : undefined}
       style={staggerIndex !== undefined ? ({ "--i": staggerIndex } as React.CSSProperties) : undefined}
     >
+      {isHero ? (
+        <span className="product-card_hero-badge">Hero Product</span>
+      ) : null}
       <Link
         className="product-card_media"
         href={href}
@@ -68,9 +71,6 @@ export function ProductCard({
           height={360}
           loading="lazy"
         />
-        {isHero ? (
-          <span className="product-card_hero-badge">Hero Product</span>
-        ) : null}
         {hasDiscount ? (
           <span className="product-card_badge">{discount}% OFF</span>
         ) : null}

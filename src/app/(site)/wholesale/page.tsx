@@ -134,7 +134,7 @@ function EnquiryIcon({ name }: { name: EnquiryIconName }) {
       </svg>
     );
   }
-  if (name === "bulk") {
+  if (name === "gift") {
     return (
       <svg viewBox="0 0 24 24" aria-hidden="true">
         <path d="m3 8 9-4 9 4-9 4-9-4Z" />
