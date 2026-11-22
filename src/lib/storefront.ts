@@ -199,7 +199,9 @@ function legacyProducts(): StoreProduct[] {
       };
     });
 
-    const image = assetUrl(product.image || product.poster);
+    const gallery = getProductGallery(slug, product.name);
+    const image = gallery[0] ?? assetUrl(product.image || product.poster);
+    const images = gallery.length ? gallery : [image];
 
     return {
       kind: "product",
@@ -213,7 +215,7 @@ function legacyProducts(): StoreProduct[] {
       shelfLife: null,
       image,
       poster: image,
-      images: [image],
+      images,
       imageAlt: `${product.name} \u2014 ${product.category} from Nilgiribytes`,
       sizes,
       rating: 4.3,
@@ -362,6 +364,84 @@ const KNOWN_COMBOS: Record<
   },
 };
 
+function getProductGallery(slug: string, name: string): string[] {
+  const s = (slug ?? "").toLowerCase();
+  const n = (name ?? "").toLowerCase();
+
+  if (s.includes("sweet") || n.includes("sweet")) {
+    return [
+      "/assets/images/products/Sweet%20Biscuit/01_Sweet.jpeg",
+      "/assets/images/products/Sweet%20Biscuit/02_Sweet.jpeg",
+      "/assets/images/products/Sweet%20Biscuit/03_Sweet.png",
+      "/assets/images/products/Sweet%20Biscuit/04.jpeg",
+      "/assets/images/products/Sweet%20Biscuit/5.jpeg",
+    ];
+  }
+  if (s.includes("salt") || n.includes("salt")) {
+    return [
+      "/assets/images/products/Salt%20Biscuit/01-Salt.jpeg",
+      "/assets/images/products/Salt%20Biscuit/02_Salt.jpeg",
+      "/assets/images/products/Salt%20Biscuit/03_Salt.jpg",
+      "/assets/images/products/Salt%20Biscuit/04.jpeg",
+      "/assets/images/products/Salt%20Biscuit/5.jpeg",
+    ];
+  }
+  if (s.includes("crispy") || n.includes("crispy")) {
+    return [
+      "/assets/images/products/Crispy/01_Crispy.jpg",
+      "/assets/images/products/Crispy/02_Crispy.jpg",
+      "/assets/images/products/Crispy/03_Crispy.jpeg",
+      "/assets/images/products/Crispy/04_Crispy.jpg",
+      "/assets/images/products/Crispy/05.jpeg",
+    ];
+  }
+  if (s.includes("flakes") || n.includes("flakes")) {
+    return [
+      "/assets/images/products/Flakes/01_Flakes.jpg",
+      "/assets/images/products/Flakes/02_Flakes.jpeg",
+      "/assets/images/products/Flakes/03_Flakes.jpeg",
+      "/assets/images/products/Flakes/04_Flakes.png",
+      "/assets/images/products/Flakes/05.jpeg",
+    ];
+  }
+  if (s.includes("mini") || n.includes("mini")) {
+    return [
+      "/assets/images/products/Mini/01_Mini%20varkey.jpg",
+      "/assets/images/products/Mini/02_Mini.jpeg",
+      "/assets/images/products/Mini/03_Mini.jpeg",
+      "/assets/images/products/Mini/04_Mini.jpg",
+      "/assets/images/products/Mini/05.jpeg",
+    ];
+  }
+  if (s.includes("premium") || n.includes("premium")) {
+    return [
+      "/assets/images/products/Premium/01_Premium.jpg",
+      "/assets/images/products/Premium/02_Premium.jpg",
+      "/assets/images/products/Premium/03_Premium.jpeg",
+      "/assets/images/products/Premium/04_Premium.jpg",
+      "/assets/images/products/Premium/05.jpeg",
+    ];
+  }
+  if (s.includes("special") || n.includes("special")) {
+    return [
+      "/assets/images/products/Special/01_Special%20Varkey.jpg",
+      "/assets/images/products/Special/02_Special.jpg",
+      "/assets/images/products/Special/03_Special%20Varkey.jpeg",
+      "/assets/images/products/Special/04_Special.jpg",
+      "/assets/images/products/Special/05.jpeg",
+    ];
+  }
+  if (s.includes("classic") || n.includes("classic")) {
+    return [
+      "/assets/images/products/Classic/01_Classic.jpg",
+      "/assets/images/products/Classic/03_Classic.jpeg",
+      "/assets/images/products/Classic/04_Classic.jpg",
+      "/assets/images/products/Classic/05.jpeg",
+    ];
+  }
+  return [];
+}
+
 export async function getCatalog(): Promise<Catalog> {
   const pool = getPool();
   if (!pool) {
@@ -412,13 +492,15 @@ export async function getCatalog(): Promise<Catalog> {
     return {
       products: heroFirst(
         productRows[0].map((product, index) => {
-        const productImages = parseJsonArray<string>(product.imageUrl)
+        const gallery = getProductGallery(product.slug, product.name);
+        const parsedImages = parseJsonArray<string>(product.imageUrl)
           .filter(
             (image): image is string =>
               typeof image === "string" && image.trim() !== ""
           )
           .map(assetUrl)
           .slice(0, 6);
+        const productImages = gallery.length ? gallery : parsedImages;
 
         const sizes = parseJsonArray<SizeJson>(product.sizes).map((size) => {
           const legacyImages = (size.images ?? [])

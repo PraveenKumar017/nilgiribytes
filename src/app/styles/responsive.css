@@ -614,7 +614,7 @@
   }
 
   .product-detail_stage {
-    aspect-ratio: 6 / 5;
+    aspect-ratio: auto;
   }
 
   .product-detail_actions .btn {

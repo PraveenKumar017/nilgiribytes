@@ -178,13 +178,27 @@ export default async function HomePage() {
               </div>
             </div>
 
+            <style>{`
+              .category-collection .category-card_text {
+                -webkit-line-clamp: 3;
+                line-clamp: 3;
+              }
+
+              @media (min-width: 1024px) {
+                .category-collection .category-grid {
+                  grid-template-columns: repeat(4, minmax(0, 1fr));
+                  grid-template-rows: auto;
+                }
+              }
+            `}</style>
+
             <div className="category-grid">
               <Link
-                className="category-card category-card--light category-card--wide category-card--full-text reveal"
-                data-reveal="drop"
+                className="category-card category-card--light reveal"
+                data-reveal="fade-up"
                 href="/shop?category=Varkey"
               >
-                <div className="category-card_media">
+                <div className="category-card_media category-card_media--biscuit">
                   <img
                     className="category-card_texture"
                     src="/assets/our_range_varkey.jpeg"
@@ -197,12 +211,9 @@ export default async function HomePage() {
                   01
                 </span>
                 <div className="category-card_body">
-                  <h3 className="category-card_title">Premium Ooty Varkey</h3>
+                  <h3 className="category-card_title">Special Ooty Varkey</h3>
                   <p className="category-card_text">
-                    Experience the finest taste of Ooty with our Premium Special Varkey! Crafted with carefully selected ingredients in just the right proportions.
-                  </p><br></br>
-                  <p className="category-card_text">
-                    Rich in flavour and wonderfully crunchy, every bite is a treat. Enjoy it as a snack or pair it with your favourite tea or coffee.
+                    Its crunchy texture slowly softens when enjoyed with hot tea or coffee. 
                   </p>
                   <span className="category-card_link">Shop varkey</span>
                 </div>
@@ -265,14 +276,14 @@ export default async function HomePage() {
               </Link>
 
               <Link
-                className="category-card category-card--light category-card--wide category-card--full-text reveal"
+                className="category-card category-card--light reveal"
                 data-reveal="fade-up"
                 href="/shop/family-combo"
               >
                 <span className="category-card_index" aria-hidden="true">
                   04
                 </span>
-                <div className="category-card_media">
+                <div className="category-card_media category-card_media--biscuit">
                   <img
                     className="category-card_texture"
                     src="/assets/images/combo_choice.jpg"
@@ -284,7 +295,7 @@ export default async function HomePage() {
                 <div className="category-card_body">
                   <h3 className="category-card_title">Family Combo</h3>
                   <p className="category-card_text">
-                    A generous 1kg pack of our most-loved varkeys and biscuits &mdash; packed together for the whole family.
+                    A generous 1kg pack of our most-loved varkeys and biscuits.
                   </p>
                   <span className="category-card_link">Shop Family Combo</span>
                 </div>
