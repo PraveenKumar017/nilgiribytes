@@ -56,6 +56,7 @@ export function errorCode(error: unknown): string | undefined {
 export function revalidateStorefront(): void {
   revalidatePath("/");
   revalidatePath("/shop");
+  revalidatePath("/shop", "layout");
   revalidatePath("/blog");
   revalidatePath("/sitemap.xml");
 }

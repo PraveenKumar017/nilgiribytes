@@ -128,11 +128,9 @@ export function CartView({
   const router = useRouter();
   const { lines, ready, count, subtotal, changeQty, clear } = useCart();
   const [showCustomerModal, setShowCustomerModal] = useState(false);
-  const [hasShownModalOnce, setHasShownModalOnce] = useState(false);
   const [customerDetailsReady, setCustomerDetailsReady] = useState(false);
   const [showPaymentForm, setShowPaymentForm] = useState(false);
   const [paymentError, setPaymentError] = useState("");
-  const [previousCount, setPreviousCount] = useState(0);
   const [catalog, setCatalog] = useState<Catalog | null>(null);
   const [relatedProducts, setRelatedProducts] = useState<StoreProduct[]>([]);
   const [customerDetails, setCustomerDetails] = useState<CustomerDetails>(
@@ -211,34 +209,6 @@ export function CartView({
       setRelatedProducts([]);
     }
   }, [lines]);
-
-  // Show modal only on FIRST cart item add if no customer details are saved yet
-  useEffect(() => {
-    if (!ready || !customerDetailsReady) return;
-
-    if (
-      count > 0 &&
-      previousCount === 0 &&
-      (!customerDetails.name || !customerDetails.email) &&
-      !hasShownModalOnce
-    ) {
-      // First item added, details incomplete, and haven't shown modal before
-      setShowCustomerModal(true);
-      setHasShownModalOnce(true); // Mark that we've shown the modal once
-    }
-    // Update previous count
-    if (count !== previousCount) {
-      setPreviousCount(count);
-    }
-  }, [
-    count,
-    ready,
-    customerDetailsReady,
-    previousCount,
-    customerDetails.name,
-    customerDetails.email,
-    hasShownModalOnce,
-  ]);
 
   // Re-validate the applied coupon whenever the cart changes.
   useEffect(() => {
@@ -356,7 +326,7 @@ export function CartView({
     }
   };
 
-  const validateForm = (): boolean => {
+  const validateForm = (showErrors = true): boolean => {
     const errors: Record<string, string> = {};
 
     if (!customerDetails.name.trim()) {
@@ -369,8 +339,9 @@ export function CartView({
       errors.mobile = "Enter a valid 10-digit mobile number";
     }
 
-    if (
-      customerDetails.email.trim() &&
+    if (!customerDetails.email.trim()) {
+      errors.email = "Email is required";
+    } else if (
       !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(customerDetails.email.trim())
     ) {
       errors.email = "Enter a valid email address";
@@ -396,7 +367,9 @@ export function CartView({
       errors.district = "District is required";
     }
 
-    setFormErrors(errors);
+    if (showErrors) {
+      setFormErrors(errors);
+    }
     return Object.keys(errors).length === 0;
   };
 
@@ -409,7 +382,6 @@ export function CartView({
     if (validateForm()) {
       persistCustomerDetails();
       setShowCustomerModal(false);
-      // Don't show modal again even if cart count changes
     }
   };
 
@@ -432,7 +404,7 @@ export function CartView({
   };
 
   const handlePayOnlineClick = () => {
-    if (!validateForm()) {
+    if (!validateForm(false)) {
       setShowPaymentForm(false);
       setShowCustomerModal(true);
       return;
@@ -521,7 +493,7 @@ export function CartView({
 
   return (
     <>
-      {/* Customer Details Modal - Show on first item add (no saved details) or when user clicks Edit Details */}
+      {/* Customer Details Modal - Shown only when user proceeds to payment or clicks Edit Details */}
       {customerDetailsReady && showCustomerModal && (
         <>
           <div
@@ -573,7 +545,7 @@ export function CartView({
               </div>
 
               <div className="form-group">
-                <label htmlFor="modal-email">Email ID</label>
+                  <label htmlFor="modal-email">Email ID *</label>
                 <input
                   type="email"
                   id="modal-email"
@@ -697,7 +669,7 @@ export function CartView({
           </div>
         </div>
         <Link className="cart-page_buy-more_link" href="/shop">
-          Explore items &rarr;
+          Explore items
         </Link>
       </div>
 
@@ -810,7 +782,7 @@ export function CartView({
                   ? shippingQuote.baseShippingPaise === 0
                     ? "Free"
                     : formatINR(shippingQuote.baseShippingPaise)
-                  : "Select state"}
+                  : "—"}
               </span>
             </div>
             {shippingQuote && shippingQuote.shippingDiscountPaise > 0 && (
@@ -1038,6 +1010,7 @@ export function CartView({
                   className="btn btn--outline"
                   onClick={() => {
                     setShowPaymentForm(false);
+                    setFormErrors({});
                     setShowCustomerModal(true);
                   }}
                 >

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { getImageProps } from "next/image";
+import { AddReview } from "@/components/add-review";
 import { IntroOverlay } from "@/components/intro-overlay";
 import { JsonLd } from "@/components/json-ld";
 import { PosterRail } from "@/components/poster-rail";
@@ -535,6 +536,12 @@ export default async function HomePage() {
               What Our Customers Say
             </h2>
             <hr className="divider reveal" data-reveal="fade-in" />
+            <AddReview
+              items={allItems.map((item) => ({
+                slug: item.slug,
+                name: item.name,
+              }))}
+            />
             <TestimonialMarquee>
               <div className="testimonial-track">
                 {[...testimonials, ...testimonials].map((review, index) => (

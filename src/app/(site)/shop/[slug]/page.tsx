@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { cache } from "react";
+import { AddReview } from "@/components/add-review";
 import { JsonLd } from "@/components/json-ld";
 import { ProductCollection } from "@/components/product-collection";
 import { ProductDetail } from "@/components/product-detail";
@@ -247,22 +248,29 @@ export default async function ProductPage({ params }: ProductPageProps) {
         </section>
       ) : null}
 
-      {item.reviews.length ? (
-        <section className="section section--reviews" aria-labelledby="reviews-title">
-          <div className="container">
-            <span className="section-kicker reveal" data-reveal="fade-up">
-              Customer reviews
-            </span>
-            <h2
-              className="section-heading reveal"
-              data-reveal="fade-up"
-              id="reviews-title"
-            >
-              What our customers <em>say</em>
-            </h2>
-            <p className="section-intro reveal" data-reveal="fade-up">
-              Real words from people who have enjoyed this from our bakery.
-            </p>
+      <section className="section section--reviews" aria-labelledby="reviews-title">
+        <div className="container">
+          <span className="section-kicker reveal" data-reveal="fade-up">
+            Customer reviews
+          </span>
+          <h2
+            className="section-heading reveal"
+            data-reveal="fade-up"
+            id="reviews-title"
+          >
+            What our customers <em>say</em>
+          </h2>
+          <p className="section-intro reveal" data-reveal="fade-up">
+            Real words from people who have enjoyed this from our bakery.
+          </p>
+          <AddReview
+            items={allItems.map((entry) => ({
+              slug: entry.slug,
+              name: entry.name,
+            }))}
+            defaultItemSlug={item.slug}
+          />
+          {item.reviews.length ? (
             <div className="reviews-grid">
               {item.reviews.map((review, index) => (
                 <article
@@ -290,9 +298,13 @@ export default async function ProductPage({ params }: ProductPageProps) {
                 </article>
               ))}
             </div>
-          </div>
-        </section>
-      ) : null}
+          ) : (
+            <p className="review-empty">
+              No reviews yet. Be the first to share your experience.
+            </p>
+          )}
+        </div>
+      </section>
 
       <JsonLd data={productLd} />
       <JsonLd data={breadcrumbLd} />

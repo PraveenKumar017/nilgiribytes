@@ -120,7 +120,7 @@ export function ComboBuilder({
           </header>
 
           <div className="combo-tier-head">
-            <h3 className="combo-tier-title">Combo price guide</h3>
+            <h3 className="combo-tier-title">Build Your Combo – Price Guide</h3>
             <span className="combo-tier-note">Updates as you choose</span>
           </div>
           <div className="combo-tier-grid" aria-label="Combo price guide">

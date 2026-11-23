@@ -283,6 +283,21 @@ export function ProductDetail({ item }: ProductDetailProps) {
           </p>
         )}
 
+        {item.kind === "combo" ? (
+          <div>
+            <p className="product-detail_label">
+              What&apos;s included ({item.weight})
+            </p>
+            <ul className="product-detail_includes">
+              {item.includes.map((include, index) => (
+                <li key={`${include.name}-${index}`}>
+                  {include.name} &mdash; {include.quantity}
+                </li>
+              ))}
+            </ul>
+          </div>
+        ) : null}
+
         <details className="product-detail_facts-toggle">
           <summary className="product-detail_facts-summary">About</summary>
           <div className="product-detail_about-list">
@@ -345,21 +360,6 @@ export function ProductDetail({ item }: ProductDetailProps) {
             <p>FSSAI License No: 22423223000163</p>
           </div>
         </details>
-
-        {item.kind === "combo" ? (
-          <div>
-            <p className="product-detail_label">
-              What&apos;s included ({item.weight})
-            </p>
-            <ul className="product-detail_includes">
-              {item.includes.map((include, index) => (
-                <li key={`${include.name}-${index}`}>
-                  {include.name} &mdash; {include.quantity}
-                </li>
-              ))}
-            </ul>
-          </div>
-        ) : null}
 
         <p className="product-detail_availability">
           &#10003; In stock &mdash; baked fresh daily

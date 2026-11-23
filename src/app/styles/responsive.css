@@ -897,6 +897,16 @@
 }
 
 @media (max-width: 767px) {
+  .review-modal_split {
+    grid-template-columns: 1fr;
+  }
+
+  .review-modal_star {
+    width: 2.4rem;
+    height: 2.4rem;
+    font-size: 2.9rem;
+  }
+
   .testimonial-grid {
     overflow: visible;
   }
