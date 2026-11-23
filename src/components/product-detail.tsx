@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import {
   cartLineKey,
+  CUSTOMER_DETAILS_STORAGE_KEY,
   itemDiscountPercent,
   itemImage,
   itemMrp,
@@ -24,6 +25,10 @@ export function ProductDetail({ item }: ProductDetailProps) {
   const [sizeIndex, setSizeIndex] = useState(0);
   const [imageIndex, setImageIndex] = useState(0);
   const [lightboxOpen, setLightboxOpen] = useState(false);
+  const [pincode, setPincode] = useState("");
+  const [pincodeStatus, setPincodeStatus] = useState<
+    "idle" | "invalid" | "ok"
+  >("idle");
 
   const lineKey = cartLineKey(item, itemSizeLabel(item, sizeIndex));
   const qty = quantityOf(lineKey);
@@ -90,6 +95,27 @@ export function ProductDetail({ item }: ProductDetailProps) {
       const next = current + delta;
       return (next + mediaCount) % mediaCount;
     });
+  }
+
+  function checkPincode() {
+    if (!/^[1-9]\d{5}$/.test(pincode)) {
+      setPincodeStatus("invalid");
+      return;
+    }
+
+    try {
+      const raw = localStorage.getItem(CUSTOMER_DETAILS_STORAGE_KEY);
+      const stored = raw ? (JSON.parse(raw) as Record<string, unknown>) : {};
+      localStorage.setItem(
+        CUSTOMER_DETAILS_STORAGE_KEY,
+        JSON.stringify({ ...stored, pincode })
+      );
+    } catch {
+      setPincodeStatus("idle");
+      return;
+    }
+
+    setPincodeStatus("ok");
   }
 
   const isHero =
@@ -364,6 +390,47 @@ export function ProductDetail({ item }: ProductDetailProps) {
         <p className="product-detail_availability">
           &#10003; In stock &mdash; baked fresh daily
         </p>
+
+        <div className="product-detail_pincode">
+          <label className="product-detail_label" htmlFor="product-pincode">
+            Check delivery to your pincode
+          </label>
+          <div className="product-detail_pincode-row">
+            <input
+              className="form-input"
+              id="product-pincode"
+              type="text"
+              inputMode="numeric"
+              autoComplete="postal-code"
+              maxLength={6}
+              placeholder="Enter 6-digit pincode"
+              value={pincode}
+              onChange={(event) => {
+                setPincode(
+                  event.target.value.replace(/\D/g, "").slice(0, 6)
+                );
+                setPincodeStatus("idle");
+              }}
+            />
+            <button
+              className="btn btn--outline"
+              type="button"
+              onClick={checkPincode}
+            >
+              Check
+            </button>
+          </div>
+          {pincodeStatus === "invalid" ? (
+            <p className="product-detail_pincode-error" role="alert">
+              Enter a valid 6-digit pincode.
+            </p>
+          ) : null}
+          {pincodeStatus === "ok" ? (
+            <p className="product-detail_pincode-ok" role="status">
+              Delivery available to {pincode}.
+            </p>
+          ) : null}
+        </div>
 
         <div className="product-detail_actions">
           {qty < 1 ? (

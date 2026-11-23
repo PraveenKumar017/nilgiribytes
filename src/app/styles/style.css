@@ -3961,6 +3961,41 @@ body[data-page="cart"] .section {
   font-weight: 600;
 }
 
+.product-detail_pincode {
+  margin-top: 1rem;
+}
+
+.product-detail_pincode-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.4rem;
+}
+
+.product-detail_pincode-row .form-input {
+  flex: 1 1 10rem;
+  min-width: 0;
+}
+
+.product-detail_pincode-row .btn {
+  flex: 0 0 auto;
+  min-width: 6rem;
+}
+
+.product-detail_pincode-error,
+.product-detail_pincode-ok {
+  margin: 0.45rem 0 0;
+  font-size: 0.78rem;
+}
+
+.product-detail_pincode-error {
+  color: #b23b2e;
+}
+
+.product-detail_pincode-ok {
+  color: var(--color-olive);
+}
+
 .product-detail_actions {
   display: flex;
   flex-wrap: wrap;

@@ -11,6 +11,7 @@ import {
 } from "./shipping";
 
 export const CART_STORAGE_KEY = "veb_cart";
+export const CUSTOMER_DETAILS_STORAGE_KEY = "nilgiribytes_customer_details";
 
 export function itemPrice(item: StoreItem, sizeIndex = 0): number {
   if (item.kind === "combo") return item.pricePaise;

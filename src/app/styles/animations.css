@@ -227,6 +227,11 @@ html.js [data-reveal="drop"].is-visible {
   animation-delay: 1300ms;
 }
 
+body.is-locked .hero-copy [data-hero-step],
+body.is-locked .hero-copy .hero-heading .highlight {
+  animation-play-state: paused;
+}
+
 .hero-copy .hero-line {
   display: block;
 }

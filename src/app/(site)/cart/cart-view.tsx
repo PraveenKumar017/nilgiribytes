@@ -4,7 +4,11 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { formatINR } from "@/lib/format";
-import { cartLinePackedWeightGrams, itemMrp } from "@/lib/cart";
+import {
+  cartLinePackedWeightGrams,
+  CUSTOMER_DETAILS_STORAGE_KEY,
+  itemMrp,
+} from "@/lib/cart";
 import { getShippingQuote, INDIAN_STATES, stateToZone } from "@/lib/shipping";
 import { useCart } from "@/components/cart-provider";
 import { SafeImage } from "@/components/safe-image";
@@ -30,8 +34,6 @@ interface CustomerDetails {
   state: string;
   district: string;
 }
-
-const STORAGE_KEY = "nilgiribytes_customer_details";
 
 const CONFETTI_COLORS = [
   "#c79a42",
@@ -146,7 +148,7 @@ export function CartView({
   // Load customer details from localStorage on mount
   useEffect(() => {
     try {
-      const stored = localStorage.getItem(STORAGE_KEY);
+      const stored = localStorage.getItem(CUSTOMER_DETAILS_STORAGE_KEY);
       if (stored) {
         setCustomerDetails({ ...EMPTY_CUSTOMER_DETAILS, ...JSON.parse(stored) });
       }
@@ -374,7 +376,7 @@ export function CartView({
   };
 
   const persistCustomerDetails = () => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(customerDetails));
+    localStorage.setItem(CUSTOMER_DETAILS_STORAGE_KEY, JSON.stringify(customerDetails));
     console.log("Customer details saved:", customerDetails);
   };
 
