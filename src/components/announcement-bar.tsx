@@ -1,10 +1,11 @@
 ﻿"use client";
 
 const MESSAGES = [
+  "Pan-India delivery",
+  "100% vegetarian",
+  "Baked fresh daily",
   "No preservatives",
-  "Delivery within 4 to 5 days",
   "Wholesale options available",
-  "100% Pure Vegetarian",
   "Custom corporate & personal gifting solutions",
 ];
 
@@ -16,8 +17,10 @@ export function AnnouncementBar() {
       <div className="announcement-track">
         {items.map((message, index) => (
           <span className="announcement-item" key={index}>
-            <span className="announcement-dot">•</span>
             {message}
+            <span className="announcement-dot" aria-hidden="true">
+              ✦
+            </span>
           </span>
         ))}
       </div>

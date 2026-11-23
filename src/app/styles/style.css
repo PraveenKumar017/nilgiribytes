@@ -6052,7 +6052,6 @@ body.is-locked {
   display: flex;
   flex: none;
   align-items: center;
-  gap: 2rem;
   width: max-content;
   animation: announcement-scroll 28s linear infinite;
   will-change: transform;
@@ -6069,13 +6068,14 @@ body.is-locked {
 .announcement-item {
   display: inline-flex;
   align-items: center;
-  gap: 0.8rem;
+  gap: 1.5rem;
+  padding-inline: 0.75rem;
   white-space: nowrap;
 }
 
 .announcement-dot {
-  color: var(--header-bg);
-  opacity: 0.8;
+  color: var(--color-gold);
+  opacity: 1;
 }
 
 @keyframes announcement-scroll {
@@ -7787,4 +7787,80 @@ body.is-locked {
   margin: 0;
   line-height: 1.4;
 }
+
+.review-summary {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  margin: 0 0 1.5rem;
+  font-size: 0.85rem;
+  color: var(--color-muted);
+}
+
+.review-summary_stars {
+  color: var(--color-gold);
+  font-size: 1.05rem;
+  letter-spacing: 0.12em;
+}
+
+.review-summary strong {
+  color: var(--color-ink);
+  font-size: 1rem;
+}
+
+#bestsellers-grid {
+  display: flex;
+  gap: 1.25rem;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  padding-bottom: 1rem;
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-gold) transparent;
+}
+
+#bestsellers-grid > * {
+  flex: 0 0 min(78vw, 270px);
+  scroll-snap-align: start;
+}
+
+.bestseller-hint {
+  margin: 0 0 1rem;
+  text-align: center;
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--color-muted);
+}
+
+.category-card--light .category-card_media::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, transparent 40%, rgba(53, 23, 15, 0.28));
+  opacity: 0;
+  transition: opacity 300ms var(--ease-out);
+  pointer-events: none;
+}
+
+.category-card--light:hover .category-card_media::after {
+  opacity: 1;
+}
+
+.category-card--light .category-card_link {
+  transition: transform 300ms var(--ease-out), color 300ms var(--ease-out);
+}
+
+.category-card--light:hover .category-card_link {
+  transform: translateX(4px);
+}
+
+@media (min-width: 1024px) {
+  #bestsellers-grid > * {
+    flex-basis: calc((100% - 3.75rem) / 4);
+  }
+}
+
 

@@ -88,12 +88,14 @@ const { props: heroDesktopProps } = getImageProps({
 export default async function HomePage() {
   const catalog = await getCatalog();
   const allItems = [...catalog.products, ...catalog.combos];
-  const testimonials = pickDailyReviews(
-    allItems.flatMap((item) =>
-      item.reviews.map((review) => ({ ...review, itemName: item.name }))
-    ),
-    "home-testimonials"
+  const allReviews = allItems.flatMap((item) =>
+    item.reviews.map((review) => ({ ...review, itemName: item.name }))
   );
+  const testimonials = pickDailyReviews(allReviews, "home-testimonials");
+  const averageRating = allReviews.length
+    ? allReviews.reduce((sum, review) => sum + review.rating, 0) /
+      allReviews.length
+    : 0;
   const featuredBestsellerSlugs = [
     "premium-special-varkey",
     "special-varkey",
@@ -542,6 +544,19 @@ export default async function HomePage() {
                 name: item.name,
               }))}
             />
+            {allReviews.length ? (
+              <div className="review-summary reveal" data-reveal="fade-up">
+                <span
+                  className="review-summary_stars"
+                  aria-label={`${averageRating.toFixed(1)} out of 5 stars`}
+                >
+                  {"★".repeat(Math.round(averageRating))}
+                  {"☆".repeat(5 - Math.round(averageRating))}
+                </span>
+                <strong>{averageRating.toFixed(1)}</strong>
+                <span>from {allReviews.length} customer reviews</span>
+              </div>
+            ) : null}
             <TestimonialMarquee>
               <div className="testimonial-track">
                 {[...testimonials, ...testimonials].map((review, index) => (

@@ -431,7 +431,7 @@ export function CartView({
   if (!lines.length) {
     return (
       <>
-        <div className="cart-page_head reveal" data-reveal="fade-up">
+        <div className="cart-page_head">
           <div>
             <span className="section-kicker">Your order</span>
             <h1 className="section-heading cart-page_title" id="cart-title">
@@ -443,7 +443,7 @@ export function CartView({
           </Link>
         </div>
 
-        <div className="empty-state cart-page_empty reveal" data-reveal="fade-up">
+        <div className="empty-state cart-page_empty">
           <svg className="cart-page_empty-icon" viewBox="0 0 24 24" aria-hidden="true">
             <path d="M6 6h15l-1.5 9h-12z" />
             <path d="M6 6 5 3H2" />
@@ -639,7 +639,7 @@ export function CartView({
         </>
       )}
 
-      <div className="cart-page_head reveal" data-reveal="fade-up">
+      <div className="cart-page_head">
         <div>
           <span className="section-kicker">Your order</span>
           <h1 className="section-heading cart-page_title" id="cart-title">

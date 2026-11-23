@@ -227,6 +227,34 @@ html.js [data-reveal="drop"].is-visible {
   animation-delay: 1300ms;
 }
 
+@keyframes heroBgZoom {
+  from {
+    transform: scale(1.02);
+  }
+  to {
+    transform: scale(1.12);
+  }
+}
+
+@keyframes ctaGlowDrift {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  50% {
+    transform: translate3d(18px, -12px, 0) scale(1.12);
+  }
+}
+
+.hero-background img {
+  animation: heroBgZoom 8s ease-in-out infinite alternate;
+}
+
+.cta:hover::before {
+  animation: ctaGlowDrift 4s ease-in-out infinite;
+}
+
+body.is-locked .hero-background img,
 body.is-locked .hero-copy [data-hero-step],
 body.is-locked .hero-copy .hero-heading .highlight {
   animation-play-state: paused;
@@ -306,6 +334,9 @@ body.is-locked .hero-copy .hero-heading .highlight {
 
   .intro.is-active .logo-loader,
   .intro.is-active .intro_rule,
+  .hero-background img,
+  .cta::before,
+  .cta:hover::before,
   .hero-copy [data-hero-step],
   .hero-copy .hero-heading .highlight,
   .cart-count.is-pop,

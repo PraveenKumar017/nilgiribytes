@@ -10,6 +10,8 @@ type PosterStyle = CSSProperties & {
   "--opacity": number;
 };
 
+const DEFAULT_POSTER_SLUG = "premium-special-varkey";
+
 const POSTER_BY_SLUG: Record<string, string> = {
   "special-varkey": "/assets/images/product_poster/Special_Varkey.jpeg",
   "premium-special-varkey": "/assets/images/product_poster/Premium_Varkey.jpeg",
@@ -26,10 +28,16 @@ export function PosterRail({ products }: { products: StoreProduct[] }) {
     .filter((product) => Boolean(POSTER_BY_SLUG[product.slug]))
     .map((product) => ({
       id: product.id,
+      slug: product.slug,
       name: product.name,
       poster: POSTER_BY_SLUG[product.slug],
     }));
-  const [active, setActive] = useState(0);
+  const [active, setActive] = useState(() => {
+    const defaultIndex = posters.findIndex(
+      (poster) => poster.slug === DEFAULT_POSTER_SLUG
+    );
+    return defaultIndex >= 0 ? defaultIndex : 0;
+  });
   const [paused, setPaused] = useState(false);
   const deckRef = useRef<HTMLDivElement>(null);
 
@@ -38,7 +46,7 @@ export function PosterRail({ products }: { products: StoreProduct[] }) {
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
     const timer = window.setInterval(
       () => setActive((current) => (current + 1) % posters.length),
-      4200
+      1000
     );
     return () => window.clearInterval(timer);
   }, [paused, posters.length]);
@@ -51,11 +59,19 @@ export function PosterRail({ products }: { products: StoreProduct[] }) {
       data-reveal="fade-up"
       ref={deckRef}
       onMouseEnter={() => setPaused(true)}
-      onMouseLeave={() => setPaused(false)}
-      onFocus={() => setPaused(true)}
+      onMouseLeave={() => {
+        setPaused(false);
+        setActive((current) => (current + 1) % posters.length);
+      }}
+      onFocus={(event) => {
+        if (
+          event.target instanceof HTMLElement &&
+          event.target.matches(":focus-visible")
+        ) {
+          setPaused(true);
+        }
+      }}
       onBlur={() => setPaused(false)}
-      onPointerDown={() => setPaused(true)}
-      onPointerUp={() => window.setTimeout(() => setPaused(false), 900)}
     >
       <div className="poster-stage" id="poster-rail" aria-label="Signature product range">
         {posters.map((poster, index) => {
