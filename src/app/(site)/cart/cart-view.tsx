@@ -2,14 +2,21 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { formatINR } from "@/lib/format";
 import {
   cartLinePackedWeightGrams,
   CUSTOMER_DETAILS_STORAGE_KEY,
   itemMrp,
 } from "@/lib/cart";
-import { getShippingQuote, INDIAN_STATES, stateToZone } from "@/lib/shipping";
+import {
+  getPincodeDeliveryArea,
+  getShippingQuote,
+  INDIAN_STATES,
+  PINCODE_API_BASE,
+  stateToZone,
+  type PincodeLookup,
+} from "@/lib/shipping";
 import { useCart } from "@/components/cart-provider";
 import { SafeImage } from "@/components/safe-image";
 import {
@@ -139,6 +146,10 @@ export function CartView({
     EMPTY_CUSTOMER_DETAILS
   );
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
+  const [pincodeLookupLoading, setPincodeLookupLoading] = useState(false);
+  const [pincodeLookupError, setPincodeLookupError] = useState("");
+  const pincodeLookupRef = useRef(0);
+  const lastLookupRef = useRef("");
   const [coupon, setCoupon] = useState<AppliedCoupon | null>(null);
   const [couponInput, setCouponInput] = useState("");
   const [couponError, setCouponError] = useState("");
@@ -315,6 +326,14 @@ export function CartView({
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
   ) => {
     const { name, value } = e.target;
+    if (name === "pincode") {
+      pincodeLookupRef.current += 1;
+      setPincodeLookupLoading(false);
+      setPincodeLookupError("");
+      if (/^[1-9]\d{5}$/.test(value)) {
+        void lookupPincode(value);
+      }
+    }
     setCustomerDetails((prev) => ({
       ...prev,
       [name]: value,
@@ -325,6 +344,54 @@ export function CartView({
         ...prev,
         [name]: "",
       }));
+    }
+  };
+
+  const lookupPincode = async (value: string) => {
+    if (!/^[1-9]\d{5}$/.test(value) || lastLookupRef.current === value) return;
+    lastLookupRef.current = value;
+
+    const requestId = ++pincodeLookupRef.current;
+    const controller = new AbortController();
+    const timeoutId = window.setTimeout(() => controller.abort(), 5000);
+    setPincodeLookupLoading(true);
+    setPincodeLookupError("");
+
+    try {
+      const response = await fetch(
+        `${PINCODE_API_BASE}/pincodes/${value}.json`,
+        { signal: controller.signal }
+      );
+      if (requestId !== pincodeLookupRef.current) return;
+      if (!response.ok) throw new Error("Pincode lookup failed");
+
+      const data = (await response.json()) as PincodeLookup;
+      if (requestId !== pincodeLookupRef.current) return;
+
+      const area = getPincodeDeliveryArea(data);
+      if (!area.canDeliver) {
+        setPincodeLookupError("Delivery is not available to this pincode.");
+        return;
+      }
+
+      setCustomerDetails((prev) => ({
+        ...prev,
+        state: area.state || prev.state,
+        district: area.district || prev.district,
+      }));
+      setFormErrors((prev) => ({ ...prev, state: "", district: "" }));
+    } catch {
+      if (requestId === pincodeLookupRef.current) {
+        lastLookupRef.current = "";
+        setPincodeLookupError(
+          "Could not fetch the location. Please select the state manually."
+        );
+      }
+    } finally {
+      window.clearTimeout(timeoutId);
+      if (requestId === pincodeLookupRef.current) {
+        setPincodeLookupLoading(false);
+      }
     }
   };
 
@@ -584,11 +651,22 @@ export function CartView({
                     name="pincode"
                     value={customerDetails.pincode}
                     onChange={handleInputChange}
+                    onBlur={() => {
+                      if (/^[1-9]\d{5}$/.test(customerDetails.pincode)) {
+                        void lookupPincode(customerDetails.pincode);
+                      }
+                    }}
                     placeholder="6-digit pincode"
                     maxLength={6}
                     className={`form-input ${formErrors.pincode ? "is-error" : ""}`}
                   />
                   {formErrors.pincode && <span className="form-error">{formErrors.pincode}</span>}
+                  {pincodeLookupLoading && (
+                    <span className="pincode-lookup-status">Fetching location...</span>
+                  )}
+                  {pincodeLookupError && (
+                    <span className="pincode-lookup-error">{pincodeLookupError}</span>
+                  )}
                 </div>
 
                 <div className="form-group">
@@ -932,7 +1010,7 @@ export function CartView({
               width: "100%",
             }}
           >
-            Pay Now
+            Order Now
           </button>
         </aside>
       </div>

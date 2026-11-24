@@ -161,6 +161,10 @@ export default async function OrderConfirmationPage({ searchParams }: PageProps)
                 {isCod ? "COD" : "Paid"}
               </div>
               <h2 className="cart-page_summary-title">{order.orderNumber}</h2>
+              <div className="order-confirmation_order-id">
+                <span>Order ID for tracking</span>
+                <strong>{order.orderNumber}</strong>
+              </div>
               <p className="cart-page_delivery-note">
                 Placed {formatOrderDate(order.createdAt)}
               </p>
@@ -193,13 +197,16 @@ export default async function OrderConfirmationPage({ searchParams }: PageProps)
                 <span>Ordered</span>
               </div>
               <p className="cart-page_delivery-note">
-                {isCod
-                  ? "Payment method: Cash on Delivery"
-                  : `Payment reference: ${order.paymentId ?? paymentId}`}
+                {isCod ? (
+                  <>
+                    Payment method: Cash on Delivery
+                    <br />
+                    Order reference: {order.paymentId ?? paymentId}
+                  </>
+                ) : (
+                  `Payment reference: ${order.paymentId ?? paymentId}`
+                )}
               </p>
-              <Link className="btn btn--primary" href="/shop">
-                Continue shopping
-              </Link>
               <Link
                 className="btn btn--outline"
                 href={`/track-order?order=${encodeURIComponent(
@@ -207,6 +214,12 @@ export default async function OrderConfirmationPage({ searchParams }: PageProps)
                 )}`}
               >
                 Track this order
+              </Link>
+              <p className="cart-page_delivery-note">
+                Use Order ID {order.orderNumber} to check your delivery status.
+              </p>
+              <Link className="btn btn--primary" href="/shop">
+                Continue shopping
               </Link>
             </aside>
           </div>

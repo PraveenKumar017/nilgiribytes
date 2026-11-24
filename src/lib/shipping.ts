@@ -62,6 +62,42 @@ function normalizeState(value: string): string {
     .trim();
 }
 
+export const PINCODE_API_BASE = "https://aniket-thapa.github.io/india-pincode-api";
+
+export type PincodeLookup = {
+  state?: string;
+  district?: string;
+  offices?: Array<{ deliveryStatus?: string }>;
+};
+
+export function formatPostalName(value: string | undefined): string {
+  if (!value?.trim()) return "";
+  return value
+    .toLowerCase()
+    .replace(/(^|[\s-])\w/g, (match) => match.toUpperCase());
+}
+
+export function matchIndianState(value: string | undefined): string {
+  if (!value?.trim()) return "";
+  const normalized = normalizeState(value);
+  return INDIAN_STATES.find((state) => normalizeState(state) === normalized) ?? "";
+}
+
+export function getPincodeDeliveryArea(data: PincodeLookup) {
+  const offices = Array.isArray(data.offices) ? data.offices : [];
+  const canDeliver = offices.some(
+    (office) =>
+      !office.deliveryStatus ||
+      office.deliveryStatus.toLowerCase() === "delivery"
+  );
+
+  return {
+    canDeliver: offices.length > 0 && canDeliver,
+    state: matchIndianState(data.state),
+    district: formatPostalName(data.district),
+  };
+}
+
 const STATE_ZONES: Record<string, ShippingZone> = {};
 
 function addStates(zone: ShippingZone, states: string[]): void {

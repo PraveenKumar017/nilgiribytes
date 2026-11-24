@@ -104,7 +104,7 @@ export async function POST(request: NextRequest) {
           status,
           razorpayOrderId,
           paymentId
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'ONLINE', 'NEW', NULL, ?)`,
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'ONLINE', 'NEW', NULL, ?)`,
         [
           temporaryNumber,
           customerName,

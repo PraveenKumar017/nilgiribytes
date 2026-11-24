@@ -46,7 +46,7 @@ export function PosterRail({ products }: { products: StoreProduct[] }) {
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
     const timer = window.setInterval(
       () => setActive((current) => (current + 1) % posters.length),
-      1000
+      2000
     );
     return () => window.clearInterval(timer);
   }, [paused, posters.length]);

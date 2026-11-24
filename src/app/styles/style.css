@@ -3956,7 +3956,7 @@ body[data-page="cart"] .section {
 
 .product-detail_availability {
   margin: 0;
-  color: var(--color-olive);
+  color: #1f7a3d;
   font-size: 0.85rem;
   font-weight: 600;
 }
@@ -3983,7 +3983,8 @@ body[data-page="cart"] .section {
 }
 
 .product-detail_pincode-error,
-.product-detail_pincode-ok {
+.product-detail_pincode-ok,
+.product-detail_pincode-info {
   margin: 0.45rem 0 0;
   font-size: 0.78rem;
 }
@@ -3993,7 +3994,17 @@ body[data-page="cart"] .section {
 }
 
 .product-detail_pincode-ok {
-  color: var(--color-olive);
+  color: #1f7a3d;
+  font-weight: 600;
+}
+
+.product-detail_pincode-info {
+  color: var(--color-muted);
+}
+
+.product-detail_pincode-row .btn:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
 }
 
 .product-detail_actions {
@@ -6238,6 +6249,22 @@ body.is-locked {
   font-size: 0.75rem;
   color: var(--color-cinnamon);
   font-weight: 500;
+}
+
+.pincode-lookup-status,
+.pincode-lookup-error {
+  display: block;
+  margin-top: 0.25rem;
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+
+.pincode-lookup-status {
+  color: var(--color-muted);
+}
+
+.pincode-lookup-error {
+  color: var(--color-cinnamon);
 }
 
 .form-textarea {

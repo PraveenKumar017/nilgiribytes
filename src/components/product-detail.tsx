@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   cartLineKey,
   CUSTOMER_DETAILS_STORAGE_KEY,
@@ -12,6 +12,11 @@ import {
   itemSizeLabel,
 } from "@/lib/cart";
 import { formatINR } from "@/lib/format";
+import {
+  getPincodeDeliveryArea,
+  PINCODE_API_BASE,
+  type PincodeLookup,
+} from "@/lib/shipping";
 import type { StoreItem } from "@/lib/types";
 import { useCart } from "./cart-provider";
 import { SafeImage } from "./safe-image";
@@ -27,8 +32,10 @@ export function ProductDetail({ item }: ProductDetailProps) {
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [pincode, setPincode] = useState("");
   const [pincodeStatus, setPincodeStatus] = useState<
-    "idle" | "invalid" | "ok"
+    "idle" | "invalid" | "checking" | "ok" | "unavailable" | "error"
   >("idle");
+  const [pincodeLocation, setPincodeLocation] = useState("");
+  const pincodeRequestRef = useRef(0);
 
   const lineKey = cartLineKey(item, itemSizeLabel(item, sizeIndex));
   const qty = quantityOf(lineKey);
@@ -97,25 +104,67 @@ export function ProductDetail({ item }: ProductDetailProps) {
     });
   }
 
-  function checkPincode() {
+  async function checkPincode() {
     if (!/^[1-9]\d{5}$/.test(pincode)) {
       setPincodeStatus("invalid");
+      setPincodeLocation("");
       return;
     }
+
+    const requestId = ++pincodeRequestRef.current;
+    setPincodeStatus("checking");
+    setPincodeLocation("");
 
     try {
-      const raw = localStorage.getItem(CUSTOMER_DETAILS_STORAGE_KEY);
-      const stored = raw ? (JSON.parse(raw) as Record<string, unknown>) : {};
-      localStorage.setItem(
-        CUSTOMER_DETAILS_STORAGE_KEY,
-        JSON.stringify({ ...stored, pincode })
+      const response = await fetch(
+        `${PINCODE_API_BASE}/pincodes/${pincode}.json`
       );
-    } catch {
-      setPincodeStatus("idle");
-      return;
-    }
+      if (requestId !== pincodeRequestRef.current) return;
 
-    setPincodeStatus("ok");
+      if (response.status === 404) {
+        setPincodeStatus("unavailable");
+        return;
+      }
+
+      if (!response.ok) {
+        setPincodeStatus("error");
+        return;
+      }
+
+      const data = (await response.json()) as PincodeLookup;
+      if (requestId !== pincodeRequestRef.current) return;
+
+      const area = getPincodeDeliveryArea(data);
+      if (!area.canDeliver) {
+        setPincodeStatus("unavailable");
+        return;
+      }
+
+      const location = [area.district, area.state].filter(Boolean).join(", ");
+      setPincodeLocation(location);
+
+      try {
+        const raw = localStorage.getItem(CUSTOMER_DETAILS_STORAGE_KEY);
+        const stored = raw ? (JSON.parse(raw) as Record<string, unknown>) : {};
+        localStorage.setItem(
+          CUSTOMER_DETAILS_STORAGE_KEY,
+          JSON.stringify({
+            ...stored,
+            pincode,
+            state: area.state,
+            district: area.district,
+          })
+        );
+      } catch {
+        setPincodeLocation(location);
+      }
+
+      setPincodeStatus("ok");
+    } catch {
+      if (requestId === pincodeRequestRef.current) {
+        setPincodeStatus("error");
+      }
+    }
   }
 
   const isHero =
@@ -406,28 +455,47 @@ export function ProductDetail({ item }: ProductDetailProps) {
               placeholder="Enter 6-digit pincode"
               value={pincode}
               onChange={(event) => {
+                pincodeRequestRef.current += 1;
                 setPincode(
                   event.target.value.replace(/\D/g, "").slice(0, 6)
                 );
                 setPincodeStatus("idle");
+                setPincodeLocation("");
               }}
             />
             <button
               className="btn btn--outline"
               type="button"
               onClick={checkPincode}
+              disabled={pincodeStatus === "checking"}
             >
-              Check
+              {pincodeStatus === "checking" ? "Checking..." : "Check"}
             </button>
           </div>
+          {pincodeStatus === "checking" ? (
+            <p className="product-detail_pincode-info" role="status">
+              Checking pincode...
+            </p>
+          ) : null}
           {pincodeStatus === "invalid" ? (
             <p className="product-detail_pincode-error" role="alert">
               Enter a valid 6-digit pincode.
             </p>
           ) : null}
+          {pincodeStatus === "unavailable" ? (
+            <p className="product-detail_pincode-error" role="alert">
+              Delivery is not available to {pincode}.
+            </p>
+          ) : null}
+          {pincodeStatus === "error" ? (
+            <p className="product-detail_pincode-error" role="alert">
+              Could not check this pincode. Please try again.
+            </p>
+          ) : null}
           {pincodeStatus === "ok" ? (
             <p className="product-detail_pincode-ok" role="status">
-              Delivery available to {pincode}.
+              Delivery available to {pincode}
+              {pincodeLocation ? ` — ${pincodeLocation}` : ""}.
             </p>
           ) : null}
         </div>

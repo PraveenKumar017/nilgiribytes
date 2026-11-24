@@ -272,6 +272,36 @@ body.is-locked .hero-copy .hero-heading .highlight {
   animation: heroHighlightGlow 3.6s ease-in-out 1.8s infinite;
 }
 
+.page-hero .section-kicker,
+.page-hero .page-hero_title,
+.page-hero .page-hero_text,
+.page-hero .page-hero_pills {
+  animation: heroContentIn 1000ms var(--ease-out) both;
+}
+
+.page-hero .section-kicker {
+  animation-delay: 100ms;
+}
+
+.page-hero .page-hero_title {
+  animation-delay: 300ms;
+}
+
+.page-hero .page-hero_text {
+  animation-delay: 500ms;
+}
+
+.page-hero .page-hero_pills {
+  animation-delay: 700ms;
+}
+
+body.is-locked .page-hero .section-kicker,
+body.is-locked .page-hero .page-hero_title,
+body.is-locked .page-hero .page-hero_text,
+body.is-locked .page-hero .page-hero_pills {
+  animation-play-state: paused;
+}
+
 /* --------------------------------------------------------------------------
    4. Motion accents
    -------------------------------------------------------------------------- */
@@ -339,6 +369,10 @@ body.is-locked .hero-copy .hero-heading .highlight {
   .cta:hover::before,
   .hero-copy [data-hero-step],
   .hero-copy .hero-heading .highlight,
+  .page-hero .section-kicker,
+  .page-hero .page-hero_title,
+  .page-hero .page-hero_text,
+  .page-hero .page-hero_pills,
   .cart-count.is-pop,
   .float-wa,
   .float-wa.is-pulse::after {
