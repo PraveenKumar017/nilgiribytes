@@ -248,7 +248,11 @@ export default async function ProductPage({ params }: ProductPageProps) {
         </section>
       ) : null}
 
-      <section className="section section--reviews" aria-labelledby="reviews-title">
+      <section
+        className="section section--reviews"
+        id="product-reviews"
+        aria-labelledby="reviews-title"
+      >
         <div className="container">
           <span className="section-kicker reveal" data-reveal="fade-up">
             Customer reviews

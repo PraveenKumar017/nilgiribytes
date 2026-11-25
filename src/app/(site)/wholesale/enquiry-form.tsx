@@ -4,12 +4,13 @@ import { useEffect, useRef, useState, type FormEvent } from "react";
 import { whatsappLink } from "@/lib/whatsapp";
 
 const ENQUIRY_TYPES = [
-  "Wholesale supply",
-  "Distributor partnership",
-  "Cafe / restaurant supply",
-  "Bulk order",
-  "Corporate gifting",
-  "Other",
+  "Distributor Partnership",
+  "Wholesale & Bulk",
+  "Hotels & Cafés",
+  "Retail & Resellers",
+  "Corporate Gifts",
+  "Events & Celebrations",
+  "Other"
 ];
 
 type EnquiryDetails = {

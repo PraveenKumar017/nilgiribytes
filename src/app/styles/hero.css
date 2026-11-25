@@ -10,22 +10,28 @@
 /* Full Hero Section Container */
 .hero-story {
   position: relative;
-  background-color: var(--hero-bg-dark);
-  background-image:
-    linear-gradient(
-      90deg,
-      rgba(8, 4, 2, 0.52) 0%,
-      rgba(8, 4, 2, 0.34) 38%,
-      rgba(8, 4, 2, 0.1) 68%,
-      rgba(8, 4, 2, 0.22) 100%
-    ),
-    url("/assets/hero_bg.png");
-  background-size: cover;
-  background-position: center;
-  background-repeat: no-repeat;
+  background: var(--hero-bg-dark);
   color: var(--hero-cream);
   overflow: hidden;
   z-index: 10;
+}
+
+/* Hero background image + video layer */
+.hero-background {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.hero-background_video {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  z-index: 1;
 }
 
 /* Pinned Hero Stage */
@@ -37,20 +43,19 @@
   isolation: isolate;
   display: flex;
   align-items: center;
+  justify-content: center;
   z-index: 5;
   padding: clamp(2rem, 6vw, 4rem) 0 clamp(4rem, 10vw, 8rem);
 }
 
-/* Soft Left Vignette for Typography Legibility */
+/* Soft Center Vignette for Typography Legibility */
 .hero-vignette {
   position: absolute;
   inset: 0;
-  background: linear-gradient(
-    90deg,
-    rgba(8, 4, 2, 0.38) 0%,
-    rgba(8, 4, 2, 0.28) 28%,
-    rgba(8, 4, 2, 0.14) 46%,
-    rgba(8, 4, 2, 0.04) 62%,
+  background: radial-gradient(
+    ellipse at center,
+    rgba(8, 4, 2, 0.58) 0%,
+    rgba(8, 4, 2, 0.34) 42%,
     transparent 78%
   );
   z-index: 5;
@@ -62,8 +67,9 @@
   position: relative;
   z-index: 15;
   width: min(72%, 960px);
-  margin-left: max(6vw, 64px);
-  padding: 24px 28px 24px 0;
+  margin-inline: auto;
+  padding: 24px 28px;
+  text-align: center;
   border-radius: 16px;
   background: transparent;
   pointer-events: auto;
@@ -118,13 +124,16 @@
   color: #ffffff;
   font-weight: 450;
   margin-bottom: 2rem;
-  max-width: 640px;
+  max-width: 720px;
+  margin-inline: auto;
+  text-align: center;
   text-shadow: 0 2px 8px rgba(0, 0, 0, 0.95), 0 1px 4px rgba(0, 0, 0, 1);
 }
 
 .hero-stage .hero-cta-group {
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 16px;
   flex-wrap: wrap;
 }
@@ -162,14 +171,14 @@
 @media (max-width: 1200px) {
   .hero-stage .hero-copy {
     width: min(76%, 860px);
-    margin-left: max(5vw, 48px);
+    margin-inline: auto;
   }
 }
 
 @media (max-width: 992px) {
   .hero-stage .hero-copy {
     width: min(80%, 720px);
-    margin-left: max(4vw, 32px);
+    margin-inline: auto;
   }
 }
 

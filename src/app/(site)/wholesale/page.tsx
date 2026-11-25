@@ -27,7 +27,7 @@ export const metadata: Metadata = pageMetadata({
     "bulk biscuits supplier",
   ],
   path: "/wholesale",
-  image: "/assets/wholesale_bg.png",
+  image: "/assets/wholesale_hero.jpeg",
 });
 
 const heroImageCommon = { alt: "", sizes: "100vw" };
@@ -36,44 +36,56 @@ const {
   props: { srcSet: heroMobileSrcSet },
 } = getImageProps({
   ...heroImageCommon,
-  src: "/assets/wholesale_mobile_bg.png",
-  width: 725,
-  height: 575,
+  src: "/assets/wholesale_mobile_bg.jpeg",
+  width: 768,
+  height: 1201,
 });
 
 const { props: heroDesktopProps } = getImageProps({
   ...heroImageCommon,
-  src: "/assets/wholesale_bg.png",
-  width: 1376,
-  height: 646,
+  src: "/assets/wholesale_hero.jpeg",
+  width: 1484,
+  height: 928,
 });
 
 const CARD_TYPE_TO_FORM_TYPE: Record<string, string> = {
-  "Become a Distributor": "Distributor partnership",
-  "Wholesale Orders": "Wholesale supply",
-  "Hotels, Cafés & Restaurants": "Cafe / restaurant supply",
-  "Gifting, Events & Celebrations": "Corporate gifting",
+  "Distributor Partnership": "Distributor Partnership",
+  "Wholesale & Bulk": "Wholesale & Bulk",
+  "Hotels & Cafés": "Hotels & Cafés",
+  "Retail & Resellers": "Retail & Resellers",
+  "Corporate Gifts": "Corporate Gifts",
+  "Events & Celebrations": "Events & Celebrations",
 };
 
 const ENQUIRY_TYPES = [
   {
-    title: "Become a Distributor",
-    text: "Partner with NilgiriBytes to bring authentic Ooty Varkey and biscuits to more customers. Explore distribution opportunities and grow with us across India.",
+    title: "Distributor Partnership",
+    text: "Partner with NilgiriBytes to bring authentic Ooty Varkey and biscuits to more customers across India.",
     icon: "distribution",
   },
   {
-    title: "Wholesale Orders",
-    text: "Bulk supply of Ooty Varkey and biscuits for retailers, supermarkets, resellers and businesses looking to stock our products.",
+    title: "Wholesale & Bulk",
+    text: "Bulk supply of Ooty Varkey and biscuits for businesses, institutions and high-volume orders.",
     icon: "package",
   },
   {
-    title: "Hotels, Cafés & Restaurants",
+    title: "Hotels & Cafés",
     text: "Supply of Varkey and biscuits for hotels, cafés, restaurants, tea shops and hospitality businesses.",
     icon: "cafe",
   },
   {
-    title: "Gifting, Events & Celebrations",
-    text: "Orders for weddings, events, corporate gifts, Custom giftings, Institutional Orders, Celebrations & special occasions.",
+    title: "Retail & Resellers",
+    text: "Stock NilgiriBytes in your retail store, supermarket or reseller network with bakery-direct supply.",
+    icon: "package",
+  },
+  {
+    title: "Corporate Gifts",
+    text: "Thoughtful NilgiriBytes gift boxes for corporate teams, clients, partners and special business occasions.",
+    icon: "gift",
+  },
+  {
+    title: "Events & Celebrations",
+    text: "Orders for weddings, events, celebrations and special occasions, packed fresh for your guests.",
     icon: "gift",
   },
 ] as const;
@@ -100,7 +112,7 @@ const WHY_REASONS = [
 const WHY_STATS = [
   { value: "1980", label: "Baking since" },
   { value: "19,299+", label: "Pin codes served" },
-  { value: "90 days", label: "Shelf life" },
+  { value: "60 days", label: "Shelf life" },
 ] as const;
 
 type EnquiryIconName = (typeof ENQUIRY_TYPES)[number]["icon"];
@@ -226,7 +238,7 @@ export default function WholesalePage() {
                   {ENQUIRY_TYPES.map((item, index) => (
                     <article
                       className={`wholesale-partner-card${
-                        item.title === "Wholesale Orders" ? " has-badge" : ""
+                        item.title === "Wholesale & Bulk" ? " has-badge" : ""
                       }`}
                       key={item.title}
                     >
@@ -236,7 +248,7 @@ export default function WholesalePage() {
                       >
                         {String(index + 1).padStart(2, "0")}
                       </span>
-                      {item.title === "Wholesale Orders" && (
+                      {item.title === "Wholesale & Bulk" && (
                         <span className="wholesale-partner_badge">
                           Most requested
                         </span>

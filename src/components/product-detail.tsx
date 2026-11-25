@@ -281,11 +281,12 @@ export function ProductDetail({ item }: ProductDetailProps) {
         </div>
         <h1 className="product-detail_title">{item.name}</h1>
 
-        <div className="product-detail_reviews">
-          <div
-            className="product-detail_stars"
-            aria-label={`${item.rating.toFixed(1)} out of 5 stars`}
-          >
+        <a
+          className="product-detail_reviews"
+          href="#product-reviews"
+          aria-label={`${item.rating.toFixed(1)} out of 5 stars. Jump to customer reviews.`}
+        >
+          <div className="product-detail_stars" aria-hidden="true">
             {Array.from({ length: 5 }, (_, index) => (
               <span
                 key={index}
@@ -298,8 +299,10 @@ export function ProductDetail({ item }: ProductDetailProps) {
               </span>
             ))}
           </div>
-          <span className="product-detail_rating">{item.rating.toFixed(1)}</span>
-        </div>
+          <span className="product-detail_rating" aria-hidden="true">
+            {item.rating.toFixed(1)}
+          </span>
+        </a>
 
         {item.kind === "product" && item.sizes.length > 1 ? (
           <div className="product-detail_size-row">
@@ -375,12 +378,12 @@ export function ProductDetail({ item }: ProductDetailProps) {
 
         <details className="product-detail_facts-toggle">
           <summary className="product-detail_facts-summary">About</summary>
-          <div className="product-detail_about-list">
-            <p>Made in Ooty, The Nilgiris</p>
-            <p>Made by Hand, Baked the Traditional Way</p>
-            <p>Freshly Baked</p>
-            <p>100% Vegetarian</p>
-          </div>
+          <ul className="product-detail_about-list">
+            <li>Made in Ooty, The Nilgiris</li>
+            <li>Made by Hand, Baked the Traditional Way</li>
+            <li>Freshly Baked</li>
+            <li>100% Vegetarian</li>
+          </ul>
         </details>
 
         {item.ingredients ? (
@@ -398,42 +401,45 @@ export function ProductDetail({ item }: ProductDetailProps) {
         {item.shelfLife ? (
           <details className="product-detail_facts-toggle">
             <summary className="product-detail_facts-summary">Shelf life</summary>
-            <div className="product-detail_about-list">
-              <p>
-                <strong>Shelf Life &amp; Storage:-</strong>
-              </p>
-              <p>Shelf life: {item.shelfLife} from date of manufacture.</p>
-              <p>Store in a cool, dry place,away from direct sunlight.</p>
-              <p>
-                Once opened, keep in an airtight container to retain freshness and crunch.
-              </p>
-            </div>
+            <p className="product-detail_about-heading">
+              <strong>Shelf Life &amp; Storage:-</strong>
+            </p>
+            <ul className="product-detail_about-list">
+              <li>Shelf life: {item.shelfLife} from date of manufacture.</li>
+              <li>Store in a cool, dry place, away from direct sunlight.</li>
+              <li>
+                Once opened, keep in an airtight container to retain freshness
+                and crunch.
+              </li>
+            </ul>
           </details>
         ) : null}
 
         <details className="product-detail_facts-toggle">
           <summary className="product-detail_facts-summary">Shipping &amp; Delivery</summary>
-          <div className="product-detail_about-list">
-            <p>Carefully packed to protect products during transit.</p>
-            <p>Dispatched from Kotagiri, in the Nilgiri hills.</p>
-            <p>Delivery available across India.</p>
-            <p>Estimated delivery time: 4&ndash;5 business days.</p>
-            <p>
-              Delivery timelines may vary depending on the destination and courier service.
-            </p>
-          </div>
+          <ul className="product-detail_about-list">
+            <li>Carefully packed to protect products during transit.</li>
+            <li>Dispatched from Kotagiri, in the Nilgiri hills.</li>
+            <li>Delivery available across India.</li>
+            <li>Estimated delivery time: 4&ndash;5 business days.</li>
+            <li>
+              Delivery timelines may vary depending on the destination and
+              courier service.
+            </li>
+          </ul>
         </details>
 
         <details className="product-detail_facts-toggle">
           <summary className="product-detail_facts-summary">Product Information</summary>
-          <div className="product-detail_about-list">
-            <p>Brand: NilgiriBytes</p>
-            <p>Manufactured by: Vasu Ettan Bakery</p>
-            <p>
-              Manufacturing Location: Kotagiri, The Nilgiris, Tamil Nadu - 643217, India
-            </p>
-            <p>FSSAI License No: 22423223000163</p>
-          </div>
+          <ul className="product-detail_about-list">
+            <li>Brand: NilgiriBytes</li>
+            <li>Manufactured by: Vasu Ettan Bakery</li>
+            <li>
+              Manufacturing Location: Kotagiri, The Nilgiris, Tamil Nadu -
+              643217, India
+            </li>
+            <li>FSSAI License No: 22423223000163</li>
+          </ul>
         </details>
 
         <p className="product-detail_availability">

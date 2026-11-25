@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
+import type { CSSProperties } from "react";
 import Link from "next/link";
-import { getImageProps } from "next/image";
 import { AddReview } from "@/components/add-review";
+import { HeroBackgroundVideo } from "@/components/hero-background-video";
 import { IntroOverlay } from "@/components/intro-overlay";
 import { JsonLd } from "@/components/json-ld";
 import { PosterRail } from "@/components/poster-rail";
@@ -67,24 +68,6 @@ export const metadata: Metadata = pageMetadata({
   imageHeight: 1257,
 });
 
-const heroImageCommon = { alt: "", sizes: "100vw" };
-
-const {
-  props: { srcSet: heroMobileSrcSet },
-} = getImageProps({
-  ...heroImageCommon,
-  src: "/assets/hero_bg_mobile.jpg",
-  width: 768,
-  height: 1010,
-});
-
-const { props: heroDesktopProps } = getImageProps({
-  ...heroImageCommon,
-  src: "/assets/hero_bg.png",
-  width: 2560,
-  height: 1536,
-});
-
 export default async function HomePage() {
   const catalog = await getCatalog();
   const allItems = [...catalog.products, ...catalog.combos];
@@ -121,10 +104,9 @@ export default async function HomePage() {
           className="hero-story"
           aria-label="NilgiriBytes Artisan Baking Kitchen & Authentic Varkey Experience"
         >
-          <picture className="hero-background" aria-hidden="true">
-            <source media="(max-width: 768px)" srcSet={heroMobileSrcSet} />
-            <img {...heroDesktopProps} fetchPriority="high" />
-          </picture>
+          <div className="hero-background" aria-hidden="true">
+            <HeroBackgroundVideo />
+          </div>
           <div className="hero-stage">
             <div className="hero-vignette" aria-hidden="true" />
             <div className="hero-copy">
@@ -602,10 +584,11 @@ export default async function HomePage() {
             </h2>
             <hr className="divider reveal" data-reveal="fade-in" />
             <div className="faq-list">
-              {faqs.map((faq) => (
+              {faqs.map((faq, index) => (
                 <details
                   className="faq-item reveal"
                   data-reveal="fade-up"
+                  style={{ "--i": index } as CSSProperties}
                   key={faq.question}
                 >
                   <summary className="faq-question">{faq.question}</summary>
