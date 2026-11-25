@@ -1805,16 +1805,23 @@ p {
 
 @media (max-width: 767px) {
   .poster-deck {
-    --stage-height: clamp(390px, 114vw, 500px);
-    padding: 0 2.4rem;
+    --stage-height: clamp(380px, 110vw, 490px);
+    padding: 0 0.5rem;
   }
 
   .poster-stage {
-    --poster-spread: 54%;
+    --poster-spread: 74%;
+    perspective: 850px;
+    perspective-origin: 50% 50%;
   }
 
   .poster-card {
-    width: clamp(205px, 62vw, 280px);
+    width: clamp(195px, 58vw, 255px);
+    transform:
+      translate(-50%, -50%)
+      translateX(calc(var(--offset, 0) * var(--poster-spread)))
+      rotateY(calc(var(--offset, 0) * 28deg))
+      scale(var(--scale, 1));
   }
 
   .poster-card[data-offset="2"],
@@ -1827,6 +1834,15 @@ p {
     top: calc(var(--stage-height) / 2 - 19px);
     width: 38px;
     height: 38px;
+    z-index: 40;
+  }
+
+  .poster-nav--prev {
+    left: 0.35rem;
+  }
+
+  .poster-nav--next {
+    right: 0.35rem;
   }
 }
 
