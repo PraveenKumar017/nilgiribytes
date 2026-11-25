@@ -497,7 +497,7 @@ export default async function HomePage() {
               data-parallax="0.35"
             >
               <img
-                src="/assets/Craftsmanship.png"
+                src="/assets/Craftsmanship-v2.png"
                 alt="Golden varkey arranged on a baking tray"
                 width={1376}
                 height={768}

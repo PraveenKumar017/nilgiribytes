@@ -59,7 +59,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       lastModified: now,
       changeFrequency: "weekly",
       priority: 0.7,
-      images: [absoluteUrl("/assets/Craftsmanship.png")],
+      images: [absoluteUrl("/assets/Craftsmanship-v2.png")],
     },
     {
       url: absoluteUrl("/policies/privacy"),
