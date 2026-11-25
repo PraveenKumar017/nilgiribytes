@@ -1679,6 +1679,7 @@ p {
 
 .section--posters .section-intro {
   color: rgba(242, 228, 197, 0.72);
+  margin-bottom: 1.5rem;
 }
 
 .section--posters .divider::after {
@@ -1804,8 +1805,12 @@ p {
 }
 
 @media (max-width: 767px) {
+  .section--posters .section-intro {
+    margin-bottom: 0.75rem;
+  }
+
   .poster-deck {
-    --stage-height: clamp(380px, 110vw, 490px);
+    --stage-height: clamp(310px, 86vw, 400px);
     padding: 0 0.5rem;
   }
 
