@@ -340,7 +340,8 @@
     margin-inline: auto;
   }
 
-  .page-hero--wholesale {
+  .page-hero--wholesale,
+  .page-hero--combo {
     min-height: 0;
     padding-block: 0;
   }

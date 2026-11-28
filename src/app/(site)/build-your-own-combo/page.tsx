@@ -63,7 +63,7 @@ export default async function BuildYourOwnComboPage() {
 
   return (
     <main id="main-content">
-      <section className="page-hero page-hero--shop" aria-labelledby="combo-title">
+      <section className="page-hero page-hero--combo" aria-labelledby="combo-title">
         <div className="page-hero_media" aria-hidden="true">
           <picture>
             <source
@@ -73,21 +73,9 @@ export default async function BuildYourOwnComboPage() {
             <img {...comboHeroDesktopProps} alt="" fetchPriority="high" />
           </picture>
         </div>
-        <div className="page-hero_overlay" aria-hidden="true" />
-        <div className="container page-hero_content">
-          <span className="section-kicker">Your choice, your box</span>
-          <h1 className="page-hero_title" id="combo-title">
-            Build Your Own Combo
-          </h1>
-          <p className="page-hero_text">
-            Create your own crunchy collection! Choose your favourite 4 to 8 varieties of Ooty Varkey and traditional biscuits to build a combo that&apos;s uniquely yours.
-          </p>
-          <ul className="page-hero_pills">
-            <li>4 to 8 varieties</li>
-            <li>250g per pack</li>
-            <li>From &#8377;679</li>
-          </ul>
-        </div>
+        <h1 className="sr-only" id="combo-title">
+          Build Your Own Combo
+        </h1>
       </section>
 
       <section className="section section--combo-builder" aria-labelledby="combo-builder-title">
