@@ -9,7 +9,7 @@ import { ExternalLinkIcon } from "@/components/admin/icons";
 import { BlogVideo } from "@/components/blog-video";
 import { formatDate } from "@/lib/format";
 import type { ActionState, LoginState } from "@/lib/admin";
-import type { BlogBlock } from "@/lib/types";
+import { BLOG_CATEGORIES, type BlogBlock } from "@/lib/types";
 
 /* -------------------------------------------------------------------------- */
 /* Navigation                                                                 */
@@ -318,6 +318,50 @@ export function AutoSubmitSelect({
         </option>
       ))}
     </select>
+  );
+}
+
+const OTHER_BLOG_CATEGORY = "Other";
+
+export function BlogCategoryField({ defaultValue }: { defaultValue?: string }) {
+  const isKnown = BLOG_CATEGORIES.some((category) => category === defaultValue);
+  const [choice, setChoice] = useState(
+    isKnown ? defaultValue ?? BLOG_CATEGORIES[0] : OTHER_BLOG_CATEGORY
+  );
+  const [custom, setCustom] = useState(isKnown ? "" : defaultValue ?? "");
+
+  return (
+    <>
+      <select
+        name="categoryChoice"
+        aria-label="Category"
+        value={choice}
+        onChange={(event) => setChoice(event.target.value)}
+        required
+      >
+        {BLOG_CATEGORIES.map((category) => (
+          <option key={category} value={category}>
+            {category}
+          </option>
+        ))}
+        <option value={OTHER_BLOG_CATEGORY}>Other</option>
+      </select>
+      {choice === OTHER_BLOG_CATEGORY ? (
+        <input
+          name="categoryCustom"
+          aria-label="Custom category"
+          value={custom}
+          onChange={(event) => setCustom(event.target.value)}
+          placeholder="Enter category"
+          required
+        />
+      ) : null}
+      <input
+        type="hidden"
+        name="category"
+        value={choice === OTHER_BLOG_CATEGORY ? custom : choice}
+      />
+    </>
   );
 }
 

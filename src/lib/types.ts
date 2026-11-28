@@ -92,6 +92,17 @@ export type BlogBlock =
   | { type: "list" | "ul" | "ol"; items: string[] }
   | { type: "video"; src: string; caption?: string };
 
+export const BLOG_CATEGORIES = [
+  "All",
+  "Ooty Varkey",
+  "Travel & Places",
+  "Food & Local Flavours",
+  "Recipes & Tea Time",
+  "Stories & Heritage",
+  "News & Updates",
+  "Lifestyle & Experiences",
+] as const;
+
 export type StorePost = {
   slug: string;
   title: string;

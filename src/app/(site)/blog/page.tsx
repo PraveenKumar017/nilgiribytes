@@ -47,9 +47,9 @@ export default async function BlogPage() {
             Tips, tales and recipes from the bakery floor.
           </p>
           <ul className="page-hero_pills">
-            <li>Baking Tips</li>
-            <li>Bakery Stories</li>
-            <li>Recipes</li>
+            <li>Ooty Varkey</li>
+            <li>Recipes & Tea Time</li>
+            <li>Stories & Heritage</li>
           </ul>
         </div>
       </section>

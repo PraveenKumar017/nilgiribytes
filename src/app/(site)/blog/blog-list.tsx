@@ -4,16 +4,7 @@ import Link from "next/link";
 import { useMemo, useState } from "react";
 import { SafeImage } from "@/components/safe-image";
 import { formatDate } from "@/lib/format";
-import type { StorePost } from "@/lib/types";
-
-const CATEGORIES = [
-  "All",
-  "Baking Tips",
-  "Bakery Stories",
-  "Ingredients",
-  "Recipes",
-  "News",
-];
+import { BLOG_CATEGORIES, type StorePost } from "@/lib/types";
 
 export function BlogList({ posts }: { posts: StorePost[] }) {
   const [category, setCategory] = useState("All");
@@ -34,7 +25,7 @@ export function BlogList({ posts }: { posts: StorePost[] }) {
     <>
       <div className="shop-toolbar reveal" data-reveal="fade-up">
         <div className="filter-chips" role="group" aria-label="Filter by category">
-          {CATEGORIES.map((value) => (
+          {BLOG_CATEGORIES.map((value) => (
             <button
               key={value}
               className="chip"

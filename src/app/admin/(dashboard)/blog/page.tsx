@@ -4,6 +4,7 @@ import {
   ActionForm,
   AutoSubmitSelect,
   BlocksEditor,
+  BlogCategoryField,
   ConfirmSubmit,
   ImageField,
   PostPreviewButton,
@@ -55,11 +56,7 @@ function PostForm({ post }: { post?: AdminPost }) {
 
         <label className="admin-field">
           <span>Category</span>
-          <input
-            name="category"
-            defaultValue={post?.category ?? "Bakery Stories"}
-            required
-          />
+          <BlogCategoryField defaultValue={post?.category ?? "Stories & Heritage"} />
         </label>
 
         <label className="admin-field">
