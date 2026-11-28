@@ -15,6 +15,7 @@ export function SafeImage({ src, fallback = FALLBACK, alt, ...rest }: SafeImageP
 
   return (
     <img
+      decoding="async"
       {...rest}
       src={current}
       alt={alt ?? ""}

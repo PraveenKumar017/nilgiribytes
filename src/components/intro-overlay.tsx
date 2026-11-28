@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 
 const INTRO_KEY = "veb_intro_seen";
+const INTRO_DELAY_MS = 700;
 
 export function IntroOverlay() {
   const [state, setState] = useState<"idle" | "active" | "done">("idle");
@@ -23,7 +24,7 @@ export function IntroOverlay() {
     }
     setState("active");
     document.body.classList.add("is-locked");
-    const timer = window.setTimeout(() => finish(), 1800);
+    const timer = window.setTimeout(() => finish(), INTRO_DELAY_MS);
     return () => {
       window.clearTimeout(timer);
       document.body.classList.remove("is-locked");

@@ -1015,7 +1015,6 @@ p {
   position: absolute;
   inset: 0;
   background-color: var(--color-chocolate);
-  background-image: url("/assets/hero_image_bg.png?v=3");
   background-repeat: no-repeat;
   background-position: right center;
   background-size: contain;

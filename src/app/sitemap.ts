@@ -24,7 +24,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       lastModified: now,
       changeFrequency: "weekly",
       priority: 1,
-      images: [absoluteUrl("/assets/hero_image_bg.png")],
+      images: [absoluteUrl("/assets/Craftsmanship-v2.jpg")],
     },
     {
       url: absoluteUrl("/shop"),
@@ -38,7 +38,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       lastModified: now,
       changeFrequency: "weekly",
       priority: 0.8,
-      images: [absoluteUrl("/assets/hero_image_bg.png")],
+      images: [absoluteUrl("/assets/build_combo.jpeg")],
     },
     {
       url: absoluteUrl("/about"),
@@ -59,7 +59,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       lastModified: now,
       changeFrequency: "weekly",
       priority: 0.7,
-      images: [absoluteUrl("/assets/Craftsmanship-v2.png")],
+      images: [absoluteUrl("/assets/Craftsmanship-v2.jpg")],
     },
     {
       url: absoluteUrl("/policies/privacy"),

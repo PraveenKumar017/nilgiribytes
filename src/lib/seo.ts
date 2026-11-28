@@ -129,7 +129,7 @@ export function bakeryJsonLd() {
     description:
       "Authentic Ooty Varkey, biscuits and signature combos baked fresh every day in Kotagiri.",
     url: `${SITE_URL}/`,
-    image: absoluteUrl("/assets/hero_image_bg.png"),
+    image: absoluteUrl("/assets/Craftsmanship-v2.jpg"),
     logo: absoluteUrl("/assets/nilgiribytes_header.png"),
     email: CONTACT_EMAIL,
     telephone: "+91-93449-21647",

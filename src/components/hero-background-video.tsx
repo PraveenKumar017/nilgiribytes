@@ -61,7 +61,7 @@ export function HeroBackgroundVideo() {
       muted
       loop
       playsInline
-      preload="auto"
+      preload="metadata"
     >
       <source
         media="(max-width: 768px)"
