@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { getImageProps } from "next/image";
 import Link from "next/link";
 import { ComboBuilder, type ComboBuilderProduct } from "@/components/combo-builder";
 import { pageMetadata } from "@/lib/seo";
@@ -20,7 +21,25 @@ export const metadata: Metadata = pageMetadata({
     "Nilgiri bakery hamper",
   ],
   path: "/build-your-own-combo",
-  image: "/assets/Fresh_Pastries.png",
+  image: "/assets/build_combo.jpeg",
+});
+
+const heroImageCommon = { alt: "", sizes: "100vw" };
+
+const {
+  props: { srcSet: comboHeroMobileSrcSet },
+} = getImageProps({
+  ...heroImageCommon,
+  src: "/assets/build_combo_mobile.jpg",
+  width: 768,
+  height: 1062,
+});
+
+const { props: comboHeroDesktopProps } = getImageProps({
+  ...heroImageCommon,
+  src: "/assets/build_combo.jpeg",
+  width: 1376,
+  height: 580,
 });
 
 export default async function BuildYourOwnComboPage() {
@@ -45,6 +64,16 @@ export default async function BuildYourOwnComboPage() {
   return (
     <main id="main-content">
       <section className="page-hero page-hero--shop" aria-labelledby="combo-title">
+        <div className="page-hero_media" aria-hidden="true">
+          <picture>
+            <source
+              media="(max-width: 767.98px)"
+              srcSet={comboHeroMobileSrcSet}
+            />
+            <img {...comboHeroDesktopProps} alt="" fetchPriority="high" />
+          </picture>
+        </div>
+        <div className="page-hero_overlay" aria-hidden="true" />
         <div className="container page-hero_content">
           <span className="section-kicker">Your choice, your box</span>
           <h1 className="page-hero_title" id="combo-title">
