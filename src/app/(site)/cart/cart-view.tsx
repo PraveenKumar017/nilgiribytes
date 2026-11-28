@@ -10,6 +10,7 @@ import {
   itemMrp,
 } from "@/lib/cart";
 import {
+  COD_EXTRA_FEE_PAISE,
   getPincodeDeliveryArea,
   getShippingQuote,
   INDIAN_STATES,
@@ -139,6 +140,9 @@ export function CartView({
   const [showCustomerModal, setShowCustomerModal] = useState(false);
   const [customerDetailsReady, setCustomerDetailsReady] = useState(false);
   const [showPaymentForm, setShowPaymentForm] = useState(false);
+  const [paymentMethod, setPaymentMethod] = useState<"ONLINE" | "COD">(
+    "ONLINE"
+  );
   const [paymentError, setPaymentError] = useState("");
   const [catalog, setCatalog] = useState<Catalog | null>(null);
   const [relatedProducts, setRelatedProducts] = useState<StoreProduct[]>([]);
@@ -478,6 +482,7 @@ export function CartView({
       setShowCustomerModal(true);
       return;
     }
+    setPaymentMethod("ONLINE");
     setShowPaymentForm(true);
     setPaymentError("");
   };
@@ -559,6 +564,9 @@ export function CartView({
   );
   const shippingPaise = shippingQuote?.shippingPaise ?? 0;
   const totalPaise = Math.max(0, subtotal - discountPaise) + shippingPaise;
+  const isCod = codEnabled && paymentMethod === "COD";
+  const codFeePaise = isCod ? COD_EXTRA_FEE_PAISE : 0;
+  const payablePaise = totalPaise + codFeePaise;
 
   return (
     <>
@@ -1073,9 +1081,32 @@ export function CartView({
                 </div>
               </div>
 
+              {isCod && (
+                <div className="cart-verify-panel_fees">
+                  <div className="detail-row">
+                    <span className="detail-label">Delivery Fee:</span>
+                    <span className="detail-value">
+                      {shippingQuote
+                        ? shippingPaise === 0
+                          ? "Free"
+                          : formatINR(shippingPaise)
+                        : "—"}
+                    </span>
+                  </div>
+                  <div className="detail-row">
+                    <span className="detail-label">COD extra charge:</span>
+                    <span className="detail-value">
+                      {formatINR(COD_EXTRA_FEE_PAISE)}
+                    </span>
+                  </div>
+                </div>
+              )}
+
               <div className="cart-verify-panel_note">
-                <span>Amount payable</span>
-                <strong>{formatINR(totalPaise)}</strong>
+                <span>
+                  {isCod ? "Amount payable on delivery" : "Amount payable"}
+                </span>
+                <strong>{formatINR(payablePaise)}</strong>
               </div>
 
               {paymentError && (
@@ -1109,6 +1140,8 @@ export function CartView({
                   couponCode={coupon?.code}
                   items={paymentItems}
                   codEnabled={codEnabled}
+                  paymentMethod={paymentMethod}
+                  onPaymentMethodChange={setPaymentMethod}
                   onSuccess={handlePaymentSuccess}
                   onError={handlePaymentError}
                   onValidationError={handleValidationError}

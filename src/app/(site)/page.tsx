@@ -497,10 +497,10 @@ export default async function HomePage() {
               data-parallax="0.35"
             >
               <img
-                src="/assets/Craftsmanship-v2.jpg"
+                src="/assets/craftmanship.jpg"
                 alt="Golden varkey arranged on a baking tray"
-                width={1376}
-                height={768}
+                width={1448}
+                height={1086}
                 loading="lazy"
               />
             </div>

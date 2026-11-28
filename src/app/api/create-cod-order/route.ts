@@ -7,7 +7,7 @@ import { getPool } from "@/lib/db";
 import { sendOrderConfirmationEmail } from "@/lib/order-email";
 import { ensureOrderShippingColumns } from "@/lib/order-shipping";
 import { priceOrderItems, type OrderItemInput } from "@/lib/order-pricing";
-import { getShippingQuote } from "@/lib/shipping";
+import { COD_EXTRA_FEE_PAISE, getShippingQuote } from "@/lib/shipping";
 
 interface CodOrderRequest {
   customerName?: string;
@@ -64,8 +64,10 @@ export async function POST(request: NextRequest) {
       ? await applyCoupon(body.couponCode, subtotalPaise)
       : null;
     const discountPaise = coupon?.discountPaise ?? 0;
+    const shippingWithCodFeePaise =
+      shipping.shippingPaise + COD_EXTRA_FEE_PAISE;
     const totalPaise =
-      Math.max(0, subtotalPaise - discountPaise) + shipping.shippingPaise;
+      Math.max(0, subtotalPaise - discountPaise) + shippingWithCodFeePaise;
 
     await ensureOrderShippingColumns();
 
@@ -112,7 +114,7 @@ export async function POST(request: NextRequest) {
           body.customerEmail?.trim() || null,
           fullAddress || null,
           subtotalPaise,
-          shipping.shippingPaise,
+          shippingWithCodFeePaise,
           shipping.shippingDiscountPaise,
           totalPaise,
           paymentId,
@@ -176,6 +178,7 @@ export async function POST(request: NextRequest) {
         discountPaise,
         shippingPaise: shipping.shippingPaise,
         shippingDiscountPaise: shipping.shippingDiscountPaise,
+        codFeePaise: COD_EXTRA_FEE_PAISE,
       });
     } catch (error) {
       console.error("COD order confirmation email failed:", error);

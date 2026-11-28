@@ -31,6 +31,7 @@ export type OrderConfirmationEmail = {
   discountPaise?: number;
   shippingPaise?: number;
   shippingDiscountPaise?: number;
+  codFeePaise?: number;
   paidAt?: Date;
 };
 
@@ -67,6 +68,7 @@ function buildHtml(
   const shippingPaise = data.shippingPaise ?? 0;
   const discountPaise = data.discountPaise ?? 0;
   const shippingDiscountPaise = data.shippingDiscountPaise ?? 0;
+  const codFeePaise = data.codFeePaise ?? 0;
   const shippingBasePaise = shippingPaise + shippingDiscountPaise;
   const itemRows = data.lines
     .map((line) => {
@@ -183,6 +185,16 @@ function buildHtml(
                   </tr>`
                 : ""
             }
+            ${
+              isCod && codFeePaise > 0
+                ? `<tr>
+                    <td colspan="3" align="right" style="padding:8px 14px;color:#6e6258;font-size:13px;">COD extra charge</td>
+                    <td align="right" style="padding:8px 14px;color:#35170f;font-size:14px;white-space:nowrap;">${escapeHtml(
+                      formatINR(codFeePaise)
+                    )}</td>
+                  </tr>`
+                : ""
+            }
             <tr>
               <td colspan="3" align="right" style="padding:14px;color:#35170f;font-size:14px;font-weight:600;">${
                 isCod ? "Amount due on delivery" : "Total paid"
@@ -223,6 +235,7 @@ function buildText(
   const shippingPaise = data.shippingPaise ?? 0;
   const discountPaise = data.discountPaise ?? 0;
   const shippingDiscountPaise = data.shippingDiscountPaise ?? 0;
+  const codFeePaise = data.codFeePaise ?? 0;
   const shippingBasePaise = shippingPaise + shippingDiscountPaise;
   const items = data.lines.map(
     (line) =>
@@ -256,6 +269,7 @@ function buildText(
     shippingDiscountPaise > 0
       ? `Shipping offer: -${formatINR(shippingDiscountPaise)}`
       : "",
+    isCod && codFeePaise > 0 ? `COD extra charge: ${formatINR(codFeePaise)}` : "",
     `${isCod ? "Amount due on delivery" : "Total paid"}: ${formatINR(totalPaise)}`,
     "",
     `View order details: ${orderUrl}`,

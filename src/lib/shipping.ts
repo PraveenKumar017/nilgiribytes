@@ -15,6 +15,8 @@ export type ShippingQuote = {
   shippingPaise: number;
 };
 
+export const COD_EXTRA_FEE_PAISE = 5000;
+
 export const INDIAN_STATES = [
   "Andaman and Nicobar Islands",
   "Andhra Pradesh",
@@ -175,7 +177,7 @@ const WEIGHT_BANDS = [
 
 const RATES_PAISE: Record<ShippingZone, number[]> = {
   1: [
-    5000, 8300, 12100, 12100, 20000, 23700, 27600, 31500, 21700, 21700,
+    6000, 8300, 12100, 12100, 20000, 23700, 27600, 31500, 21700, 21700,
     24600, 24600, 30000, 43000, 55600, 55600, 81000,
   ],
   2: [

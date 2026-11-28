@@ -24,7 +24,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       lastModified: now,
       changeFrequency: "weekly",
       priority: 1,
-      images: [absoluteUrl("/assets/Craftsmanship-v2.jpg")],
+      images: [absoluteUrl("/assets/craftmanship.jpg")],
     },
     {
       url: absoluteUrl("/shop"),
@@ -59,7 +59,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       lastModified: now,
       changeFrequency: "weekly",
       priority: 0.7,
-      images: [absoluteUrl("/assets/Craftsmanship-v2.jpg")],
+      images: [absoluteUrl("/assets/craftmanship.jpg")],
     },
     {
       url: absoluteUrl("/policies/privacy"),

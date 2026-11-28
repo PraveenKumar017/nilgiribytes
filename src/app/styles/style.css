@@ -6650,6 +6650,13 @@ body.is-locked {
   font-variant-numeric: tabular-nums;
 }
 
+.cart-verify-panel_fees {
+  padding: 0.25rem 1rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-cream);
+}
+
 .cart-verify-panel_body .form-actions {
   margin-top: 0;
 }

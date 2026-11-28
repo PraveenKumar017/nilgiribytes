@@ -16,6 +16,8 @@ interface PaymentCheckoutProps {
   couponCode?: string;
   items: OrderItemInput[];
   codEnabled?: boolean;
+  paymentMethod: "ONLINE" | "COD";
+  onPaymentMethodChange: (method: "ONLINE" | "COD") => void;
   onSuccess: (paymentData: PaymentSuccessData) => void;
   onError: (error: string) => void;
   onClose?: () => void;
@@ -90,6 +92,8 @@ export function PaymentCheckout({
   couponCode,
   items,
   codEnabled = false,
+  paymentMethod,
+  onPaymentMethodChange,
   onSuccess,
   onError,
   onClose,
@@ -97,7 +101,6 @@ export function PaymentCheckout({
 }: PaymentCheckoutProps) {
   const [loading, setLoading] = useState(false);
   const [status, setStatus] = useState("");
-  const [paymentMethod, setPaymentMethod] = useState<"ONLINE" | "COD">("ONLINE");
   const scriptLoaded = useRef(false);
 
   // Load Razorpay script dynamically
@@ -371,7 +374,7 @@ export function PaymentCheckout({
               name="paymentMethod"
               value="ONLINE"
               checked={paymentMethod === "ONLINE"}
-              onChange={() => setPaymentMethod("ONLINE")}
+              onChange={() => onPaymentMethodChange("ONLINE")}
               disabled={loading}
             />
             <span>Pay Online</span>
@@ -386,7 +389,7 @@ export function PaymentCheckout({
               name="paymentMethod"
               value="COD"
               checked={paymentMethod === "COD"}
-              onChange={() => setPaymentMethod("COD")}
+              onChange={() => onPaymentMethodChange("COD")}
               disabled={loading}
             />
             <span>Cash on Delivery</span>

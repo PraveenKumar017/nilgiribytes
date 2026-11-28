@@ -8,18 +8,19 @@ import { BLOG_CATEGORIES, type StorePost } from "@/lib/types";
 
 export function BlogList({ posts }: { posts: StorePost[] }) {
   const [category, setCategory] = useState("All");
-  const [query, setQuery] = useState("");
+  // const [query, setQuery] = useState("");
 
   const visible = useMemo(() => {
-    const needle = query.trim().toLowerCase();
+    // const needle = query.trim().toLowerCase();
     return posts.filter((post) => {
       if (category !== "All" && post.category !== category) return false;
-      if (!needle) return true;
-      return `${post.title} ${post.excerpt} ${post.category}`
-        .toLowerCase()
-        .includes(needle);
+      // if (!needle) return true;
+      // return `${post.title} ${post.excerpt} ${post.category}`
+      //   .toLowerCase()
+      //   .includes(needle);
+      return true;
     });
-  }, [posts, category, query]);
+  }, [posts, category]);
 
   return (
     <>
@@ -37,7 +38,7 @@ export function BlogList({ posts }: { posts: StorePost[] }) {
             </button>
           ))}
         </div>
-        <div className="shop-controls">
+        {/* <div className="shop-controls">
           <div className="field blog-search-field">
             <label htmlFor="blog-search">Search</label>
             <input
@@ -50,7 +51,7 @@ export function BlogList({ posts }: { posts: StorePost[] }) {
               onChange={(event) => setQuery(event.target.value)}
             />
           </div>
-        </div>
+        </div> */}
       </div>
 
       <div className="blog-grid mt-4" id="blog-grid">

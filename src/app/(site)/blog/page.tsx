@@ -19,7 +19,7 @@ export const metadata: Metadata = pageMetadata({
     "varkey ingredients",
   ],
   path: "/blog",
-  image: "/assets/Craftsmanship-v2.jpg",
+  image: "/assets/craftmanship.jpg",
 });
 
 export default async function BlogPage() {
@@ -30,7 +30,7 @@ export default async function BlogPage() {
       <section className="page-hero page-hero--blog" aria-labelledby="blog-title">
         <div className="page-hero_media" aria-hidden="true">
           <Image
-            src="/assets/Craftsmanship-v2.jpg"
+            src="/assets/craftmanship.jpg"
             alt=""
             fill
             sizes="100vw"
